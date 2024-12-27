@@ -1,0 +1,83 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/htslib.202241226.tar.gz /opt
+    ../../external/cutadapt.20241224.tar.gz /opt
+    ../../external/prinseq.20241226.tar.gz /opt
+    ../../external/fastqc_v0.12.1.zip /opt
+    ../../external/falco.20241226.tar.gz /opt
+    ../../external/spades.20241226.tar.gz /opt
+    ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
+    #../../external/ncbi-blast-2.16.0+-src.tar.gz /opt
+
+%post
+    dnf -y install epel-release \
+                   passwd which unzip zstd emacs \
+                   jq nc nmap valgrind rsync ruby wget python3-devel pip \
+                   gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
+                   xz-devel autoconf automake \
+                   openmpi-devel.x86_64 bzip2-devel \
+                   ghostscript git java-21-openjdk \
+                   perl perl-FindBin
+
+    pip install -U pip setuptools
+
+    pushd /opt
+
+        # cf) https://kazumaxneo.hatenablog.com/entry/2024/05/10/024009
+        tar xvfz htslib.202241226.tar.gz
+        pushd htslib
+            autoheader
+            autoreconf -i
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
+
+        tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
+        #tar xvfz ncbi-blast-2.16.0+-src.tar.gz
+        #pushd ncbi-blast-2.16.0+-src/c++
+        #      ./configure
+        #      make -j$(nproc)
+        #      make install
+        #popd
+
+        tar xvfz cutadapt.20241224.tar.gz
+        pip install cutadapt
+
+        tar xvfz prinseq.20241226.tar.gz
+
+        unzip fastqc_v0.12.1.zip
+
+        # cf) https://kazumaxneo.hatenablog.com/entry/2024/04/20/011400
+        tar xvfz falco.20241226.tar.gz
+        pushd falco
+            ./autogen.sh
+            ./configure CXXFLAGS="-O3 -Wall" --enable-hts
+            make -j$(nproc) HAVE_HTSLIB=1 all
+            make HAVE_HTSLIB=1 install
+        popd
+
+        tar xvfz spades.20241226.tar.gz
+        pushd spades
+           ./spades_compile.sh
+        popd
+    popd
+
+    mkdir -p /scratch/local
+    mkdir -p /external
+    mkdir -p /work
+
+%environment
+    export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
+    export PATH=/opt/spades/bin:$PATH
+    export PATH=/opt/FastQC:$PATH
+    export PATH=/opt/prinseq:$PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+%runscript
+    echo "PATH=$PATH"
+    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
