@@ -27,44 +27,72 @@ From: almalinux:9
 
     pushd /opt
 
+        # install nextflow
+        if true ; then
+            curl -s https://get.nextflow.io | bash
+            chmod +x nextflow
+            mv nextflow /usr/local/bin
+        fi
+	
+        # install htslib
         # cf) https://kazumaxneo.hatenablog.com/entry/2024/05/10/024009
-        tar xvfz htslib.202241226.tar.gz
-        pushd htslib
-            autoheader
-            autoreconf -i
-            ./configure
-            make -j$(nproc)
-            make install
-        popd
+        if true ; then
+            tar xvfz htslib.202241226.tar.gz
+            pushd htslib
+                autoheader
+                autoreconf -i
+                ./configure
+                make -j$(nproc)
+                make install
+            popd
+        fi
 
-        tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
-        #tar xvfz ncbi-blast-2.16.0+-src.tar.gz
-        #pushd ncbi-blast-2.16.0+-src/c++
-        #      ./configure
-        #      make -j$(nproc)
-        #      make install
-        #popd
+        # install ncbi-blast
+        if true ; then
+            tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
+            #tar xvfz ncbi-blast-2.16.0+-src.tar.gz
+            #pushd ncbi-blast-2.16.0+-src/c++
+            #      ./configure
+            #      make -j$(nproc)
+            #      make install
+            #popd
+        fi
 
-        tar xvfz cutadapt.20241224.tar.gz
-        pip install cutadapt
+        # install cutadapt
+        if true ; then
+            tar xvfz cutadapt.20241224.tar.gz
+            pip install cutadapt
+        fi
 
-        tar xvfz prinseq.20241226.tar.gz
+        # install prinseq
+        if true ; then
+            tar xvfz prinseq.20241226.tar.gz
+        fi
 
-        unzip fastqc_v0.12.1.zip
+        # install fastqc
+        if true ; then
+            unzip fastqc_v0.12.1.zip
+        fi
 
+        # install falco
         # cf) https://kazumaxneo.hatenablog.com/entry/2024/04/20/011400
-        tar xvfz falco.20241226.tar.gz
-        pushd falco
-            ./autogen.sh
-            ./configure CXXFLAGS="-O3 -Wall" --enable-hts
-            make -j$(nproc) HAVE_HTSLIB=1 all
-            make HAVE_HTSLIB=1 install
-        popd
+        if true ; then
+            tar xvfz falco.20241226.tar.gz
+            pushd falco
+                ./autogen.sh
+                ./configure CXXFLAGS="-O3 -Wall" --enable-hts
+                make -j$(nproc) HAVE_HTSLIB=1 all
+                make HAVE_HTSLIB=1 install
+            popd
+        fi
 
-        tar xvfz spades.20241226.tar.gz
-        pushd spades
-           ./spades_compile.sh
-        popd
+        # install spades
+        if true ; then
+            tar xvfz spades.20241226.tar.gz
+            pushd spades
+               ./spades_compile.sh
+            popd
+        fi
     popd
 
     mkdir -p /scratch/local

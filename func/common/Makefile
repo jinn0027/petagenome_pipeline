@@ -22,7 +22,8 @@ test1 :
 
 test3 : el9.sbx
 	@mkdir -p /tmp/work -m 777
-	singularity shell --fakeroot --writable --bind /scratch/local,../../external:/external,/tmp/work:/work el9.sbx
+	#singularity shell --fakeroot --writable --bind /scratch/local,../../external:/external,/tmp/work:/work el9.sbx
+	sudo /usr/local/bin/singularity shell --writable --bind /scratch/local,../../external:/external,/tmp/work:/work el9.sbx
 
 test4 : el9.sbx
 	@mkdir -p /tmp/work -m 777
