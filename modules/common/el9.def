@@ -30,7 +30,7 @@ From: almalinux:9
         # install nextflow
         if true ; then
             curl -s https://get.nextflow.io | bash
-            chmod +x nextflow
+            chmod +rx nextflow
             mv nextflow /usr/local/bin
         fi
 	
