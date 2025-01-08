@@ -57,3 +57,7 @@ test11 : el9.sbx
 	@mkdir -p /tmp/work -m 777
 	sudo /usr/local/bin/singularity run --bind /scratch/local,../../external:/external,/tmp/work:/work el9.sbx
 
+test12 : el9.sif
+	@mkdir -p /tmp/work -m 777
+	sudo /usr/local/bin/singularity shell --bind /scratch/local,../../external:/external,/tmp/work:/work el9.sif
+
