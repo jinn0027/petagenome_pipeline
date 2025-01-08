@@ -14,7 +14,7 @@ el9.sif : el9.sbx
 	sudo /usr/local/bin/singularity build el9.sif el9.sbx
 	#singularity build --fakeroot el9.sif el9.sbx
 
-test1 :
+test1 : el9.sif
 	singularity shell el9.sif
 
 #test2 : el9.sbx
