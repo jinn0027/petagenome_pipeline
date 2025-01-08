@@ -1,0 +1,29 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/fastqc_v0.12.1.zip /opt
+
+%post
+    dnf -y install unzip
+    
+    pushd /opt
+
+        # install fastqc
+        if true ; then
+            unzip fastqc_v0.12.1.zip
+        fi
+    popd
+
+    mkdir -p /scratch/local
+    mkdir -p /external
+    mkdir -p /work
+
+%environment
+    export PATH=/opt/FastQC:$PATH
+
+%runscript
+    echo "PATH=$PATH"
+    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
