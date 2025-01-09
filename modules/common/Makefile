@@ -1,4 +1,4 @@
-all : el9.sbx
+all : el9.sbx el9.sif
 
 clean :
 	sudo rm -rf el9.sbx el9.sif build-temp-*
@@ -7,11 +7,11 @@ clean :
 #	singularity build --fakeroot el9.sif el9.def
 
 el9.sbx : el9.def
-	sudo /usr/local/bin/singularity build --sandbox el9.sbx el9.def
+	sudo /usr/local/bin/singularity build --fix-perms --sandbox el9.sbx el9.def
 	#singularity build --fakeroot --sandbox el9.sbx el9.def
 
 el9.sif : el9.sbx
-	sudo /usr/local/bin/singularity build el9.sif el9.sbx
+	sudo /usr/local/bin/singularity build --fix-perms el9.sif el9.sbx
 	#singularity build --fakeroot el9.sif el9.sbx
 
 test1 : el9.sif

@@ -1,4 +1,4 @@
-all : fastqc.sbx
+all : fastqc.sbx fastqc.sif
 
 clean :
 	sudo rm -rf fastqc.sbx fastqc.sif build-temp-*
@@ -11,10 +11,21 @@ fastqc.sif : fastqc.sbx
 	sudo /usr/local/bin/singularity build --fix-perms fastqc.sif fastqc.sbx
 	#singularity build --fakeroot fastqc.sif fastqc.sbx
 
-test1 : fastqc.sif
+test1 : fastqc.sbx
+	@mkdir -p /tmp/work -m 777
+	#singularity shell --fakeroot --writable --bind /scratch/local,../../external:/external,/tmp/work:/work fastqc.sbx
+	sudo /usr/local/bin/singularity shell --writable --bind /scratch/local,../../external:/external,/tmp/work:/work fastqc.sbx
+
+test2 : fastqc.sbx
+	@mkdir -p /tmp/work -m 777
+	#singularity shell --fakeroot --writable --bind /scratch/local,../../external:/external,/tmp/work:/work fastqc.sbx
+	/usr/local/bin/singularity shell --writable --bind /scratch/local,../../external:/external,/tmp/work:/work fastqc.sbx
+
+
+test3 : fastqc.sif
 	singularity shell fastqc.sif
 
-test2 : fastqc.sif
+test4 : fastqc.sif
 	@mkdir -p /tmp/work -m 777
 	sudo /usr/local/bin/singularity shell --bind /scratch/local,../../external:/external,/tmp/work:/work fastqc.sif
 
