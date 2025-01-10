@@ -16,9 +16,9 @@ From: almalinux:9
         fi
     popd
 
-    mkdir -p /scratch/local
-    mkdir -p /external
-    mkdir -p /work
+    #mkdir -p /scratch/local
+    #mkdir -p /external
+    #mkdir -p /work
 
 %environment
     export PATH=/opt/prinseq:$PATH

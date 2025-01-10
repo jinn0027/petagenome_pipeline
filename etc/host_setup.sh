@@ -1,20 +1,25 @@
 #!/bin/bash
 
 # singularityにgo必要なのでインストール
-wget https://go.dev/dl/go1.23.3.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.23.3.linux-amd64.tar.gz
+if [ ! -d /usr/local/go ] ; then
+    if [ ! -f go1.23.3.linux-amd64.tar.gz ] ; then
+	wget https://go.dev/dl/go1.23.3.linux-amd64.tar.gz
+    fi
+    sudo tar -C /usr/local -xzf go1.23.3.linux-amd64.tar.gz
+fi
 export PATH=/usr/local/go/bin:$PATH
 
 sudo yum -y groupinstall 'Development Tools'
 sudo yum -y install openssl-devel libuuid-devel libseccomp-devel \
                     wget squashfs-tools glib2-devel-2.68.4-14.el9_4.1.x86_64 \
                     fuse3-devel-3.10.2-9.el9.x86_64
-wget https://github.com/sylabs/singularity/releases/download/v4.2.2/singularity-ce-4.2.2.tar.gz
 
 # singularityインストール
 
-tar xvfz singularity-ce-4.2.2.tar.gz
-cd singularity-ce-4.2.2
+if [ ! -d singularity ] ; then
+    git clone https://github.com/sylabs/singularity.git -b v4.2.2 --recursive
+fi
+cd singularity
 ./mconfig
 make -C ./builddir
 sudo make -C ./builddir install

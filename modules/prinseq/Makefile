@@ -11,10 +11,17 @@ prinseq.sif : prinseq.sbx
 	sudo /usr/local/bin/singularity build --fix-perms prinseq.sif prinseq.sbx
 	#singularity build --fakeroot prinseq.sif prinseq.sbx
 
-test1 : prinseq.sif
-	singularity shell prinseq.sif
+test1 : prinseq.sbx
+	singularity shell prinseq.sbx
 
 test2 : prinseq.sif
 	@mkdir -p /tmp/work -m 777
 	sudo /usr/local/bin/singularity shell --bind /scratch/local,../../external:/external,/tmp/work:/work prinseq.sif
+
+test3 : prinseq.sif
+	/usr/local/bin/singularity -d shell --fakeroot prinseq.sif
+
+test4 : prinseq.sif
+	/usr/local/bin/singularity exec --fakeroot prinseq.sif echo hello
+
 

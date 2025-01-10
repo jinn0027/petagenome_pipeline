@@ -90,5 +90,5 @@ https://ftp.ncbi.nlm.nih.gov/blast/executables/magicblast/1.7.2/ncbi-magicblast-
 https://go.dev/dl/go1.23.3.linux-amd64.tar.gz
 
 [singularity]
-https://github.com/sylabs/singularity/releases/download/v4.2.1/singularity-ce-4.2.1.tar.gz
-
+#https://github.com/sylabs/singularity/releases/download/v4.2.2/singularity-ce-4.2.2.tar.gz
+git clone https://github.com/sylabs/singularity.git -b v4.2.2 --recursive
