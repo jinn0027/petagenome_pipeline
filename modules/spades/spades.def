@@ -4,7 +4,7 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/spades.20241226.tar.gz /opt
+    ../../external/spades.20250110.tar.gz /opt
 
 %post
     dnf -y install python3-devel pip \
@@ -14,7 +14,7 @@ From: almalinux:9
     pushd /opt
         # install spades
         if true ; then
-            tar xvfz spades.20241226.tar.gz
+            tar xvfz spades.20250110.tar.gz
             pushd spades
                ./spades_compile.sh
             popd
