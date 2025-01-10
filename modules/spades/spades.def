@@ -1,0 +1,31 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/spades.20241226.tar.gz /opt
+
+%post
+    dnf -y install python3-devel pip \
+                   gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
+                   xz-devel autoconf automake bzip2-devel \
+
+    pushd /opt
+        # install spades
+        if true ; then
+            tar xvfz spades.20241226.tar.gz
+            pushd spades
+               ./spades_compile.sh
+            popd
+        fi
+    popd
+
+%environment
+    export PATH=/opt/spades/bin:$PATH
+
+%runscript
+    echo "PATH=$PATH"
+    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    ls /opt/prinseq
+    
