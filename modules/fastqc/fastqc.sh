@@ -2,6 +2,6 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/singularity exec ${MY_DIR}/fastqc.sif /opt/FastQC/fastqc --version
+/usr/local/bin/singularity exec --fakeroot ${MY_DIR}/fastqc.sif /opt/FastQC/fastqc --version
 
 

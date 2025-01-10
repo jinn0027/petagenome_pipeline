@@ -1,0 +1,26 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/cutadapt.20241224.tar.gz /opt
+
+%post
+    dnf -y install python3-devel pip
+
+    pushd /opt
+        # install cutadapt
+        if true ; then
+            tar xvfz cutadapt.20241224.tar.gz
+            pip install cutadapt
+        fi
+    popd
+
+%environment
+
+%runscript
+    echo "PATH=$PATH"
+    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    ls /opt/prinseq
+    
