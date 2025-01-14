@@ -13,6 +13,7 @@ From: almalinux:9
         # install prinseq
         if true ; then
             tar xvfz prinseq.20250110.tar.gz
+	    chmod +x prinseq/*.pl
         fi
     popd
 
@@ -20,7 +21,4 @@ From: almalinux:9
     export PATH=/opt/prinseq:$PATH
 
 %runscript
-    echo "PATH=$PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    ls /opt/prinseq
-    
+    prinseq-lite.pl -h
