@@ -12,6 +12,9 @@ ncbi-blast.sif : ncbi-blast.sbx
 shell : ncbi-blast.sbx
 	sudo /usr/local/bin/singularity shell --writable ncbi-blast.sbx
 
-hello : ncbi-blast.sif
-	/usr/local/bin/singularity exec --fakeroot ncbi-blast.sif echo hello
+help : ncbi-blast.sif
+	/usr/local/bin/singularity exec --fakeroot ncbi-blast.sif blastn -help
+
+version : ncbi-blast.sif
+	/usr/local/bin/singularity exec --fakeroot ncbi-blast.sif blastn -version
 
