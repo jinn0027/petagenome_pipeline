@@ -39,4 +39,7 @@ mv ncbi-blast-2.16.0+-x64-linux.tar.gz ncbi-blast-2.16.0+-x64-linux.${date}.tar.
 wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip
 mv fastqc_v0.12.1.zip fastqc_v0.12.1.${date}.zip
 
+wget https://zenodo.org/record/1168727/files/virsorter-data-v2.tar.gz
+tar xvfz virsorter-data-v2.tar.gz
+
 popd
