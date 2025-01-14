@@ -12,6 +12,8 @@ falco.sif : falco.sbx
 shell : falco.sbx
 	sudo /usr/local/bin/singularity shell --writable falco.sbx
 
-hello : falco.sif
-	/usr/local/bin/singularity exec --fakeroot falco.sif echo hello
+help : falco.sif
+	/usr/local/bin/singularity exec --fakeroot falco.sif falco -h
 
+version : falco.sif
+	/usr/local/bin/singularity exec --fakeroot falco.sif falco -v
