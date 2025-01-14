@@ -25,7 +25,4 @@ From: almalinux:9
     export PATH=/opt/spades/bin:$PATH
 
 %runscript
-    echo "PATH=$PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    ls /opt/prinseq
-    
+    spades.py -h
