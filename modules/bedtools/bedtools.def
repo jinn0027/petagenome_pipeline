@@ -15,7 +15,7 @@ From: almalinux:9
         # install bedtools
         if true ; then
             tar xvfz bedtools2.20250110.tar.gz
-            pushd bedtools
+            pushd bedtools2
             popd
         fi
     popd

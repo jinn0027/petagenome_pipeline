@@ -15,7 +15,7 @@ From: almalinux:9
         # install virsorter
         if true ; then
             tar xvfz VirSorter.20250110.tar.gz
-            pushd virsorter
+            pushd VirSorter
             popd
         fi
     popd

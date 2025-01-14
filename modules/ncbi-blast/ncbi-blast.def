@@ -15,7 +15,7 @@ From: almalinux:9
         # install ncbi-blast
         if true ; then
             tar xvfz ncbi-blast-2.16.0+-x64-linux.20250110.tar.gz
-            pushd ncbi-blast
+            pushd ncbi-blast-2.16.0+
             popd
         fi
     popd

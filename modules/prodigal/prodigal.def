@@ -7,15 +7,15 @@ From: almalinux:9
     ../../external/Prodigal.20250110.tar.gz /opt
 
 %post
-    dnf -y install python3-devel pip \
-                   gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
-                   xz-devel autoconf automake bzip2-devel \
+    dnf -y install gcc-c++ make-4.3
 
     pushd /opt
         # install prodigal
         if true ; then
             tar xvfz Prodigal.20250110.tar.gz
-            pushd prodigal
+            pushd Prodigal
+	    make -j$(nproc)
+	    make install
             popd
         fi
     popd
@@ -23,7 +23,4 @@ From: almalinux:9
 %environment
 
 %runscript
-    echo "PATH=$PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    ls /opt/prodigal
-    
+    prodigal -h

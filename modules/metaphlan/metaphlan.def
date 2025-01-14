@@ -15,7 +15,7 @@ From: almalinux:9
         # install metaphlan
         if true ; then
             tar xvfz MetaPhlAn.20250110.tar.gz
-            pushd metaphlan
+            pushd MetaPhlAn
             popd
         fi
     popd

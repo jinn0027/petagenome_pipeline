@@ -15,7 +15,7 @@ From: almalinux:9
         # install bbmap
         if true ; then
             tar xvfz BBMap.20250110.tar.gz
-            pushd bbmap
+            pushd BBMap
             popd
         fi
     popd
