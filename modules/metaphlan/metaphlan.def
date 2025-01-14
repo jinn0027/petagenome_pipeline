@@ -4,7 +4,7 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/MetaPhlAn.20250110.tar.gz /opt
+    ../../external/MetaPhlAn.tar.gz /opt
 
 %post
     dnf -y install python3-devel pip \
@@ -14,7 +14,7 @@ From: almalinux:9
     pushd /opt
         # install metaphlan
         if true ; then
-            tar xvfz MetaPhlAn.20250110.tar.gz
+            tar xvfz MetaPhlAn.tar.gz
             pushd MetaPhlAn
             popd
         fi

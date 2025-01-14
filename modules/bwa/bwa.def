@@ -4,7 +4,7 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/bwa.20250110.tar.gz /opt
+    ../../external/bwa.tar.gz /opt
 
 %post
     dnf -y install python3-devel pip \
@@ -14,7 +14,7 @@ From: almalinux:9
     pushd /opt
         # install bwa
         if true ; then
-            tar xvfz bwa.20250110.tar.gz
+            tar xvfz bwa.tar.gz
             pushd bwa
             popd
         fi

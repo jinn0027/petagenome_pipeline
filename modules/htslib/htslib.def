@@ -4,7 +4,7 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/htslib.20250110.tar.gz /opt
+    ../../external/htslib.tar.gz /opt
 
 %post
     dnf -y install python3-devel pip \
@@ -14,7 +14,7 @@ From: almalinux:9
     pushd /opt
         # install htslib
         if true ; then
-            tar xvfz htslib.20250110.tar.gz
+            tar xvfz htslib.tar.gz
             pushd htslib
             popd
         fi

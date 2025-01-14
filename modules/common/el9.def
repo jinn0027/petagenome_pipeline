@@ -4,13 +4,13 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/htslib.20250110.tar.gz /opt
-    ../../external/cutadapt.20250110.tar.gz /opt
-    ../../external/prinseq.20250110.tar.gz /opt
-    ../../external/fastqc_v0.12.1.20250110.zip /opt
-    ../../external/spades.20250110.tar.gz /opt
-    ../../external/ncbi-blast-2.16.0+-x64-linux.20250110.tar.gz /opt
-    ../../external/falco.20250110.tar.gz /opt
+    ../../external/htslib.tar.gz /opt
+    ../../external/cutadapt.tar.gz /opt
+    ../../external/prinseq.tar.gz /opt
+    ../../external/fastqc_v0.12.1.zip /opt
+    ../../external/spades.tar.gz /opt
+    ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
+    ../../external/falco.tar.gz /opt
 
 %post
     dnf -y install epel-release \
@@ -36,7 +36,7 @@ From: almalinux:9
         # install htslib
         # cf) https://kazumaxneo.hatenablog.com/entry/2024/05/10/024009
         if true ; then
-            tar xvfz htslib.20250110.tar.gz
+            tar xvfz htslib.tar.gz
             pushd htslib
                 autoheader
                 autoreconf -i
@@ -48,7 +48,7 @@ From: almalinux:9
 
         # install ncbi-blast
         if true ; then
-            tar xvfz ncbi-blast-2.16.0+-x64-linux.20250110.tar.gz
+            tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
             #tar xvfz ncbi-blast-2.16.0+-src.tar.gz
             #pushd ncbi-blast-2.16.0+-src/c++
             #      ./configure
@@ -59,24 +59,24 @@ From: almalinux:9
 
         # install cutadapt
         if true ; then
-            tar xvfz cutadapt.20250110.tar.gz
+            tar xvfz cutadapt.tar.gz
             pip install cutadapt
         fi
 
         # install prinseq
         if true ; then
-            tar xvfz prinseq.20250110.tar.gz
+            tar xvfz prinseq.tar.gz
         fi
 
         # install fastqc
         if true ; then
-            unzip fastqc_v0.12.1.20250110.zip
+            unzip fastqc_v0.12.1.zip
         fi
 
         # install falco
         # cf) https://kazumaxneo.hatenablog.com/entry/2024/04/20/011400
         if true ; then
-            tar xvfz falco.20250110.tar.gz
+            tar xvfz falco.tar.gz
             pushd falco
                 ./autogen.sh
                 ./configure CXXFLAGS="-O3 -Wall" --enable-hts

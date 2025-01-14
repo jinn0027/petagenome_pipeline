@@ -4,7 +4,7 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/bcftools.20250110.tar.gz /opt
+    ../../external/bcftools.tar.gz /opt
 
 %post
     dnf -y install python3-devel pip \
@@ -14,7 +14,7 @@ From: almalinux:9
     pushd /opt
         # install bcftools
         if true ; then
-            tar xvfz bcftools.20250110.tar.gz
+            tar xvfz bcftools.tar.gz
             pushd bcftools
             popd
         fi

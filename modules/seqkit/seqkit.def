@@ -4,7 +4,7 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/seqkit.20250110.tar.gz /opt
+    ../../external/seqkit.tar.gz /opt
 
 %post
     dnf -y install python3-devel pip \
@@ -14,7 +14,7 @@ From: almalinux:9
     pushd /opt
         # install seqkit
         if true ; then
-            tar xvfz seqkit.20250110.tar.gz
+            tar xvfz seqkit.tar.gz
             pushd seqkit
             popd
         fi

@@ -1,0 +1,41 @@
+all :
+	make -C bbmap all
+	make -C bcftools all
+	make -C bedtools all
+	make -C bwa all
+	make -C cdhit all
+	make -C cutadapt all
+	make -C falco all
+	make -C fastqc all
+	make -C hmmer all
+	make -C htslib all
+	make -C metaphlan all
+	make -C ncbi-blast all
+	make -C ppsplus all
+	make -C prinseq all
+	make -C prodigal all
+	make -C samtools all
+	make -C seqkit all
+	make -C spades all
+	make -C virsorter all
+
+clean :
+	make -C bbmap clean
+	make -C bcftools clean
+	make -C bedtools clean
+	make -C bwa clean
+	make -C cdhit clean
+	make -C cutadapt clean
+	make -C falco clean
+	make -C fastqc clean
+	make -C hmmer clean
+	make -C htslib clean
+	make -C metaphlan clean
+	make -C ncbi-blast clean
+	make -C ppsplus clean
+	make -C prinseq clean
+	make -C prodigal clean
+	make -C samtools clean
+	make -C seqkit clean
+	make -C spades clean
+	make -C virsorter clean

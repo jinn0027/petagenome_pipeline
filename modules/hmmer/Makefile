@@ -12,6 +12,9 @@ hmmer.sif : hmmer.sbx
 shell : hmmer.sbx
 	sudo /usr/local/bin/singularity shell --writable hmmer.sbx
 
-hello : hmmer.sif
-	/usr/local/bin/singularity exec --fakeroot hmmer.sif echo hello
+help : hmmer.sif
+	/usr/local/bin/singularity exec --fakeroot hmmer.sif jackhmmer -h
+
+version : hmmer.sif
+	/usr/local/bin/singularity exec --fakeroot hmmer.sif jackhmmer -h | head -n 2
 

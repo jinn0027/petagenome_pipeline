@@ -4,7 +4,7 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/bedtools2.20250110.tar.gz /opt
+    ../../external/bedtools2.tar.gz /opt
 
 %post
     dnf -y install python3-devel pip \
@@ -14,7 +14,7 @@ From: almalinux:9
     pushd /opt
         # install bedtools
         if true ; then
-            tar xvfz bedtools2.20250110.tar.gz
+            tar xvfz bedtools2.tar.gz
             pushd bedtools2
             popd
         fi

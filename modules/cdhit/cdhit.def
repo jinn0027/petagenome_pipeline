@@ -4,7 +4,7 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/cdhit.20250110.tar.gz /opt
+    ../../external/cdhit.tar.gz /opt
 
 %post
     dnf -y install python3-devel pip \
@@ -14,7 +14,7 @@ From: almalinux:9
     pushd /opt
         # install cdhit
         if true ; then
-            tar xvfz cdhit.20250110.tar.gz
+            tar xvfz cdhit.tar.gz
             pushd cdhit
             popd
         fi

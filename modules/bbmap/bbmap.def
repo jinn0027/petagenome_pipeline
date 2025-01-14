@@ -4,7 +4,7 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/BBMap.20250110.tar.gz /opt
+    ../../external/BBMap.tar.gz /opt
 
 %post
     dnf -y install python3-devel pip \
@@ -14,7 +14,7 @@ From: almalinux:9
     pushd /opt
         # install bbmap
         if true ; then
-            tar xvfz BBMap.20250110.tar.gz
+            tar xvfz BBMap.tar.gz
             pushd BBMap
             popd
         fi
