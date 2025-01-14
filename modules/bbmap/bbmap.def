@@ -1,0 +1,29 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/BBMap.20250110.tar.gz /opt
+
+%post
+    dnf -y install python3-devel pip \
+                   gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
+                   xz-devel autoconf automake bzip2-devel \
+
+    pushd /opt
+        # install bbmap
+        if true ; then
+            tar xvfz BBMap.20250110.tar.gz
+            pushd bbmap
+            popd
+        fi
+    popd
+
+%environment
+
+%runscript
+    echo "PATH=$PATH"
+    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    ls /opt/bbmap
+    
