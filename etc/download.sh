@@ -20,7 +20,8 @@ git clone https://github.com/samtools/bcftools -b 1.21 --recursive
 git clone https://github.com/BioInfoTools/BBMap -b v36.20 --recursive
 git clone https://github.com/hyattpd/Prodigal -b v2.6.3 --recursive
 git clone https://github.com/algbioi/ppsplus --recursive
-git clone https://github.com/falcosecurity/falco -b v0.2.0 --recursive
+#git clone https://github.com/falcosecurity/falco -b v0.2.0 --recursive
+git clone https://github.com/falcosecurity/falco --recursive
 git clone https://github.com/lh3/bwa -b v0.7.18 --recursive
 
 for i in $(ls)
