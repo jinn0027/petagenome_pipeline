@@ -8,7 +8,8 @@ From: almalinux:9
     ../../external/MetaPhlAn.tar.gz /opt
 
 %post
-    dnf -y install gcc-c++
+    dnf -y install \
+        gcc-c++-11.5.0-2.el9.alma.1
 
     pushd /opt
         # install miniconda
@@ -21,14 +22,12 @@ From: almalinux:9
             python=3
 	    
         # install metaphlan
-        if true ; then
-            tar xvfz MetaPhlAn.tar.gz
-            /opt/miniconda3/bin/pip install -e MetaPhlAn
-        fi
+        tar xvfz MetaPhlAn.tar.gz
+        /opt/miniconda3/bin/pip install -e MetaPhlAn
     popd
 
 %environment
     export PATH=/opt/miniconda3/bin:$PATH
 
 %runscript
-    metaphlan -h   
+    metaphlan --help   
