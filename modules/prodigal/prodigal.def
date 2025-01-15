@@ -7,17 +7,17 @@ From: almalinux:9
     ../../external/Prodigal.tar.gz /opt
 
 %post
-    dnf -y install gcc-c++ make-4.3
+    dnf -y install \
+        gcc-c++-11.5.0-2.el9.alma.1 \
+        make-1:4.3-8.el9
 
     pushd /opt
         # install prodigal
-        if true ; then
-            tar xvfz Prodigal.tar.gz
-            pushd Prodigal
-	    make -j$(nproc)
+        tar xvfz Prodigal.tar.gz
+        pushd Prodigal
+            make -j$(nproc)
 	    make install
-            popd
-        fi
+        popd
     popd
 
 %environment
