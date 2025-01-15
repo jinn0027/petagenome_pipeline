@@ -1,0 +1,31 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/diamond.tar.gz /opt
+
+%post
+    dnf -y install gcc-c++ zlib-devel-1.2.11 make-4.3 cmake
+
+    pushd /opt
+        # install diamond
+        if true ; then
+            tar xvfz diamond.tar.gz
+            pushd diamond
+                mkdir build
+                pushd build
+                    cmake ..
+                    make -j$(nproc)
+                    make install
+                popd
+            popd
+        fi
+    popd
+
+%environment
+
+%runscript
+    diamond help
+    
