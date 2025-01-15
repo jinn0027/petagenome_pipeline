@@ -12,6 +12,9 @@ cdhit.sif : cdhit.sbx
 shell : cdhit.sbx
 	sudo /usr/local/bin/singularity shell --writable cdhit.sbx
 
-hello : cdhit.sif
-	/usr/local/bin/singularity exec --fakeroot cdhit.sif echo hello
+help : cdhit.sif
+	/usr/local/bin/singularity exec --fakeroot cdhit.sif cd-hit --help
+
+version : cdhit.sif
+	/usr/local/bin/singularity exec --fakeroot cdhit.sif cd-hit --help | head -n 1
 

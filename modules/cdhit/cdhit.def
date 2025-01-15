@@ -7,15 +7,19 @@ From: almalinux:9
     ../../external/cdhit.tar.gz /opt
 
 %post
-    dnf -y install python3-devel pip \
-                   gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
-                   xz-devel autoconf automake bzip2-devel \
+    dnf -y install gcc-c++ make-4.3 zlib-devel-1.2.11
 
     pushd /opt
         # install cdhit
         if true ; then
             tar xvfz cdhit.tar.gz
             pushd cdhit
+	        make -j$(nproc)
+	        make install
+	        pushd cd-hit-auxtools
+                    make -j$(nproc)
+		    cp -f cd-hit-dup cd-hit-lap read-linker /usr/local/bin
+		popd
             popd
         fi
     popd
@@ -23,7 +27,6 @@ From: almalinux:9
 %environment
 
 %runscript
-    echo "PATH=$PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    ls /opt/cdhit
+    cd-hit --help
+
     
