@@ -7,23 +7,21 @@ From: almalinux:9
     ../../external/bwa.tar.gz /opt
 
 %post
-    dnf -y install python3-devel pip \
-                   gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
-                   xz-devel autoconf automake bzip2-devel \
+    dnf -y install gcc-c++ make-4.3 zlib-devel-1.2.11 \
 
     pushd /opt
         # install bwa
         if true ; then
             tar xvfz bwa.tar.gz
             pushd bwa
+                make -j$(nproc)
+                #make install
             popd
         fi
     popd
 
 %environment
+    export PATH=/opt/bwa:$PATH
 
 %runscript
-    echo "PATH=$PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    ls /opt/bwa
-    
+    bwa

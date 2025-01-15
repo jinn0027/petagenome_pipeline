@@ -12,6 +12,10 @@ bwa.sif : bwa.sbx
 shell : bwa.sbx
 	sudo /usr/local/bin/singularity shell --writable bwa.sbx
 
-hello : bwa.sif
-	/usr/local/bin/singularity exec --fakeroot bwa.sif echo hello
+help : bwa.sif
+	/usr/local/bin/singularity exec --fakeroot bwa.sif bwa
+
+version : bwa.sif
+	/usr/local/bin/singularity exec --fakeroot bwa.sif bwa | head -n 2
+
 
