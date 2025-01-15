@@ -4,24 +4,25 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/BBMap.tar.gz /opt
+    ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
 
 %post
-    dnf -y install java-21-openjdk
-
     pushd /opt
+        # install miniconda
+	sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+
+        # install python libraries
+        /opt/miniconda3/bin/conda config --add channels conda-forge
+	/opt/miniconda3/bin/conda config --append channels bioconda
+        
         # install bbmap
         if true ; then
-            tar xvfz BBMap.tar.gz
-            pushd BBMap
-            popd
+	    /opt/miniconda3/bin/conda install -y bbmap=39.13
         fi
     popd
 
 %environment
+    export PATH=/opt/miniconda3/bin:$PATH
 
 %runscript
-    echo "PATH=$PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    ls /opt/bbmap
-    
+    bbmap.sh --help

@@ -12,6 +12,9 @@ bbmap.sif : bbmap.sbx
 shell : bbmap.sbx
 	sudo /usr/local/bin/singularity shell --writable bbmap.sbx
 
-hello : bbmap.sif
-	/usr/local/bin/singularity exec --fakeroot bbmap.sif echo hello
+help : bbmap.sif
+	/usr/local/bin/singularity exec --fakeroot bbmap.sif bbmap.sh --help
+
+version : bbmap.sif
+	/usr/local/bin/singularity exec --fakeroot bbmap.sif bbmap.sh --version
 
