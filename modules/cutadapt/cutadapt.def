@@ -7,7 +7,8 @@ From: almalinux:9
     ../../external/cutadapt.tar.gz /opt
 
 %post
-    dnf -y install python3-devel-3.9.21-1.el9_5
+    dnf -y install \
+        python3-devel-3.9.21-1.el9_5
 
     pushd /opt
         # install cutadapt
