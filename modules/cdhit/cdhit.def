@@ -7,21 +7,23 @@ From: almalinux:9
     ../../external/cdhit.tar.gz /opt
 
 %post
-    dnf -y install gcc-c++ make-4.3 zlib-devel-1.2.11
+    dnf -y install \
+        gcc-c++-11.5.0-2.el9.alma.1 \
+        make-1:4.3-8.el9 \
+        zlib-devel-1.2.11
 
     pushd /opt
         # install cdhit
-        if true ; then
-            tar xvfz cdhit.tar.gz
-            pushd cdhit
-	        make -j$(nproc)
-	        make install
-	        pushd cd-hit-auxtools
-                    make -j$(nproc)
-		    cp -f cd-hit-dup cd-hit-lap read-linker /usr/local/bin
-		popd
+        tar xvfz cdhit.tar.gz
+        pushd cdhit
+            make -j$(nproc)
+            make install
+            # install auxtools
+            pushd cd-hit-auxtools
+                make -j$(nproc)
+                cp -f cd-hit-dup cd-hit-lap read-linker /usr/local/bin
             popd
-        fi
+        popd
     popd
 
 %environment
