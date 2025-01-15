@@ -12,6 +12,8 @@ bedtools.sif : bedtools.sbx
 shell : bedtools.sbx
 	sudo /usr/local/bin/singularity shell --writable bedtools.sbx
 
-hello : bedtools.sif
-	/usr/local/bin/singularity exec --fakeroot bedtools.sif echo hello
+help : bedtools.sif
+	/usr/local/bin/singularity exec --fakeroot bedtools.sif bedtools --help
 
+version : bedtools.sif
+	/usr/local/bin/singularity exec --fakeroot bedtools.sif bedtools --version

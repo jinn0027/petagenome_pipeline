@@ -11,7 +11,6 @@ all :
 	make -C hmmer all
 	make -C metaphlan all
 	make -C ncbi-blast all
-	make -C ppsplus all
 	make -C prinseq all
 	make -C prodigal all
 	make -C samtools all
@@ -33,7 +32,6 @@ clean :
 	make -C htslib clean
 	make -C metaphlan clean
 	make -C ncbi-blast clean
-	make -C ppsplus clean
 	make -C prinseq clean
 	make -C prodigal clean
 	make -C samtools clean
