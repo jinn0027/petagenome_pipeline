@@ -29,6 +29,10 @@ git clone https://github.com/algbioi/ppsplus --recursive
 git clone https://github.com/falcosecurity/falco --recursive
 git clone https://github.com/lh3/bwa -b v0.7.18 --recursive
 git clone https://github.com/bbuchfink/diamond -b v2.1.10 --recursive
+git clone https://github.com/BenLangmead/bowtie -b v1.3.1 --recursive
+git clone https://github.com/BenLangmead/bowtie2 -b v2.5.4 --recursive
+git clone https://github.com/ncbi/sra-tools -b 3.2.0 --recursive
+git clone https://github.com/ncbi/ncbi-vdb -b 3.2.0 --recursive
 
 for i in $(ls)
 do

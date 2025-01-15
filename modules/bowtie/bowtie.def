@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/bowtie.tar.gz /opt
+
+%post
+    dnf -y install gcc-c++ make-4.3 zlib-devel-1.2.11
+   
+    #dnf -y install gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
+    #               xz-devel autoconf automake bzip2-devel \
+    #		   flex bison libxml2-devel java-21-openjdk-devel \
+     #              which perl
+   
+    pushd /opt
+        # install bowtie
+        if true ; then
+            tar xvfz bowtie.tar.gz
+            pushd bowtie
+                make -j$(nproc)
+                make install
+            popd
+        fi
+    popd
+
+%environment
+
+%runscript
+    bowtie --help
+    
