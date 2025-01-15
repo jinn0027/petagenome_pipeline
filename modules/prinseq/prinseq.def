@@ -19,4 +19,4 @@ From: almalinux:9
     export PATH=/opt/prinseq:$PATH
 
 %runscript
-    prinseq-lite.pl -h
+    prinseq-lite.pl -help
