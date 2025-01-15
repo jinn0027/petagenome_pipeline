@@ -9,8 +9,6 @@ From: almalinux:9
 
 %post
     dnf -y install gcc-c++
-    #make-4.3 zlib-devel-1.2.11 cmake \
-    #               xz-devel autoconf automake bzip2-devel \
 
     pushd /opt
         # install miniconda
@@ -25,15 +23,12 @@ From: almalinux:9
         # install metaphlan
         if true ; then
             tar xvfz MetaPhlAn.tar.gz
-            pushd MetaPhlAn
-            popd
+            /opt/miniconda3/bin/pip install -e MetaPhlAn
         fi
     popd
 
 %environment
+    export PATH=/opt/miniconda3/bin:$PATH
 
 %runscript
-    echo "PATH=$PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    ls /opt/metaphlan
-    
+    metaphlan -h   

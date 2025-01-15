@@ -12,6 +12,9 @@ metaphlan.sif : metaphlan.sbx
 shell : metaphlan.sbx
 	sudo /usr/local/bin/singularity shell --writable metaphlan.sbx
 
-hello : metaphlan.sif
-	/usr/local/bin/singularity exec --fakeroot metaphlan.sif echo hello
+help : metaphlan.sif
+	/usr/local/bin/singularity exec --fakeroot metaphlan.sif metaphlan -h
+
+version : metaphlan.sif
+	/usr/local/bin/singularity exec --fakeroot metaphlan.sif metaphlan -v
 
