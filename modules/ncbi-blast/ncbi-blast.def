@@ -9,7 +9,9 @@ From: almalinux:9
 %post
     pushd /opt
         # install ncbi-blast
+        echo "############ ncbi-blast ###############"
         tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
+	chown -R $(whoami) ncbi-blast-2.16.0+
     popd
 
 %environment

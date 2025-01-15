@@ -23,7 +23,9 @@ wget -O seqkit_linux_amd64.2.9.0.tar.gz  https://github.com/shenwei356/seqkit/re
 git clone https://github.com/samtools/samtools -b 1.21 --recursive
 git clone https://github.com/samtools/htslib -b 1.21 --recursive
 git clone https://github.com/samtools/bcftools -b 1.21 --recursive
+
 git clone https://github.com/BioInfoTools/BBMap -b v36.20 --recursive
+
 git clone https://github.com/hyattpd/Prodigal -b v2.6.3 --recursive
 git clone https://github.com/algbioi/ppsplus --recursive
 git clone https://github.com/falcosecurity/falco --recursive
