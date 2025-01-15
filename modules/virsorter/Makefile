@@ -12,6 +12,8 @@ virsorter.sif : virsorter.sbx
 shell : virsorter.sbx
 	sudo /usr/local/bin/singularity shell --writable virsorter.sbx
 
-hello : virsorter.sif
-	/usr/local/bin/singularity exec --fakeroot virsorter.sif echo hello
+help : virsorter.sif
+	/usr/local/bin/singularity exec --fakeroot virsorter.sif virsorter --help
 
+version : virsorter.sif
+	/usr/local/bin/singularity exec --fakeroot virsorter.sif virsorter --version
