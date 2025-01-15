@@ -8,35 +8,42 @@ From: almalinux:9
     ../../external/sra-tools.tar.gz /opt
 
 %post
-    dnf -y install gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
-                   xz-devel autoconf automake bzip2-devel \
-		   flex bison libxml2-devel java-21-openjdk-devel \
-                   which perl
+    dnf -y install \
+        gcc-c++-11.5.0-2.el9.alma.1 \
+        make-1:4.3-8.el9 \
+        zlib-devel-1.2.11 \
+        cmake-3.26.5-2.el9 \
+        xz-devel-5.2.5-8.el9_0 \
+        autoconf-2.69-39.el9 \
+        automake-1.16.2-8.el9 \
+        bzip2-devel-1.0.8-8.el9 \
+        flex-2.6.4-9.el9 \
+        bison-3.7.4-5.el9 \
+        libxml2-devel-2.9.13-6.el9_4 \
+        java-21-openjdk-devel-1:21.0.5.0.11-2.el9.alma.1 \
+        which-2.21-29.el9 \
+        perl-4:5.32.1-481.el9
 
     pushd /opt
         # install ncbi-vdb
-        if true ; then
-            tar xvfz ncbi-vdb.tar.gz
-            pushd ncbi-vdb
-                pushd build
-		    cmake ..
-                    make -j$(nproc)
-                    make install
-                popd
+        tar xvfz ncbi-vdb.tar.gz
+        pushd ncbi-vdb
+            pushd build
+                cmake ..
+                make -j$(nproc)
+                make install
             popd
-        fi
+        popd
 	
         # install sra-tools
-        if true ; then
-            tar xvfz sra-tools.tar.gz
-            pushd sra-tools
-                pushd build
-		    cmake .. -D VDB_LIBDIR=/usr/local/lib64 -D USE_SRA=1 -D USE_SAIS=1
-                    make -j$(nproc)
-                    make install
-                popd
+        tar xvfz sra-tools.tar.gz
+        pushd sra-tools
+            pushd build
+                cmake .. -D VDB_LIBDIR=/usr/local/lib64 -D USE_SRA=1 -D USE_SAIS=1
+                make -j$(nproc)
+                make install
             popd
-        fi
+        popd
     popd
 
 %environment

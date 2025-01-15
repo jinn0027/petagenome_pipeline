@@ -7,22 +7,18 @@ From: almalinux:9
     ../../external/bowtie.tar.gz /opt
 
 %post
-    dnf -y install gcc-c++ make-4.3 zlib-devel-1.2.11
-   
-    #dnf -y install gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
-    #               xz-devel autoconf automake bzip2-devel \
-    #		   flex bison libxml2-devel java-21-openjdk-devel \
-     #              which perl
+    dnf -y install \
+        gcc-c++-11.5.0-2.el9.alma.1 \
+        make-1:4.3-8.el9 \
+        zlib-devel-1.2.11
    
     pushd /opt
         # install bowtie
-        if true ; then
-            tar xvfz bowtie.tar.gz
-            pushd bowtie
-                make -j$(nproc)
-                make install
-            popd
-        fi
+        tar xvfz bowtie.tar.gz
+        pushd bowtie
+            make -j$(nproc)
+            make install
+        popd
     popd
 
 %environment
