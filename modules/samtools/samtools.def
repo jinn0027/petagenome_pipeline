@@ -8,36 +8,41 @@ From: almalinux:9
     ../../external/samtools.tar.gz /opt
 
 %post
-    dnf -y install python3-devel \
-                   gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
-                   xz-devel autoconf automake bzip2-devel \
-                   libcurl-devel ncurses-devel
+    dnf -y install \
+        python3-devel-3.9.21-1.el9_5 \
+        git-2.43.5-2.el9_5 \
+        gcc-c++-11.5.0-2.el9.alma.1 \
+        make-1:4.3-8.el9 \
+        zlib-devel-1.2.11 \
+        cmake-3.26.5-2.el9 \
+        xz-devel-5.2.5-8.el9_0 \
+        autoconf-2.69-39.el9 \
+        automake-1.16.2-8.el9 \
+        bzip2-devel-1.0.8-8.el9 \
+        libcurl-devel-7.76.1-31.el9 \
+        ncurses-devel-6.2-10.20210508.el9
                                 
     pushd /opt
         # install htslib
-        if true ; then
-            tar xvfz htslib.tar.gz
-            pushd htslib
-                autoreconf
-                ./configure
-                make -j$(nproc)
-                make install
-            popd
-        fi
+        tar xvfz htslib.tar.gz
+        pushd htslib
+            autoreconf
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
     
         # install samtools
-        if true ; then
-            tar xvfz samtools.tar.gz
-            pushd samtools
-                autoreconf
-                ./configure
-                make -j$(nproc)
-                make install
-            popd
-        fi
+        tar xvfz samtools.tar.gz
+        pushd samtools
+            autoreconf
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
     popd
 
 %environment
 
 %runscript
-    samtools --help    
+    samtools help    
