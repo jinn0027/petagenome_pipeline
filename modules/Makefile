@@ -2,6 +2,7 @@ all :
 	make -C bbmap all
 	make -C bcftools all
 	make -C bedtools all
+	make -C bowtie all
 	make -C bwa all
 	make -C cdhit all
 	make -C cutadapt all
@@ -22,6 +23,7 @@ clean :
 	make -C bbmap clean
 	make -C bcftools clean
 	make -C bedtools clean
+	make -C bowtie clean
 	make -C bwa clean
 	make -C cdhit clean
 	make -C cutadapt clean

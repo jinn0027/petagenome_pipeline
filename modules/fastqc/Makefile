@@ -13,7 +13,7 @@ shell : fastqc.sbx
 	sudo /usr/local/bin/singularity shell --writable fastqc.sbx
 
 help : fastqc.sif
-	/usr/local/bin/singularity exec --fakeroot fastqc.sif fastqc -h
+	/usr/local/bin/singularity exec --fakeroot fastqc.sif fastqc --help
 
 version : fastqc.sif
-	/usr/local/bin/singularity exec --fakeroot fastqc.sif fastqc -v
+	/usr/local/bin/singularity exec --fakeroot fastqc.sif fastqc --version

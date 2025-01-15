@@ -7,19 +7,19 @@ From: almalinux:9
     ../../external/fastqc_v0.12.1.zip /opt
 
 %post
-    dnf -y install unzip perl perl-FindBin java-21-openjdk
+    dnf -y install \
+        unzip-6.0-57.el9 \
+        java-21-openjdk-devel-1:21.0.5.0.11-2.el9.alma.1 \
+        perl-4:5.32.1-481.el9
 
     pushd /opt
-
         # install fastqc
-        if true ; then
-            unzip fastqc_v0.12.1.zip
-        fi
+        unzip fastqc_v0.12.1.zip
     popd
 
 %environment
     export PATH=/opt/FastQC:$PATH
 
 %runscript
-    fastqc -h
+    fastqc --help
     

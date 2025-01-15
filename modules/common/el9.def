@@ -19,7 +19,7 @@ From: almalinux:9
                    gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
                    xz-devel autoconf automake \
                    openmpi-devel.x86_64 bzip2-devel \
-                   ghostscript git java-21-openjdk \
+                   ghostscript git java-21-openjdk-devel \
                    perl perl-FindBin
 
     pip install -U pip setuptools

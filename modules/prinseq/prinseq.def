@@ -7,14 +7,12 @@ From: almalinux:9
     ../../external/prinseq.tar.gz /opt
 
 %post
-    dnf -y install perl perl-FindBin
+    dnf -y install perl-4:5.32.1-481.el9
 
     pushd /opt
         # install prinseq
-        if true ; then
-            tar xvfz prinseq.tar.gz
-	    chmod +x prinseq/*.pl
-        fi
+        tar xvfz prinseq.tar.gz
+        chmod +x prinseq/*.pl
     popd
 
 %environment
