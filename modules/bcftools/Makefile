@@ -13,8 +13,8 @@ shell : bcftools.sbx
 	sudo /usr/local/bin/singularity shell --writable bcftools.sbx
 
 help : bcftools.sif
-	/usr/local/bin/singularity exec --fakeroot bcftools.sif bcftools -h
+	/usr/local/bin/singularity exec --fakeroot bcftools.sif bcftools --help
 
 version : bcftools.sif
-	/usr/local/bin/singularity exec --fakeroot bcftools.sif bcftools -v
+	/usr/local/bin/singularity exec --fakeroot bcftools.sif bcftools --version
 
