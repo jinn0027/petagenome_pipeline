@@ -13,9 +13,9 @@ shell : bwa.sbx
 	sudo /usr/local/bin/singularity shell --writable bwa.sbx
 
 help : bwa.sif
-	/usr/local/bin/singularity exec --fakeroot bwa.sif bwa
+	/usr/local/bin/singularity exec --fakeroot bwa.sif bwa 2>&1
 
 version : bwa.sif
-	/usr/local/bin/singularity exec --fakeroot bwa.sif bwa | head -n 2
+	/usr/local/bin/singularity exec --fakeroot bwa.sif bwa 2>&1 | head -n 8
 
 
