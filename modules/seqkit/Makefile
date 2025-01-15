@@ -12,6 +12,9 @@ seqkit.sif : seqkit.sbx
 shell : seqkit.sbx
 	sudo /usr/local/bin/singularity shell --writable seqkit.sbx
 
-hello : seqkit.sif
-	/usr/local/bin/singularity exec --fakeroot seqkit.sif echo hello
+help : seqkit.sif
+	/usr/local/bin/singularity exec --fakeroot seqkit.sif seqkit -h
+
+version : seqkit.sif
+	/usr/local/bin/singularity exec --fakeroot seqkit.sif seqkit version
 

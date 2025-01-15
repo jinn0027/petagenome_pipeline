@@ -18,6 +18,8 @@ git clone https://github.com/EddyRivasLab/easel -b infernal-1.1.5 --recursive
 popd
 git clone https://github.com/arq5x/bedtools2 -b v2.31.1 --recursive
 git clone https://github.com/shenwei356/seqkit -b v2.9.0 --recursive
+wget -O seqkit_linux_amd64.2.9.0.tar.gz  https://github.com/shenwei356/seqkit/releases/download/v2.9.0/seqkit_linux_amd64.tar.gz
+
 git clone https://github.com/samtools/samtools -b 1.21 --recursive
 git clone https://github.com/samtools/htslib -b 1.21 --recursive
 git clone https://github.com/samtools/bcftools -b 1.21 --recursive

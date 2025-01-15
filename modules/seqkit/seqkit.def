@@ -4,26 +4,18 @@ From: almalinux:9
 %setup
 
 %files
-    ../../external/seqkit.tar.gz /opt
+    ../../external/seqkit_linux_amd64.2.9.0.tar.gz /opt
 
 %post
-    dnf -y install python3-devel pip \
-                   gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
-                   xz-devel autoconf automake bzip2-devel \
-
     pushd /opt
         # install seqkit
         if true ; then
-            tar xvfz seqkit.tar.gz
-            pushd seqkit
-            popd
+            tar xvfz seqkit_linux_amd64.2.9.0.tar.gz
+            mv -f seqkit /usr/local/bin
         fi
     popd
 
 %environment
 
 %runscript
-    echo "PATH=$PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    ls /opt/seqkit
-    
+    seqkit -h    
