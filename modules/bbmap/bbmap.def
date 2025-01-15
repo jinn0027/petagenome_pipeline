@@ -7,9 +7,7 @@ From: almalinux:9
     ../../external/BBMap.tar.gz /opt
 
 %post
-    dnf -y install python3-devel pip \
-                   gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
-                   xz-devel autoconf automake bzip2-devel \
+    dnf -y install java-21-openjdk
 
     pushd /opt
         # install bbmap

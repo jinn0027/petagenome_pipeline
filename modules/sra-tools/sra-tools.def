@@ -1,0 +1,46 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/ncbi-vdb.tar.gz /opt
+    ../../external/sra-tools.tar.gz /opt
+
+%post
+    dnf -y install gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
+                   xz-devel autoconf automake bzip2-devel \
+		   flex bison libxml2-devel java-21-openjdk-devel \
+                   which perl
+
+    pushd /opt
+        # install ncbi-vdb
+        if true ; then
+            tar xvfz ncbi-vdb.tar.gz
+            pushd ncbi-vdb
+                pushd build
+		    cmake ..
+                    make -j$(nproc)
+                    make install
+                popd
+            popd
+        fi
+	
+        # install sra-tools
+        if true ; then
+            tar xvfz sra-tools.tar.gz
+            pushd sra-tools
+                pushd build
+		    cmake .. -D VDB_LIBDIR=/usr/local/lib64 -D USE_SRA=1 -D USE_SAIS=1
+                    make -j$(nproc)
+                    make install
+                popd
+            popd
+        fi
+    popd
+
+%environment
+
+%runscript
+    sratools -h
+    
