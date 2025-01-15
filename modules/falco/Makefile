@@ -13,7 +13,7 @@ shell : falco.sbx
 	sudo /usr/local/bin/singularity shell --writable falco.sbx
 
 help : falco.sif
-	/usr/local/bin/singularity exec --fakeroot falco.sif falco -h
+	/usr/local/bin/singularity exec --fakeroot falco.sif falco --help
 
 version : falco.sif
-	/usr/local/bin/singularity exec --fakeroot falco.sif falco -v
+	/usr/local/bin/singularity exec --fakeroot falco.sif falco --version
