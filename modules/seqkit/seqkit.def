@@ -9,13 +9,11 @@ From: almalinux:9
 %post
     pushd /opt
         # install seqkit
-        if true ; then
-            tar xvfz seqkit_linux_amd64.2.9.0.tar.gz
-            mv -f seqkit /usr/local/bin
-        fi
+        tar xvfz seqkit_linux_amd64.2.9.0.tar.gz
+        mv -f seqkit /usr/local/bin
     popd
 
 %environment
 
 %runscript
-    seqkit -h    
+    seqkit --help    

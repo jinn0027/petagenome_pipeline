@@ -13,7 +13,7 @@ shell : samtools.sbx
 	sudo /usr/local/bin/singularity shell --writable samtools.sbx
 
 help : samtools.sif
-	/usr/local/bin/singularity exec --fakeroot samtools.sif samtools help
+	/usr/local/bin/singularity exec --fakeroot samtools.sif samtools --help
 
 version : samtools.sif
 	/usr/local/bin/singularity exec --fakeroot samtools.sif samtools version
