@@ -4,18 +4,35 @@ From: almalinux:9
 %setup
 
 %files
+    ../../external/htslib.tar.gz /opt
     ../../external/samtools.tar.gz /opt
 
 %post
-    dnf -y install python3-devel pip \
+    dnf -y install python3-devel \
                    gcc-c++ make-4.3 zlib-devel-1.2.11 cmake \
                    xz-devel autoconf automake bzip2-devel \
-
+                   libcurl-devel ncurses-devel
+                                
     pushd /opt
+        # install htslib
+        if true ; then
+            tar xvfz htslib.tar.gz
+            pushd htslib
+                autoreconf
+                ./configure
+                make -j$(nproc)
+                make install
+            popd
+        fi
+    
         # install samtools
         if true ; then
             tar xvfz samtools.tar.gz
             pushd samtools
+                autoreconf
+                ./configure
+                make -j$(nproc)
+                make install
             popd
         fi
     popd
@@ -23,7 +40,4 @@ From: almalinux:9
 %environment
 
 %runscript
-    echo "PATH=$PATH"
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    ls /opt/samtools
-    
+    samtools --help    

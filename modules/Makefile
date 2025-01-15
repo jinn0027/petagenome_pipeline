@@ -5,10 +5,10 @@ all :
 	make -C bwa all
 	make -C cdhit all
 	make -C cutadapt all
+	make -C diamond all
 	make -C falco all
 	make -C fastqc all
 	make -C hmmer all
-	make -C htslib all
 	make -C metaphlan all
 	make -C ncbi-blast all
 	make -C ppsplus all
@@ -26,6 +26,7 @@ clean :
 	make -C bwa clean
 	make -C cdhit clean
 	make -C cutadapt clean
+	make -C diamond clean
 	make -C falco clean
 	make -C fastqc clean
 	make -C hmmer clean
