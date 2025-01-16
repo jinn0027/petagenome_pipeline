@@ -1,22 +1,27 @@
-all : prodigal.sbx prodigal.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=prodigal.def
+SBX=prodigal.sbx
+SIF=prodigal.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf prodigal.sbx prodigal.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-prodigal.sbx : prodigal.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox prodigal.sbx prodigal.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-prodigal.sif : prodigal.sbx
-	sudo /usr/local/bin/singularity build --fix-perms prodigal.sif prodigal.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : prodigal.sbx
-	sudo /usr/local/bin/singularity shell --writable prodigal.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : prodigal.sif
-	/usr/local/bin/singularity exec --fakeroot prodigal.sif prodigal -h
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} prodigal -h
 
-version : prodigal.sif
-	/usr/local/bin/singularity exec --fakeroot prodigal.sif prodigal -v
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} prodigal -v
 
 
 

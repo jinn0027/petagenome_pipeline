@@ -1,20 +1,25 @@
-all : hmmer.sbx hmmer.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=hmmer.def
+SBX=hmmer.sbx
+SIF=hmmer.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf hmmer.sbx hmmer.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-hmmer.sbx : hmmer.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox hmmer.sbx hmmer.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-hmmer.sif : hmmer.sbx
-	sudo /usr/local/bin/singularity build --fix-perms hmmer.sif hmmer.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : hmmer.sbx
-	sudo /usr/local/bin/singularity shell --writable hmmer.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : hmmer.sif
-	/usr/local/bin/singularity exec --fakeroot hmmer.sif jackhmmer -h
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} jackhmmer -h
 
-version : hmmer.sif
-	/usr/local/bin/singularity exec --fakeroot hmmer.sif jackhmmer -h | head -n 2
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} jackhmmer -h | head -n 2
 

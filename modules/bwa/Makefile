@@ -1,21 +1,26 @@
-all : bwa.sbx bwa.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=bwa.def
+SBX=bwa.sbx
+SIF=bwa.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf bwa.sbx bwa.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-bwa.sbx : bwa.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox bwa.sbx bwa.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-bwa.sif : bwa.sbx
-	sudo /usr/local/bin/singularity build --fix-perms bwa.sif bwa.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : bwa.sbx
-	sudo /usr/local/bin/singularity shell --writable bwa.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : bwa.sif
-	/usr/local/bin/singularity exec --fakeroot bwa.sif bwa 2>&1
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} bwa 2>&1
 
-version : bwa.sif
-	/usr/local/bin/singularity exec --fakeroot bwa.sif bwa 2>&1 | head -n 8
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} bwa 2>&1 | head -n 8
 
 

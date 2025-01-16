@@ -1,19 +1,24 @@
-all : falco.sbx falco.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=falco.def
+SBX=falco.sbx
+SIF=falco.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf falco.sbx falco.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-falco.sbx : falco.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox falco.sbx falco.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-falco.sif : falco.sbx
-	sudo /usr/local/bin/singularity build --fix-perms falco.sif falco.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : falco.sbx
-	sudo /usr/local/bin/singularity shell --writable falco.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : falco.sif
-	/usr/local/bin/singularity exec --fakeroot falco.sif falco --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} falco --help
 
-version : falco.sif
-	/usr/local/bin/singularity exec --fakeroot falco.sif falco --version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} falco --version

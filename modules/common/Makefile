@@ -1,20 +1,25 @@
-all : el9.sbx el9.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=el9.def
+SBX=el9.sbx
+SIF=el9.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf el9.sbx el9.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-el9.sbx : el9.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox el9.sbx el9.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-el9.sif : el9.sbx
-	sudo /usr/local/bin/singularity build --fix-perms el9.sif el9.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : el9.sbx
-	sudo /usr/local/bin/singularity shell --writable el9.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : el9.sif
-	/usr/local/bin/singularity exec --fakeroot el9.sif fastqc --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} fastqc --help
 
-version : el9.sif
-	/usr/local/bin/singularity exec --fakeroot el9.sif fastqc --version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} fastqc --version
 

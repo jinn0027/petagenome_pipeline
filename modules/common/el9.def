@@ -262,6 +262,7 @@ From: almalinux:9
     popd
 
 %environment
+    export LC_ALL=C
     export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
     export PATH=/opt/prinseq:$PATH
     export PATH=/opt/bwa:$PATH

@@ -1,20 +1,25 @@
-all : bbmap.sbx bbmap.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=bbmap.def
+SBX=bbmap.sbx
+SIF=bbmap.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf bbmap.sbx bbmap.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-bbmap.sbx : bbmap.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox bbmap.sbx bbmap.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-bbmap.sif : bbmap.sbx
-	sudo /usr/local/bin/singularity build --fix-perms bbmap.sif bbmap.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : bbmap.sbx
-	sudo /usr/local/bin/singularity shell --writable bbmap.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : bbmap.sif
-	/usr/local/bin/singularity exec --fakeroot bbmap.sif bbmap.sh --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} bbmap.sh --help
 
-version : bbmap.sif
-	/usr/local/bin/singularity exec --fakeroot bbmap.sif bbmap.sh --version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} bbmap.sh --version
 

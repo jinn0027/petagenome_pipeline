@@ -16,6 +16,7 @@ From: almalinux:9
     popd
 
 %environment
+    export LC_ALL=C
 
 %runscript
     seqkit --help    

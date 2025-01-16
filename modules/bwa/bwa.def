@@ -25,6 +25,7 @@ From: almalinux:9
     popd
 
 %environment
+    export LC_ALL=C
     export PATH=/opt/bwa:$PATH
 
 %runscript

@@ -1,20 +1,25 @@
-all : diamond.sbx diamond.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=diamond.def
+SBX=diamond.sbx
+SIF=diamond.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf diamond.sbx diamond.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-diamond.sbx : diamond.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox diamond.sbx diamond.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-diamond.sif : diamond.sbx
-	sudo /usr/local/bin/singularity build --fix-perms diamond.sif diamond.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : diamond.sbx
-	sudo /usr/local/bin/singularity shell --writable diamond.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : diamond.sif
-	/usr/local/bin/singularity exec --fakeroot diamond.sif diamond help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} diamond help
 
-version : diamond.sif
-	/usr/local/bin/singularity exec --fakeroot diamond.sif diamond version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} diamond version
 

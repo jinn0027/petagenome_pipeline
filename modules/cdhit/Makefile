@@ -1,20 +1,25 @@
-all : cdhit.sbx cdhit.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=cdhit.def
+SBX=cdhit.sbx
+SIF=cdhit.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf cdhit.sbx cdhit.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-cdhit.sbx : cdhit.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox cdhit.sbx cdhit.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-cdhit.sif : cdhit.sbx
-	sudo /usr/local/bin/singularity build --fix-perms cdhit.sif cdhit.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : cdhit.sbx
-	sudo /usr/local/bin/singularity shell --writable cdhit.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : cdhit.sif
-	/usr/local/bin/singularity exec --fakeroot cdhit.sif cd-hit --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} cd-hit --help
 
-version : cdhit.sif
-	/usr/local/bin/singularity exec --fakeroot cdhit.sif cd-hit --help | head -n 1
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} cd-hit --help | head -n 1
 

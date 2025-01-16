@@ -1,20 +1,25 @@
-all : metaphlan.sbx metaphlan.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=metaphlan.def
+SBX=metaphlan.sbx
+SIF=metaphlan.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf metaphlan.sbx metaphlan.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-metaphlan.sbx : metaphlan.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox metaphlan.sbx metaphlan.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-metaphlan.sif : metaphlan.sbx
-	sudo /usr/local/bin/singularity build --fix-perms metaphlan.sif metaphlan.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : metaphlan.sbx
-	sudo /usr/local/bin/singularity shell --writable metaphlan.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : metaphlan.sif
-	/usr/local/bin/singularity exec --fakeroot metaphlan.sif metaphlan --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} metaphlan --help
 
-version : metaphlan.sif
-	/usr/local/bin/singularity exec --fakeroot metaphlan.sif metaphlan --version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} metaphlan --version
 

@@ -1,19 +1,24 @@
-all : sra-tools.sbx sra-tools.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=sra-tools.def
+SBX=sra-tools.sbx
+SIF=sra-tools.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf sra-tools.sbx sra-tools.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-sra-tools.sbx : sra-tools.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox sra-tools.sbx sra-tools.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-sra-tools.sif : sra-tools.sbx
-	sudo /usr/local/bin/singularity build --fix-perms sra-tools.sif sra-tools.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : sra-tools.sbx
-	sudo /usr/local/bin/singularity shell --writable sra-tools.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : sra-tools.sif
-	/usr/local/bin/singularity exec --fakeroot sra-tools.sif sratools -h
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} sratools -h
 
-version : sra-tools.sif
-	/usr/local/bin/singularity exec --fakeroot sra-tools.sif sratools -h
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} sratools -h

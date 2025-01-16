@@ -1,20 +1,25 @@
-all : bowtie.sbx bowtie.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=bowtie.def
+SBX=bowtie.sbx
+SIF=bowtie.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf bowtie.sbx bowtie.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-bowtie.sbx : bowtie.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox bowtie.sbx bowtie.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-bowtie.sif : bowtie.sbx
-	sudo /usr/local/bin/singularity build --fix-perms bowtie.sif bowtie.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : bowtie.sbx
-	sudo /usr/local/bin/singularity shell --writable bowtie.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : bowtie.sif
-	/usr/local/bin/singularity exec --fakeroot bowtie.sif bowtie --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} bowtie --help
 
-version : bowtie.sif
-	/usr/local/bin/singularity exec --fakeroot bowtie.sif bowtie --version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} bowtie --version
 

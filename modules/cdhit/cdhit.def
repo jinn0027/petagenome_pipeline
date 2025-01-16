@@ -30,6 +30,7 @@ From: almalinux:9
     popd
 
 %environment
+    export LC_ALL=C
 
 %runscript
     cd-hit --help

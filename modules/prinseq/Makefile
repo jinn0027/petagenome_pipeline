@@ -1,20 +1,25 @@
-all : prinseq.sbx prinseq.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=prinseq.def
+SBX=prinseq.sbx
+SIF=prinseq.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf prinseq.sbx prinseq.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-prinseq.sbx : prinseq.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox prinseq.sbx prinseq.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-prinseq.sif : prinseq.sbx
-	sudo /usr/local/bin/singularity build --fix-perms prinseq.sif prinseq.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : prinseq.sbx
-	sudo /usr/local/bin/singularity shell --writable prinseq.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : prinseq.sif
-	/usr/local/bin/singularity exec --fakeroot prinseq.sif prinseq-lite.pl -help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} prinseq-lite.pl -help
 
-version : prinseq.sif
-	/usr/local/bin/singularity exec --fakeroot prinseq.sif prinseq-lite.pl -version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} prinseq-lite.pl -version
 

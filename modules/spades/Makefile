@@ -1,19 +1,24 @@
-all : spades.sbx spades.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=spades.def
+SBX=spades.sbx
+SIF=spades.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf spades.sbx spades.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-spades.sbx : spades.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox spades.sbx spades.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-spades.sif : spades.sbx
-	sudo /usr/local/bin/singularity build --fix-perms spades.sif spades.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : spades.sbx
-	sudo /usr/local/bin/singularity shell --writable spades.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : spades.sif
-	/usr/local/bin/singularity exec --fakeroot spades.sif spades.py -h
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} spades.py -h
 
-version : spades.sif
-	/usr/local/bin/singularity exec --fakeroot spades.sif spades.py -v
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} spades.py -v

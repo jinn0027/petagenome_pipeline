@@ -1,20 +1,25 @@
-all : bcftools.sbx bcftools.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=bcftools.def
+SBX=bcftools.sbx
+SIF=bcftools.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf bcftools.sbx bcftools.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-bcftools.sbx : bcftools.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox bcftools.sbx bcftools.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-bcftools.sif : bcftools.sbx
-	sudo /usr/local/bin/singularity build --fix-perms bcftools.sif bcftools.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : bcftools.sbx
-	sudo /usr/local/bin/singularity shell --writable bcftools.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : bcftools.sif
-	/usr/local/bin/singularity exec --fakeroot bcftools.sif bcftools --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} bcftools --help
 
-version : bcftools.sif
-	/usr/local/bin/singularity exec --fakeroot bcftools.sif bcftools --version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} bcftools --version
 

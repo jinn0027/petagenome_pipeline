@@ -1,20 +1,25 @@
-all : seqkit.sbx seqkit.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=seqkit.def
+SBX=seqkit.sbx
+SIF=seqkit.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf seqkit.sbx seqkit.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-seqkit.sbx : seqkit.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox seqkit.sbx seqkit.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-seqkit.sif : seqkit.sbx
-	sudo /usr/local/bin/singularity build --fix-perms seqkit.sif seqkit.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : seqkit.sbx
-	sudo /usr/local/bin/singularity shell --writable seqkit.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : seqkit.sif
-	/usr/local/bin/singularity exec --fakeroot seqkit.sif seqkit --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} seqkit --help
 
-version : seqkit.sif
-	/usr/local/bin/singularity exec --fakeroot seqkit.sif seqkit version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} seqkit version
 

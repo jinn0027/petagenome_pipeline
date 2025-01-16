@@ -1,19 +1,24 @@
-all : bedtools.sbx bedtools.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=bedtools.def
+SBX=bedtools.sbx
+SIF=bedtools.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf bedtools.sbx bedtools.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-bedtools.sbx : bedtools.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox bedtools.sbx bedtools.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-bedtools.sif : bedtools.sbx
-	sudo /usr/local/bin/singularity build --fix-perms bedtools.sif bedtools.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : bedtools.sbx
-	sudo /usr/local/bin/singularity shell --writable bedtools.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : bedtools.sif
-	/usr/local/bin/singularity exec --fakeroot bedtools.sif bedtools --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} bedtools --help
 
-version : bedtools.sif
-	/usr/local/bin/singularity exec --fakeroot bedtools.sif bedtools --version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} bedtools --version

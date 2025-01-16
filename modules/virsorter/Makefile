@@ -1,19 +1,24 @@
-all : virsorter.sbx virsorter.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=virsorter.def
+SBX=virsorter.sbx
+SIF=virsorter.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf virsorter.sbx virsorter.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-virsorter.sbx : virsorter.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox virsorter.sbx virsorter.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-virsorter.sif : virsorter.sbx
-	sudo /usr/local/bin/singularity build --fix-perms virsorter.sif virsorter.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : virsorter.sbx
-	sudo /usr/local/bin/singularity shell --writable virsorter.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : virsorter.sif
-	/usr/local/bin/singularity exec --fakeroot virsorter.sif virsorter --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} virsorter --help
 
-version : virsorter.sif
-	/usr/local/bin/singularity exec --fakeroot virsorter.sif virsorter --version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} virsorter --version

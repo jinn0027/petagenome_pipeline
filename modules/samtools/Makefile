@@ -1,19 +1,24 @@
-all : samtools.sbx samtools.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=samtools.def
+SBX=samtools.sbx
+SIF=samtools.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf samtools.sbx samtools.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-samtools.sbx : samtools.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox samtools.sbx samtools.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-samtools.sif : samtools.sbx
-	sudo /usr/local/bin/singularity build --fix-perms samtools.sif samtools.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : samtools.sbx
-	sudo /usr/local/bin/singularity shell --writable samtools.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : samtools.sif
-	/usr/local/bin/singularity exec --fakeroot samtools.sif samtools --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} samtools --help
 
-version : samtools.sif
-	/usr/local/bin/singularity exec --fakeroot samtools.sif samtools version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} samtools version

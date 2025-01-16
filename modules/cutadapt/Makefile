@@ -1,19 +1,24 @@
-all : cutadapt.sbx cutadapt.sif
+SINGULARITY=/usr/local/bin/apptainer
+DEF=cutadapt.def
+SBX=cutadapt.sbx
+SIF=cutadapt.sif
+
+all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf cutadapt.sbx cutadapt.sif build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-*
 
-cutadapt.sbx : cutadapt.def
-	sudo /usr/local/bin/singularity build --fix-perms --sandbox cutadapt.sbx cutadapt.def
+${SBX} : ${DEF}
+	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
 
-cutadapt.sif : cutadapt.sbx
-	sudo /usr/local/bin/singularity build --fix-perms cutadapt.sif cutadapt.sbx
+${SIF} : ${SBX}
+	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
-shell : cutadapt.sbx
-	sudo /usr/local/bin/singularity shell --writable cutadapt.sbx
+shell : ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX}
 
-help : cutadapt.sif
-	/usr/local/bin/singularity exec --fakeroot cutadapt.sif cutadapt --help
+help : ${SIF}
+	${SINGULARITY} exec ${SIF} cutadapt --help
 
-version : cutadapt.sif
-	/usr/local/bin/singularity exec --fakeroot cutadapt.sif cutadapt --version
+version : ${SIF}
+	${SINGULARITY} exec ${SIF} cutadapt --version
