@@ -9,7 +9,7 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/singularity exec --fakeroot --bind ${fq1},${fq2},${odir} spades.sif /opt/spades/bin/spades.py --test --isolate
+/usr/local/bin/apptainer exec --fakeroot --bind ${fq1},${fq2},${odir} spades.sif /opt/spades/bin/spades.py --test --isolate
 
 
 

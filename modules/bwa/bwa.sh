@@ -2,7 +2,7 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/singularity exec --fakeroot bwa -h
+/usr/local/bin/apptainer exec --fakeroot bwa -h
 
 
 

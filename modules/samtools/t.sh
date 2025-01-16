@@ -9,7 +9,7 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/singularity exec --fakeroot --bind ${fq1},${fq2},${odir} samtools -h
+/usr/local/bin/apptainer exec --fakeroot --bind ${fq1},${fq2},${odir} samtools -h
 
 
 
