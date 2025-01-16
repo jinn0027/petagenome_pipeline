@@ -3,27 +3,43 @@
 # singularityにgo必要なのでインストール
 if [ ! -d /usr/local/go ] ; then
     if [ ! -f go1.23.3.linux-amd64.tar.gz ] ; then
-	wget https://go.dev/dl/go1.23.3.linux-amd64.tar.gz
+        wget https://go.dev/dl/go1.23.3.linux-amd64.tar.gz
     fi
     sudo tar -C /usr/local -xzf go1.23.3.linux-amd64.tar.gz
 fi
 export PATH=/usr/local/go/bin:$PATH
 
-sudo yum -y groupinstall 'Development Tools'
-sudo yum -y install openssl-devel libuuid-devel libseccomp-devel \
+sudo dnf -y groupinstall 'Development Tools'
+sudo dnf -y install openssl-devel libuuid-devel libseccomp-devel \
                     wget squashfs-tools glib2-devel-2.68.4-14.el9_4.1.x86_64 \
-                    fuse3-devel-3.10.2-9.el9.x86_64
+                    fuse3-devel-3.10.2-9.el9.x86_64 \
+                    fakeroot \
+                    cryptsetup \
+                    libsubid-dev \
+#                    wget git
 
-# singularityインストール
+sudo dnf --enablerepo=devel install -y shadow-utils-subid-devel
 
-if [ ! -d singularity ] ; then
-    git clone https://github.com/sylabs/singularity.git -b v4.2.2 --recursive
+# apptainerインストール
+if [ ! -d apptainer ] ; then
+    git clone https://github.com/apptainer/apptainer.git
 fi
-cd singularity
+cd apptainer
 ./mconfig
 make -C ./builddir
 sudo make -C ./builddir install
 cd ..
+
+# singularityインストール
+
+#if [ ! -d singularity ] ; then
+#    git clone https://github.com/sylabs/singularity.git -b v4.2.2 --recursive
+#fi
+#cd singularity
+#./mconfig
+#make -C ./builddir
+#sudo make -C ./builddir install
+#cd ..
 
 # nextflowにjava必要なのでインストール
 

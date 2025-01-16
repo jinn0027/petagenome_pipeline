@@ -52,6 +52,6 @@ wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.1
 wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip
 
 wget https://zenodo.org/record/1168727/files/virsorter-data-v2.tar.gz
-tar xvfz virsorter-data-v2.tar.gz
+#tar xvfz virsorter-data-v2.tar.gz
 
 popd
