@@ -62,7 +62,9 @@ From: almalinux:9
         popd
 	
         # install hmmer
+        echo "############ hmmer ###############"
         tar xvfz hmmer.tar.gz
+	chown -R $(whoami) hmmer
         pushd hmmer
             autoconf
             ./configure
@@ -71,6 +73,7 @@ From: almalinux:9
         popd
 	
         # install virsorter
+        echo "############ virsorter ###############"
         tar xvfz VirSorter.tar.gz
 	chown -R $(whoami) VirSorter
         pushd VirSorter

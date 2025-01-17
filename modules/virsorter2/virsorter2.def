@@ -35,6 +35,7 @@ From: almalinux:9
             libarchive=3.7.7
 
         # install prodigal
+        echo "############ prodigal ###############"
         tar xvfz Prodigal.tar.gz
 	chown -R $(whoami) Prodigal
         pushd Prodigal
@@ -43,6 +44,7 @@ From: almalinux:9
         popd
 	
         # install hmmer
+        echo "############ hmmer ###############"
         tar xvfz hmmer.tar.gz
 	chown -R $(whoami) hmmer
         pushd hmmer
@@ -53,6 +55,7 @@ From: almalinux:9
         popd
 	
         # install virsorter2
+        echo "############ virsorter2 ###############"
         tar xvfz VirSorter2.tar.gz
 	chown -R $(whoami) VirSorter2
         pushd VirSorter2

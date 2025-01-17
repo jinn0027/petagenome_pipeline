@@ -27,16 +27,19 @@ From: almalinux:9
             conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5
 	    
         # install megahit
+        echo "############ megahit ###############"
         tar xvfz megahit.tar.gz
+	chown -R $(whoami) megahit
         pushd megahit
-        mkdir build
-        pushd build
-	    cmake .. -DCMAKE_BUILD_TYPE=Release
-            make -j$(nproc)
-            make install
+            mkdir build
+            pushd build
+	        cmake .. -DCMAKE_BUILD_TYPE=Release
+                make -j$(nproc)
+                make install
+            popd
         popd
     popd
-
+    
 %environment
     export LC_ALL=C
     export PATH=/opt/miniconda3/bin:$PATH
