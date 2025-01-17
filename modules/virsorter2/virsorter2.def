@@ -8,6 +8,7 @@ From: almalinux:9
     ../../external/hmmer.tar.gz /opt
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
     ../../external/VirSorter2.tar.gz /opt
+    ../../external/virsorter-data-v2.tar.gz /opt
 
 %post
     dnf -y install \
@@ -35,6 +36,7 @@ From: almalinux:9
 
         # install prodigal
         tar xvfz Prodigal.tar.gz
+	chown -R $(whoami) Prodigal
         pushd Prodigal
             make -j$(nproc)
             make install
@@ -42,6 +44,7 @@ From: almalinux:9
 	
         # install hmmer
         tar xvfz hmmer.tar.gz
+	chown -R $(whoami) hmmer
         pushd hmmer
             autoconf
             ./configure
@@ -51,8 +54,10 @@ From: almalinux:9
 	
         # install virsorter2
         tar xvfz VirSorter2.tar.gz
+	chown -R $(whoami) VirSorter2
         pushd VirSorter2
             /opt/miniconda3/bin/pip install -e .
+	    tar xvfz virsorter-data-v2.tar.gz -C .
         popd
     popd
 

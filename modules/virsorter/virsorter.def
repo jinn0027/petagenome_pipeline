@@ -10,6 +10,7 @@ From: almalinux:9
     ../../external/hmmer.tar.gz /opt
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
     ../../external/VirSorter.tar.gz /opt
+    ../../external/mga_x86_64.tar.gz /opt
 
 %post
     dnf -y install \
@@ -71,9 +72,14 @@ From: almalinux:9
 	
         # install virsorter
         tar xvfz VirSorter.tar.gz
+	chown -R $(whoami) VirSorter
         pushd VirSorter
             pushd Scripts
+	        make clean
+	        make -j$(nproc)
 	    popd
+	    # install MetaGeneAnnotator
+	    tar xvfz /opt/mga_x86_64.tar.gz -C .
         popd
     popd
 
@@ -84,6 +90,6 @@ From: almalinux:9
     export PATH=/opt/VirSorter:$PATH
 
 %runscript
-    wrapper_phage_contigs_sorter_iPlant.pl
+    wrapper_phage_contigs_sorter_iPlant.pl --help
 
     
