@@ -1,7 +1,7 @@
 SINGULARITY?=/usr/local/bin/apptainer
-DEF=ncbi-blast.def
-SBX=ncbi-blast.sbx
-SIF=ncbi-blast.sif
+DEF=blast.def
+SBX=blast.sbx
+SIF=blast.sif
 
 all : ${SBX} ${SIF}
 
