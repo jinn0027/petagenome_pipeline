@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# singularityにgo必要なのでインストール
+# apptainer/singularityにgo必要なのでインストール
 if [ ! -d /usr/local/go ] ; then
     if [ ! -f go1.23.3.linux-amd64.tar.gz ] ; then
         wget https://go.dev/dl/go1.23.3.linux-amd64.tar.gz

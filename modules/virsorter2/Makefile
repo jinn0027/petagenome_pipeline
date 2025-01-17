@@ -1,7 +1,7 @@
 SINGULARITY?=/usr/local/bin/apptainer
-DEF=virsorter.def
-SBX=virsorter.sbx
-SIF=virsorter.sif
+DEF=virsorter2.def
+SBX=virsorter2.sbx
+SIF=virsorter2.sif
 
 all : ${SBX} ${SIF}
 

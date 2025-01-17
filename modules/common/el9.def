@@ -238,15 +238,17 @@ From: almalinux:9
         /opt/miniconda3/bin/conda config --add channels conda-forge
 	/opt/miniconda3/bin/conda config --append channels bioconda
         /opt/miniconda3/bin/conda install -y \
-            python=3
+            python=3 mcl=14.137 muscle=5.3 perl-bioperl=1.7.8 perl-file-which=1.24 \
+	    perl-parallel-forkmanager=2.03 perl-list-moreutils=0.430
+            python=3 scikit-learn=1.0.2 imbalanced-learn=0.12.4 pandas=2.2.3 \
+            seaborn=0.13.2 screed=1.1.3 ruamel.yaml=0.18.10 click=8.1.8 \
+            python-irodsclient=2.1.0 snakemake=5.16.0 \
+            conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5 \
+            libarchive=3.7.7
 	    
         # install bowtie2
         echo "############ bowtie2 ###############"
         /opt/miniconda3/bin/conda install -y \
-            conda-libmamba-solver=24.11.1 \
-            libmamba=2.0.5 \
-            libmambapy=2.0.5 \
-            libarchive=3.7.7 \
             bowtie2=2.5.4 \
 	    --solver=classic
 	    
@@ -263,12 +265,13 @@ From: almalinux:9
 
 %environment
     export LC_ALL=C
+    export PATH=/opt/miniconda3/bin:$PATH
     export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
     export PATH=/opt/prinseq:$PATH
     export PATH=/opt/bwa:$PATH
     export PATH=/opt/FastQC:$PATH
     export PATH=/opt/spades/bin:$PATH
-    export PATH=/opt/miniconda3/bin:$PATH
+    export PATH=/opt/VirSorter:$PATH
     export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 %runscript

@@ -10,6 +10,7 @@ git clone https://github.com/uwb-linux/prinseq --recursive
 git clone https://github.com/ablab/spades -b v4.0.0 --recursive
 git clone https://github.com/weizhongli/cdhit -b V4.8.1 --recursive
 git clone https://github.com/biobakery/MetaPhlAn -b 4.1.1 --recursive
+git clone https://github.com/simroux/VirSorter -b v1.0.6 --recursive
 git clone https://github.com/jiarong/VirSorter2 -b v2.2.4 --recursive
 #git clone https://github.com/EddyRivasLab/hmmer -b hmmer-3.4 --recursive
 git clone https://github.com/EddyRivasLab/hmmer -b infernal-1.1.5 --recursive
