@@ -59,6 +59,7 @@ From: almalinux:9
 
 %environment
     export LC_ALL=C
+    export PATH=/opt/miniconda3/bin:$PATH
 
 %runscript
     bcftools --help
