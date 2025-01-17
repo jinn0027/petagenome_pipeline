@@ -1,0 +1,89 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
+    ../../external/diamond.tar.gz /opt
+    #../../external/Prodigal.tar.gz /opt
+    ../../external/hmmer.tar.gz /opt
+    ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
+    ../../external/VirSorter.tar.gz /opt
+
+%post
+    dnf -y install \
+        git-2.43.5-2.el9_5 \
+        gcc-c++-11.5.0-2.el9.alma.1 \
+        make-1:4.3-8.el9 \
+        zlib-devel-1.2.11 \
+        cmake-3.26.5-2.el9 \
+        xz-devel-5.2.5-8.el9_0 \
+        autoconf-2.69-39.el9 \
+        automake-1.16.2-8.el9 \
+        bzip2-devel-1.0.8-8.el9
+
+    pushd /opt
+        # install miniconda
+	sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+
+        # install python libraries
+        /opt/miniconda3/bin/conda config --add channels conda-forge
+	/opt/miniconda3/bin/conda config --append channels bioconda
+
+        /opt/miniconda3/bin/conda install -y \
+            python=3 mcl=14.137 muscle=5.3 perl-bioperl=1.7.8 perl-file-which=1.24 \
+	    perl-parallel-forkmanager=2.03 perl-list-moreutils=0.430
+
+        # install prodigal
+        #tar xvfz Prodigal.tar.gz
+        #pushd Prodigal
+        #    make -j$(nproc)
+        #    make install
+        #popd
+	
+        # install blast
+        echo "############ blast ###############"
+        tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
+	chown -R $(whoami) ncbi-blast-2.16.0+
+
+        # install diamond
+        echo "############ diamond ###############"
+        tar xvfz diamond.tar.gz
+	chown -R $(whoami) diamond
+        pushd diamond
+            mkdir build
+            pushd build
+                cmake ..
+                make -j$(nproc)
+                make install
+            popd
+        popd
+	
+        # install hmmer
+        tar xvfz hmmer.tar.gz
+        pushd hmmer
+            autoconf
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
+	
+        # install virsorter
+        tar xvfz VirSorter.tar.gz
+        pushd VirSorter
+            pushd Scripts
+	    popd
+        popd
+    popd
+
+%environment
+    export LC_ALL=C
+    export PATH=/opt/miniconda3/bin:$PATH
+    export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
+    export PATH=/opt/VirSorter:$PATH
+
+%runscript
+    wrapper_phage_contigs_sorter_iPlant.pl
+
+    
