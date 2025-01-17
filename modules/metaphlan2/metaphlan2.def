@@ -19,7 +19,7 @@ From: almalinux:9
         /opt/miniconda3/bin/conda config --add channels conda-forge
 	/opt/miniconda3/bin/conda config --append channels bioconda
         /opt/miniconda3/bin/conda install -y \
-            python=3 numpy=2.2.1 \
+            python=3 numpy=1.26.4 \
             conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5
    
         # install metaphlan2
