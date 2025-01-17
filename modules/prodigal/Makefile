@@ -1,4 +1,4 @@
-SINGULARITY=/usr/local/bin/apptainer
+SINGULARITY?=/usr/local/bin/apptainer
 DEF=prodigal.def
 SBX=prodigal.sbx
 SIF=prodigal.sif

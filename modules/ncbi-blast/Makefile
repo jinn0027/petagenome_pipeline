@@ -1,4 +1,4 @@
-SINGULARITY=/usr/local/bin/apptainer
+SINGULARITY?=/usr/local/bin/apptainer
 DEF=ncbi-blast.def
 SBX=ncbi-blast.sbx
 SIF=ncbi-blast.sif

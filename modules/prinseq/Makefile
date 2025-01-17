@@ -1,4 +1,4 @@
-SINGULARITY=/usr/local/bin/apptainer
+SINGULARITY?=/usr/local/bin/apptainer
 DEF=prinseq.def
 SBX=prinseq.sbx
 SIF=prinseq.sif

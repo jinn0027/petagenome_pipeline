@@ -1,4 +1,4 @@
-SINGULARITY=/usr/local/bin/apptainer
+SINGULARITY?=/usr/local/bin/apptainer
 DEF=hmmer.def
 SBX=hmmer.sbx
 SIF=hmmer.sif

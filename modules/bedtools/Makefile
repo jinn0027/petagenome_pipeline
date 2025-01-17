@@ -1,4 +1,4 @@
-SINGULARITY=/usr/local/bin/apptainer
+SINGULARITY?=/usr/local/bin/apptainer
 DEF=bedtools.def
 SBX=bedtools.sbx
 SIF=bedtools.sif

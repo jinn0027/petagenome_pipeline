@@ -1,4 +1,4 @@
-SINGULARITY=/usr/local/bin/apptainer
+SINGULARITY?=/usr/local/bin/apptainer
 DEF=metaphlan.def
 SBX=metaphlan.sbx
 SIF=metaphlan.sif

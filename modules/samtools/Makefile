@@ -1,4 +1,4 @@
-SINGULARITY=/usr/local/bin/apptainer
+SINGULARITY?=/usr/local/bin/apptainer
 DEF=samtools.def
 SBX=samtools.sbx
 SIF=samtools.sif

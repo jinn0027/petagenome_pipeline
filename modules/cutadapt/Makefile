@@ -1,4 +1,4 @@
-SINGULARITY=/usr/local/bin/apptainer
+SINGULARITY?=/usr/local/bin/apptainer
 DEF=cutadapt.def
 SBX=cutadapt.sbx
 SIF=cutadapt.sif
