@@ -189,7 +189,7 @@ From: almalinux:9
         echo "############ cutadapt ###############"
         tar xvfz cutadapt.tar.gz
 	chown -R $(whoami) cutadapt
-        pip install cutadapt
+        /opt/miniconda3/bin/pip install cutadapt
 	
         # install prinseq
         echo "############ prinseq ###############"
