@@ -57,7 +57,7 @@ From: almalinux:9
 	chown -R $(whoami) VirSorter2
         pushd VirSorter2
             /opt/miniconda3/bin/pip install -e .
-	    tar xvfz virsorter-data-v2.tar.gz -C .
+            tar xvfz /opt/virsorter-data-v2.tar.gz -C .
         popd
     popd
 

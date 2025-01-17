@@ -10,6 +10,7 @@ git clone https://github.com/uwb-linux/prinseq --recursive
 git clone https://github.com/ablab/spades -b v4.0.0 --recursive
 git clone https://github.com/weizhongli/cdhit -b V4.8.1 --recursive
 git clone https://github.com/biobakery/MetaPhlAn -b 4.1.1 --recursive
+git clone https://github.com/biobakery/MetaPhlAn2 --recursive
 git clone https://github.com/simroux/VirSorter -b v1.0.6 --recursive
 git clone https://github.com/jiarong/VirSorter2 -b v2.2.4 --recursive
 #git clone https://github.com/EddyRivasLab/hmmer -b hmmer-3.4 --recursive
@@ -36,6 +37,7 @@ git clone https://github.com/BenLangmead/bowtie -b v1.3.1 --recursive
 git clone https://github.com/BenLangmead/bowtie2 -b v2.5.4 --recursive
 git clone https://github.com/ncbi/sra-tools -b 3.2.0 --recursive
 git clone https://github.com/ncbi/ncbi-vdb -b 3.2.0 --recursive
+git clone https://github.com/voutcn/megahit -b v1.2.9 --recursive
 
 for i in $(ls)
 do
@@ -52,7 +54,7 @@ wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.1
 
 wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip
 
+wget http://metagene.nig.ac.jp/metagene/mga_x86_64.tar.gz
 wget https://zenodo.org/record/1168727/files/virsorter-data-v2.tar.gz
-#tar xvfz virsorter-data-v2.tar.gz
 
 popd
