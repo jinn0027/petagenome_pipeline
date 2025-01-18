@@ -15,7 +15,7 @@ ${SIF} : ${SBX}
 	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
 
 shell : ${SBX}
-	sudo ${SINGULARITY} shell --writable ${SBX}
+	sudo ${SINGULARITY} shell --writable ${SBX} *~
 
 help : ${SIF}
 	${SINGULARITY} exec ${SIF} megahit --help

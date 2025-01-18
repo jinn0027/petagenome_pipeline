@@ -6,7 +6,7 @@ SIF=bbmap.sif
 all : ${SBX} ${SIF}
 
 clean :
-	sudo rm -rf ${SBX} ${SIF} build-temp-*
+	sudo rm -rf ${SBX} ${SIF} build-temp-* *~
 
 ${SBX} : ${DEF}
 	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
