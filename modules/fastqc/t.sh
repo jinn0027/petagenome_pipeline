@@ -9,5 +9,10 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --fakeroot --bind ${fq1},${fq2},${odir} fastqc.sif fastqc -o ${odir} ${fq1} ${fq2}
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} fastqc.sif fastqc -o ${odir} ${fq1} ${fq2}
+
+exit
+
+# #{fastqc_dir}/bin/fastqc -o #{dir_fastqc_} #{out_cutadapt}_1.fastq
+# 01_trim_qc.HiSeq.rb 02_error_correction.rb
 

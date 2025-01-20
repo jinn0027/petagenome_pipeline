@@ -2,7 +2,7 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/apptainer exec --fakeroot virsorter2.sif virsorter -h
+/usr/local/bin/apptainer exec virsorter2.sif virsorter -h
 
 
 

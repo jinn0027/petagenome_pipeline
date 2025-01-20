@@ -2,7 +2,7 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/apptainer exec --fakeroot prodigal -h
+/usr/local/bin/apptainer exec prodigal.sif prodigal -h
 
 
 

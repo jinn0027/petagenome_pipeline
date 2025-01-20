@@ -2,7 +2,7 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/apptainer exec --fakeroot ${MY_DIR}/cutadapt.sif cutadapt -h
+/usr/local/bin/apptainer exec ${MY_DIR}/cutadapt.sif cutadapt -h
 
 
 

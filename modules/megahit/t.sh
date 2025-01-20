@@ -9,8 +9,11 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --fakeroot --bind ${fq1},${fq2},${odir} virsorter.sif virsorter -h
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} megahit.sif megahit --help
 
+exit
+
+NOP
 
 
 

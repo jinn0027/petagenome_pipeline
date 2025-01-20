@@ -9,8 +9,12 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --fakeroot --bind ${fq1},${fq2},${odir} cutadapt.sif cutadapt -h
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} cutadapt.sif cutadapt -h
 
+exit
+
+# #{cutadapt_dir}/bin/cutadapt --minimum-length 50 -a ${ADPT_FWD} -o #{out_cutadapt}_1.fastq ${QUERY1_}
+# 01_trim_qc.HiSeq.rb
 
 
 

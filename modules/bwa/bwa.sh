@@ -2,7 +2,7 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/apptainer exec --fakeroot bwa -h
+/usr/local/bin/apptainer exec bwa.sif bwa -h
 
 
 

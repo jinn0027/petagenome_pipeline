@@ -2,9 +2,7 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/apptainer exec --fakeroot diamond -h
-
-
+/usr/local/bin/apptainer exec diamond.sif diamond -h
 
 
 

@@ -9,9 +9,11 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --fakeroot --bind ${fq1},${fq2},${odir} sra-tools -h
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} sra-tools.sif sra-tools -h
 
+exit
 
+# NOP
 
 
 

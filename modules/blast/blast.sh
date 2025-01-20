@@ -2,7 +2,7 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/apptainer exec --fakeroot blast.sif blastn -h
+/usr/local/bin/apptainer exec blast.sif blastn -h
 
 
 
