@@ -8,6 +8,9 @@ refdir=ref
 
 log=t.log
 
+ofq1=${odir}/$(basename ${fq1} | sed 's#.gz$##')
+ofq2=${odir}/$(basename ${fq2} | sed 's#.gz$##')
+
 ret=0
 
 ADPT_FWD="AATGATACGGCGACCACCGAGAUCTACAC"
@@ -18,8 +21,8 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../cutadapt.sif cutadapt --minimum-length 50 -a ${ADPT_FWD} -g ${ADPT_REV} -o ${odir}/$(basename ${fq1}) -p ${odir}/$(basename ${fq2}) ${fq1} ${fq2}> ${log} 2>&1
-for i in $(ls $odir/*.fastq.gz)
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../cutadapt.sif cutadapt --minimum-length 50 -a ${ADPT_FWD} -g ${ADPT_REV} -o ${ofq1} -p ${ofq2} ${fq1} ${fq2}> ${log} 2>&1
+for i in $(ls $odir/*.fastq)
 do
     j=$refdir/$(basename $i)
     zdiff -q $i $j >> ${log} 2>&1 && :
