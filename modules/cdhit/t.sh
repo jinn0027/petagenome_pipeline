@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 fq1=../test/s_6_1.fastq.gz
@@ -9,7 +10,7 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} cdhit.sif cdhit -h
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} cdhit.sif cd-hit -h
 
 exit
 
