@@ -16,7 +16,6 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-
 /usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../fastqc.sif fastqc -o ${odir} ${fq1} ${fq2} > ${log} 2>&1
 for i in $(ls $odir/*.html)
 do
