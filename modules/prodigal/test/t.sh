@@ -1,18 +1,29 @@
 #!/bin/bash
 
-fq1=../test/s_6_1.fastq.gz
-fq2=../test/s_6_2.fastq.gz
-odir=results
+fa1=../../test/ecoli_1K_1.fa.gz
 
-fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
-fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
+wdir=work
+odir=results
+refdir=ref
+
+log=t.log
+
+ret=0
+
+fa1=$(cd $(dirname ${fa1}) && pwd)/$(basename ${fa1})
+wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
-mkdir -p ${odir}
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../prodigal.sif prodigal -h > ${log} 2>&1
+mkdir -p ${odir} ${wdir}
+
+wfa1=${wdir}/$(basename ${fa1} | sed 's#.gz$##')
+
+gunzip ${fa1} -c > ${wfa1}
+
+/usr/local/bin/apptainer exec --bind ${wfa1},${odir} ../prodigal.sif prodigal -a ${odir}/out.faa -d ${odir}/out.ffn -p meta -i ${wfa1} -f gbk -o ${odir}/out.gbk > ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.fa)
+for i in $(ls ${refdir}/*.faa ${refdir}/*.ffn ${refdir}/*.gbk)
 do
     j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
