@@ -31,18 +31,18 @@ do
 done
 
 failed=""
-for i in $(ls ${odir}/corrected/*.fastq)
+for i in $(ls ${refdir}/corrected/*.fastq)
 do
-    j=${refdir}/corrected/$(basename $i)
+    j=${odir}/corrected/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
 	failed="${failed} $(basename $i)"
         ret=1
     fi
 done
-for i in $(ls ${odir}/scaffolds.fasta)
+for i in $(ls ${refdir}/scaffolds.fasta)
 do
-    j=${refdir}/$(basename $i)
+    j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
 	failed="${failed} $(basename $i)"

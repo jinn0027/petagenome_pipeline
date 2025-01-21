@@ -3,6 +3,9 @@
 ./spades/src/projects/spades/test_dataset/ecoli_1K_1.fq.gz
 ./spades/src/projects/spades/test_dataset/ecoli_1K_2.fq.gz
 
+echo ">ecoli_1K_1.fa.gz:L=4" > q.fa
+zcat ecoli_1K_1.fa.gz | head -n 4 | tail -n 1 >> q.fa
+
 #./bcftools/test/idx.2.bed
 #./bcftools/test/idx.3.bed
 #./bcftools/test/idx.4.bed
@@ -18,3 +21,4 @@
 ./bedtools2/test/getfasta/test.iupac.bed
 ./test/intersect/x.bed
 ./test/intersect/y.bed
+

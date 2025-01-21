@@ -29,12 +29,12 @@ mkdir -p ${odir} ${wdir}
 /usr/local/bin/apptainer exec --bind ${ref},${fq1},${fq2},${odir},${wdir} ../bbmap.sif bbmap.sh -Xmx${mem}g threads=${n_threads} path=${wdir} in=${fq1} in2=${fq2} ambiguous=random minid=0.95 pairlen=1500 out=${odir}/out.sam scafstats=${odir}/out.scafstats >> ${log} 2>&1
 
 failed=""
-for i in $(ls $odir/*.sam ${odir}/*.scafstats)
+for i in $(ls ${refdir}/*.sam ${refdir}/*.scafstats)
 do
-    j=${refdir}/$(basename $i)
+    j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
-	failed="${failed} $(basename $i)"
+        failed="${failed} $(basename $i)"
         ret=1
     fi
 done

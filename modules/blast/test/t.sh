@@ -33,21 +33,15 @@ gunzip ${fa1} -c > ${wfa1}
 /usr/local/bin/apptainer exec --bind ${wdir},${fa2},${odir} ../blast.sif blastn -task megablast -num_threads ${n_threads} -query ${fa2} -db ${db} -perc_identity ${pi_thre} -evalue ${e_thre} -outfmt 6 -num_alignments ${n_al} -out ${odir}/out.txt >> ${log} 2>&1
 
 failed=""
-n=$(ls results/*.txt 2> /dev/null | wc -l)
-if [ $n -gt 0 ] ; then
-    for i in $(ls ${odir}/*.txt)
-    do
-        j=${refdir}/$(basename $i)
-        diff -q $i $j >> ${log} 2>&1 && :
-        if [ $? -ne 0 ]; then
-            failed="${failed} $(basename $i)"
-            ret=1
-        fi
-    done
-else
-    failed="no result found"
-    ret=1
-fi
+for i in $(ls ${refdir}/*.txt)
+do
+    j=${odir}/$(basename $i)
+    diff -q $i $j >> ${log} 2>&1 && :
+    if [ $? -ne 0 ]; then
+        failed="${failed} $(basename $i)"
+        ret=1
+    fi
+done
 
 if [ ${ret} -eq 0 ]; then
     echo " PASSED" | tee -a ${log}

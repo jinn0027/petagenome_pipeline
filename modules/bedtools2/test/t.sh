@@ -30,13 +30,12 @@ mkdir -p ${odir} ${wdir}
 
 /usr/local/bin/apptainer exec --bind ${bed3},${bed4},${wdir},${odir} ../bedtools2.sif sh -c "bedtools intersect -a ${bed3} -b ${bed4} > ${odir}/intersected.bed" >> ${log} 2>&1
 
-failed=""
-for i in $(ls ${odir}/*.fa ${odir}/*.bed)
+for i in $(ls ${refdir}/*.fa ${refdir}/*.bed)
 do
-    j=${refdir}/$(basename $i)
+    j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
-	failed="${failed} $(basename $i)"
+        failed="${failed} $(basename $i)"
         ret=1
     fi
 done

@@ -19,12 +19,12 @@ mkdir -p ${odir}
 /usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../fastqc.sif fastqc -o ${odir} ${fq1} ${fq2} > ${log} 2>&1
 
 failed=""
-for i in $(ls ${odir}/*.fa)
+for i in $(ls ${refdir}/*.fa)
 do
-    j=${refdir}/$(basename $i)
+    j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
-	failed="${failed} $(basename $i)"
+        failed="${failed} $(basename $i)"
         ret=1
     fi
 done
