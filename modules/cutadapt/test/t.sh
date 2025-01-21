@@ -10,16 +10,19 @@ log=t.log
 
 ret=0
 
+ADPT_FWD="AATGATACGGCGACCACCGAGAUCTACAC"
+ADPT_REV="CAAGCAGAAGACGGCATACGAGAT"
+
 fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
 fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../cutadapt.sif cutadapt -h > ${log} 2>&1
-for i in $(ls $odir/*.html)
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../cutadapt.sif cutadapt --minimum-length 50 -a ${ADPT_FWD} -g ${ADPT_REV} -o ${odir}/$(basename ${fq1}) -p ${odir}/$(basename ${fq2}) ${fq1} ${fq2}> ${log} 2>&1
+for i in $(ls $odir/*.fastq.gz)
 do
     j=$refdir/$(basename $i)
-    diff -q $i $j >> ${log} 2>&1 && :
+    zdiff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         ret=1
     fi
