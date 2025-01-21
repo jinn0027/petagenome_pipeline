@@ -1,22 +1,28 @@
 #!/bin/bash
 
-fq1=../../test/s_6_1.fastq.gz
-fq2=../../test/s_6_2.fastq.gz
+n_threads=$(nproc)
+mem=128
+
+fa1=../../test/s_6_1.fasta.gz
+fa2=../../test/s_6_2.fasta.gz
 odir=results
 
-fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
-fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
+fa1=$(cd $(dirname ${fa1}) && pwd)/$(basename ${fa1})
+fa2=$(cd $(dirname ${fa2}) && pwd)/$(basename ${fa2})
 
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 refdir=ref
 
 log=t.log
 
+ofa1=${odir}/$(basename ${fa1} | sed 's#.gz$##')
+ofa2=${odir}/$(basename ${fa2} | sed 's#.gz$##')
+
 ret=0
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../cdhit.sif cd-hit -h > ${log} 2>&1
-for i in $(ls $odir/*.html)
+/usr/local/bin/apptainer exec --bind ${fa1},${fa2},${odir} ../cdhit.sif cd-hit-est -c 0.95 -G 1 -mask NX -d 150 -n 10 -T ${n_threads} -M ${mem}000 -i ${fa1} -o ${ofa1} > ${log} 2>&1
+for i in $(ls $odir/*.fasta)
 do
     j=$refdir/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
