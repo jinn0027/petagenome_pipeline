@@ -16,11 +16,14 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
 /usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../virsorter.sif virsorter -h > ${log} 2>&1
-for i in $(ls $odir/*.html)
+
+failed=""
+for i in $(ls ${odir}/*.fa)
 do
     j=${refdir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
+	failed="${failed} $(basename $i)"
         ret=1
     fi
 done
@@ -28,7 +31,7 @@ done
 if [ ${ret} -eq 0 ]; then
     echo " PASSED" | tee -a ${log}
 else
-    echo " FAILED" | tee -a ${log}
+    echo " FAILED : ${failed}" | tee -a ${log}
 fi
 
 exit ${ret}
