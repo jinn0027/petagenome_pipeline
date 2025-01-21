@@ -15,7 +15,7 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../bedtools.sif bedtools -h  2>&1
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../bedtools2.sif bedtools -h  2>&1
 for i in $(ls $odir/*.html)
 do
     j=${refdir}/$(basename $i)

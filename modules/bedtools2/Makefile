@@ -1,7 +1,7 @@
 SINGULARITY?=/usr/local/bin/apptainer
-DEF=bedtools.def
-SBX=bedtools.sbx
-SIF=bedtools.sif
+DEF=bedtools2.def
+SBX=bedtools2.sbx
+SIF=bedtools2.sif
 
 .PHONY : all
 all : ${SBX} ${SIF}

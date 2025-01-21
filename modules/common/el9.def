@@ -149,8 +149,8 @@ From: almalinux:9
             popd
         popd
 	
-        # install bedtools
-        echo "############ bedtools ###############"
+        # install bedtools2
+        echo "############ bedtools2 ###############"
         tar xvfz bedtools2.tar.gz
 	chown -R $(whoami) bedtools2
         pushd bedtools2
