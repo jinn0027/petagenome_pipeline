@@ -1,5 +1,8 @@
 #!/bin/bash
 
+n_threads=$(nproc)
+mem=128
+
 fq1=../../test/s_6_1.fastq.gz
 fq2=../../test/s_6_2.fastq.gz
 
@@ -15,10 +18,10 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sif /opt/spades/bin/spades.py --test --isolate > ${log} 2>&1
-for i in $(ls $odir/*.html)
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sif spades.py --only-error-correction --pe1-1 ${fq1} --pe1-2 ${fq2} --memory ${mem} --threads ${n_threads} -o ${odir} > ${log} 2>&1
+for i in $(ls ${odir}/corrected "*.fastq.gz")
 do
-    j=$refdir/$(basename $i)
+    j=${refdir}/corrected/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         ret=1

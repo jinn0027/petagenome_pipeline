@@ -19,7 +19,7 @@ mkdir -p ${odir}
 /usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../fastqc.sif fastqc -o ${odir} ${fq1} ${fq2} > ${log} 2>&1
 for i in $(ls $odir/*.html)
 do
-    j=$refdir/$(basename $i)
+    j=${refdir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         ret=1
@@ -42,7 +42,7 @@ mkdir -p ${odir}
 /usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../metaphlan2.sif metaphlan2.py --help > ${log} 2>&1
 for i in $(ls $odir/*.html)
 do
-    j=$refdir/$(basename $i)
+    j=${refdir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         ret=1

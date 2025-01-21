@@ -24,7 +24,7 @@ mkdir -p ${odir}
 /usr/local/bin/apptainer exec --bind ${fa1},${fa2},${odir} ../cdhit.sif cd-hit-est -c 0.95 -G 1 -mask NX -d 150 -n 10 -T ${n_threads} -M ${mem}000 -i ${fa1} -o ${ofa1} > ${log} 2>&1
 for i in $(ls $odir/*.fasta)
 do
-    j=$refdir/$(basename $i)
+    j=${refdir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         ret=1

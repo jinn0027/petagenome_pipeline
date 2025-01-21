@@ -25,7 +25,7 @@ gunzip ${fq2} -c > ${wfq2}
 /usr/local/bin/apptainer exec --bind ${wfq1},${wfq2},${odir} ../prinseq.sif prinseq-lite.pl -trim_right 10 -trim_left 10 -trim_qual_right 20 -trim_qual_left 20 -trim_qual_window 20 -min_len 75 -derep 1 -lc_method dust -lc_threshold 7 -trim_ns_right 1 -ns_max_n 0 -fastq ${wfq1} -fastq2 ${wfq2} -out_good ${odir}/good -out_bad ${odir}/bad > ${log} 2>&1
 for i in $(ls $odir/*.fastq)
 do
-    j=$refdir/$(basename $i)
+    j=${refdir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         ret=1

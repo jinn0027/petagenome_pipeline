@@ -18,7 +18,7 @@ mkdir -p ${odir}
 /usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../bedtools.sif bedtools -h  2>&1
 for i in $(ls $odir/*.html)
 do
-    j=$refdir/$(basename $i)
+    j=${refdir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         ret=1
