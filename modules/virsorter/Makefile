@@ -22,7 +22,7 @@ shell : ${SBX}
 
 .PHONY : help
 help : ${SIF}
-	${SINGULARITY} exec ${SIF} wrapper_phage_contigs_sorter_iPlant.pl --help
+	${SINGULARITY} exec ${SBX} wrapper_phage_contigs_sorter_iPlant.pl --help
 
 .PHONY : version
 version : ${SIF}

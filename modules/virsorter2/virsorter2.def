@@ -8,7 +8,6 @@ From: almalinux:9
     ../../external/hmmer.tar.gz /opt
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
     ../../external/VirSorter2.tar.gz /opt
-    ../../external/virsorter-data-v2.tar.gz /opt
 
 %post
     dnf -y install \
@@ -62,7 +61,6 @@ From: almalinux:9
 	chown -R $(whoami) VirSorter2
         pushd VirSorter2
             /opt/miniconda3/bin/pip install -e .
-            tar xvfz /opt/virsorter-data-v2.tar.gz -C .
         popd
     popd
 

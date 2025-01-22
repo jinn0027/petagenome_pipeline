@@ -39,6 +39,8 @@ git clone https://github.com/ncbi/sra-tools -b 3.2.0 --recursive
 git clone https://github.com/ncbi/ncbi-vdb -b 3.2.0 --recursive
 git clone https://github.com/voutcn/megahit -b v1.2.9 --recursive
 
+git clone https://github.com/ncbi/ncbi-cxx-toolkit-public.git -b release-28.0.12 --recursive
+
 for i in $(ls)
 do
     if [ -d $i ] ; then
@@ -48,13 +50,26 @@ do
     fi
 done
 
+# MiniConda setup script
 wget https://repo.anaconda.com/miniconda/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh
 
+# Blast+ binary
 wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.16.0+-x64-linux.tar.gz
+# Blast+ source
+wget https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/ncbi-blast-2.16.0+-src.tar.gz
 
+# FastQC binary
 wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip
 
+# MetaPhlAn2 database
+wget https://figshare.com/ndownloader/articles/6200807/versions/1 -O mpa_v20_m200.zip
+
+# VirSorter Metagenome Annotator
 wget http://metagene.nig.ac.jp/metagene/mga_x86_64.tar.gz
+# VirSorter database
 wget https://zenodo.org/record/1168727/files/virsorter-data-v2.tar.gz
+
+# VirSorter2 database
+wget https://osf.io/v46sc/download -O db.tgz
 
 popd

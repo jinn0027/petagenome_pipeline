@@ -300,6 +300,8 @@ From: almalinux:9
 	    popd
 	    # install MetaGeneAnnotator
 	    tar xvfz /opt/mga_x86_64.tar.gz -C .
+	    # install database
+            tar xvfz /opt/virsorter-data-v2.tar.gz -C .
         popd
 
         # install virsorter2
@@ -308,10 +310,9 @@ From: almalinux:9
 	chown -R $(whoami) VirSorter2
         pushd VirSorter2
             /opt/miniconda3/bin/pip install -e .
-            tar xvfz /opt/virsorter-data-v2.tar.gz -C .
         popd
     popd
-    
+
 %environment
     export LC_ALL=C
     export PATH=/opt/miniconda3/bin:$PATH
