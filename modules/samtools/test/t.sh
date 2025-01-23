@@ -23,13 +23,24 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir} ${wdir}
 
-/usr/local/bin/apptainer exec --bind ${sam1},${odir} ../samtools.sif sh -c "samtools sort -@ ${n_threads} -O bam -o ${odir}/out.sorted.bam ${sam1}" > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${sam1},${odir} ../samtools.sif sh -c "\
+    samtools sort -@ ${n_threads} -O bam -o ${odir}/out.sorted.bam ${sam1}" \
+> ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${bam1},${wdir},${odir} ../samtools.sif sh -c "samtools depth -m 10000000 -a ${bam1} -o ${wdir}/out.depth.txt && head -n 100 ${wdir}/out.depth.txt > ${odir}/out.depth.head100.txt" >> ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${bam1},${wdir},${odir} ../samtools.sif sh -c "\
+    samtools depth -m 10000000 -a ${bam1} -o ${wdir}/out.depth.txt \
+    && head -n 100 ${wdir}/out.depth.txt \
+    > ${odir}/out.depth.head100.txt" \
+>> ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${bam1},${odir} ../samtools.sif sh -c "samtools index ${bam1} -o ${odir}/out.index.bai" >> ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${bam1},${odir} ../samtools.sif sh -c "\
+    samtools index ${bam1} -o ${odir}/out.index.bai" \
+>> ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${bam1},${odir} ../samtools.sif sh -c "samtools bedcov ${bed1} ${bam1} > ${odir}/out.bedcov.txt" >> ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${bam1},${odir} ../samtools.sif sh -c "\
+    samtools index ${bam1} -o ${wdir}/tmp.bai \
+    && samtools bedcov ${bed1} ${bam1} -X ${wdir}/tmp.bai > ${odir}/out.bedcov.txt" \
+>> ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.txt ${refdir}/*.bam ${refdir}/*.bai)
