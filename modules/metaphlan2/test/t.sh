@@ -19,24 +19,23 @@ wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir} ${wdir}
-/usr/local/bin/apptainer exec --bind ${fq1},${odir} ../metaphlan2.sif sh -c "zcat ${fq1} | metaphlan2.py --bowtie2db ${db} --input_type fastq --bowtie2out ${odir}/out.sam --nproc ${n_threads} > ${odir}/out.prof" > ${log} 2>&1
+
+/usr/local/bin/apptainer exec --bind ${fq1},${odir} ../metaphlan2.sif sh -c "\
+    zcat ${fq1} | \
+    metaphlan2.py \
+        --bowtie2db ${db} \
+        --input_type fastq \
+        --bowtie2out ${wdir}/out.all.sam \
+        --nproc ${n_threads} \
+        > ${odir}/out.prof \
+    && head -n 100 ${wdir}/out.all.sam > ${odir}/out.sam \
+    && tail -n 100 ${wdir}/out.all.sam >> ${odir}/out.sam" > ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.prof)
+for i in $(ls ${refdir}/*.prof ${refdir}/*.sam)
 do
     j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
-    if [ $? -ne 0 ]; then
-        failed="${failed} $(basename $i)"
-        ret=1
-    fi
-done
-for i in $(ls ${refdir}/*.sam)
-do
-    j=${odir}/$(basename $i)
-    head -n 100 $j > ${wdir}/$(basename $i)
-    tail -n 100 $j >> ${wdir}/$(basename $i)
-    diff -q $i ${wdir}/$(basename $i) >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         failed="${failed} $(basename $i)"
         ret=1
