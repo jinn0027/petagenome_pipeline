@@ -19,6 +19,10 @@ zcat ecoli_1K_1.fa.gz | head -n 4 | tail -n 1 >> q.fa
 ./bedtools2/test/test/merge/precisionTest2.bed
 ./bedtools2/test/getfasta/test.iupac.fa
 ./bedtools2/test/getfasta/test.iupac.bed
-./test/intersect/x.bed
-./test/intersect/y.bed
+./bedtools2/test/intersect/x.bed
+./bedtools2/test/intersect/y.bed
 
+./samtools/test/bedcov/bedcov.bam
+#./samtools/test/bedcov/bedcov.bam.bai
+./samtools/test/bedcov/bedcov.bed
+./samtools/test/sort/minimiser-basic.sam

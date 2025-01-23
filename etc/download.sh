@@ -70,6 +70,6 @@ wget http://metagene.nig.ac.jp/metagene/mga_x86_64.tar.gz
 wget https://zenodo.org/record/1168727/files/virsorter-data-v2.tar.gz
 
 # VirSorter2 database
-wget https://osf.io/v46sc/download -O db.tgz
+wget https://osf.io/v46sc/download -O db.tar.gz
 
 popd
