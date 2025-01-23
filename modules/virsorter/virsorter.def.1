@@ -4,15 +4,13 @@ From: almalinux:9
 %setup
 
 %files
-    #../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
-    #../../external/ncbi-blast-2.16.0+-src.tar.gz /opt
-    ../../external/diamond.tar.gz /opt
+    ../../external/diamond.0.9.36.tar.gz /opt
     ../../external/hmmer.tar.gz /opt
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
     ../../external/VirSorter.tar.gz /opt
     ../../external/virsorter-data-v2.tar.gz /opt
     ../../external/mga_x86_64.tar.gz /opt
-    ../../external/ncbi-cxx-toolkit-public.tar.gz /opt
+    ../../external/ncbi-blast-2.16.0+-src.tar.gz /opt
     
 %post
     dnf -y install \
@@ -41,40 +39,29 @@ From: almalinux:9
 
         /opt/miniconda3/bin/conda install -y \
             python=3 mcl=14.137 muscle=5.3 perl-bioperl=1.7.8 perl-file-which=1.24 \
-            perl-parallel-forkmanager=2.03 perl-list-moreutils=0.430 \
-            blast=2.16.0
+            perl-parallel-forkmanager=2.03 perl-list-moreutils=0.430
 
-        # install ncbi-cxx-toolkit
-        echo "############ ncbi-cxx-toolkit ###############"
-        tar xvfz ncbi-cxx-toolkit-public.tar.gz
-        chown -R $(whoami) ncbi-cxx-toolkit-public
-        pushd ncbi-cxx-toolkit-public
-            ./configure --prefix=/usr/local/ncbi --without-gui
+        # install blast
+        echo "############ blast ###############"
+        #tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
+        ##chown -R $(whoami) ncbi-blast-2.16.0+
+        tar xvfz ncbi-blast-2.16.0+-src.tar.gz
+        chown -R $(whoami) ncbi-blast-2.16.0+-src
+        pushd ncbi-blast-2.16.0+-src/c++
+            ./configure --prefix=/usr/local/ncbi
             make -j$(nproc)
             make install
         popd
-        
-        # install blast
-        #echo "############ blast ###############"
-        ##tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
-        ##chown -R $(whoami) ncbi-blast-2.16.0+
-        #tar xvfz ncbi-blast-2.16.0+-src.tar.gz
-        #chown -R $(whoami) ncbi-blast-2.16.0+-src
-        #pushd ncbi-blast-2.16.0+-src/c++
-            #./configure --prefix=/usr/local/ncbi --without-debug --without-boost --without-gui --without-dll
-            #./configure --prefix=/usr/local/ncbi --without-debug --without-boost --without-gui
-            #make -j$(nproc)
-            #make install
-        #popd
 
         # install diamond
-        echo "############ diamond ###############"
-        tar xvfz diamond.tar.gz
+        echo "############ diamond.0.9.36 ###############"
+        tar xvfz diamond.0.9.36.tar.gz
+	mv diamond.0.9.36 diamond
         chown -R $(whoami) diamond
         pushd diamond
             mkdir build
             pushd build
-                cmake -DBLAST_INCLUDE_DIR=/usr/local/ncbi/include/ncbi-tools++ -DBLAST_LIBRARY_DIR=/opt/miniconda3/lib/ncbi-blast+ -DZSTD_LIBRARY=/usr/lib64/libzstd.so ..	    
+		cmake -DZSTD_LIBRARY=/usr/lib64/libzstd.so ..	    
                 make -j$(nproc)
                 make install
             popd
@@ -112,7 +99,8 @@ From: almalinux:9
     export PATH=/opt/miniconda3/bin:$PATH
     #export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
     export PATH=/opt/VirSorter:$PATH
-
+    export LD_LIBRARY_PATH=/usr/lib64:$LD_LIBRARY_PATH
+  
 %runscript
     wrapper_phage_contigs_sorter_iPlant.pl --help
 

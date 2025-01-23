@@ -33,6 +33,8 @@ From: almalinux:9
             python=3 mcl=14.137 muscle=5.3 perl-bioperl=1.7.8 perl-file-which=1.24 \
             perl-parallel-forkmanager=2.03 perl-list-moreutils=0.430 \
             blast=2.16.0 diamond=0.9.14 hmmer=3.1b2
+	    
+            # NOTE : latest diamond(=2.1.10) is not comiled with blast database support.
 	
         # install virsorter
         echo "############ virsorter ###############"

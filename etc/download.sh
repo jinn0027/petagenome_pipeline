@@ -32,14 +32,22 @@ git clone https://github.com/hyattpd/Prodigal -b v2.6.3 --recursive
 git clone https://github.com/algbioi/ppsplus --recursive
 git clone https://github.com/smithlabcode/falco -b v1.2.5 --recursive
 git clone https://github.com/lh3/bwa -b v0.7.18 --recursive
+
+# diamond with blast seems not possible on v2.1.10
 git clone https://github.com/bbuchfink/diamond -b v2.1.10 --recursive
+# 0.9.14 has an installation bug : http://diamondsearch.org/forums/index.php?threads/diamond-installation-error.4/
+# 0.9.36 can be installed successfully but yet has a version mismatch error of database for virsorter.
+#  as : Error: Database was built with an older version of Diamond and is incompatible.
+#git clone https://github.com/bbuchfink/diamond -b v0.9.14 --recursive diamond.0.9.14
+git clone https://github.com/bbuchfink/diamond -b v0.9.36 --recursive diamond.0.9.36
+
 git clone https://github.com/BenLangmead/bowtie -b v1.3.1 --recursive
 git clone https://github.com/BenLangmead/bowtie2 -b v2.5.4 --recursive
 git clone https://github.com/ncbi/sra-tools -b 3.2.0 --recursive
 git clone https://github.com/ncbi/ncbi-vdb -b 3.2.0 --recursive
 git clone https://github.com/voutcn/megahit -b v1.2.9 --recursive
 
-git clone https://github.com/ncbi/ncbi-cxx-toolkit-public.git -b release-28.0.12 --recursive
+#git clone https://github.com/ncbi/ncbi-cxx-toolkit-public.git -b release-28.0.12 --recursive
 
 for i in $(ls)
 do
