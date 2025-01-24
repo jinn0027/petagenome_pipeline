@@ -1,3 +1,8 @@
+■virsorter-data-v2.updatedの作り方。
+0.9.14と 0.9.36を用いて*.dmndを変換した。
+/opt/miniconda3/bin/diamond getseq -d $i | /usr/local/bin/diamond makedb -d $j
+
+
 ■singularityにgoが必要なのでインストール
 
 sudo tar -C /usr/local -xzf go1.23.3.linux-amd64.tar.gz

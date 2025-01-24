@@ -1,6 +1,48 @@
-conda経由でのインストールでvirsorterのバージョンを最新(2.1.10)にした場合、
+conda経由でのインストールでvirsorterのdiamondのバージョンを最新(2.1.10)にした場合、
 
-Opening the database... Error: This executable was not compiled with support for BLAST databases.
+　　Opening the database... Error: This executable was not compiled with support for BLAST databases.
 
-エラーが発生。
+実行するとエラーが発生。
+
+---
+
+以下のうち(4)をvirsorter.defとしている。
+
+(1) virsorter.def.1 : blastとdiamondをどちらもソースからビルドしたもの。動作はする。
+  diamondは2.x.xではそもそもblastと関連付けができないが、0.9.x(xがある程度大きいもの)では出ないっぽいので
+  0.9.36を用いることとした。
+  これは関連付けはできるけど、従来のvirsorter-data-v2.tar.gzだとデータベースのバージョンミスマッチが発生。
+
+　　Error: Database was built with an older version of Diamond and is incompatible.
+
+  conda経由でdiamond=0.9.36を実行してもこれが発生するので、これは本質的と考えデータベースを更新し
+  名前をvirsorter-data-v2.updated.tar.gzとした。
+  データベースの更新は(3)の環境で行った。
+
+
+(2) virsorter.def.2 : blast=2.16.0 diamond=0.9.14 とcondaでインストールしたもの。動作する。
+  基本的に従来の利用方法。
+  ただしdiamondのバージョンが低いので、その後の不具合修正等が反映されていないのが問題。
+
+
+(3) virsorter.def.3 : condaでblast=2.16.0 diamond=0.9.14をインストール、
+    ソースからdiamond v0.9.36をビルドしたもの。
+    これはdiamondデータベースをアップデートするために用いた。
+
+    基本的にはvirsorter-data-v2.tar.gzをアップデートしてvirsorter-data-v2.updated.tar.gzを作成するために用いた。
+    大体以下のような感じでデータベースを更新した。
+
+      for i in $(find /opt/VirSorter/virsorter-data -name '*.dmnd' -print)
+      do
+        j=${i}.new.dmnd
+  　  　/opt/miniconda3/bin/diamond getseq -d $i | /usr/local/bin/diamond makedb -d $j
+        mv -f $j $i
+      done
+
+(4) virsorter.def.4 : blast=2.16.0 diamond=0.9.36 とcondaでインストールしたもの。動作する。
+　　diamondデータベースはアップデート済のもの(virsorter-data-v2.updated.tar.gz)を利用。
+
+
+
+
 

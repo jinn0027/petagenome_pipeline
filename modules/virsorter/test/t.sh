@@ -23,9 +23,9 @@ odir_dmnd=${odir}/diamond
 
 mkdir -p ${odir_blst} ${odir_dmnd}
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir_blst} ../virsorter.sif wrapper_phage_contigs_sorter_iPlant.pl --db 1 --data-dir ${db} --ncpu ${n_threads} --wdir ${odir_blst} --fna ${fa1} > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${fa1},${odir_blst} ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --db 1 --data-dir ${db} --ncpu ${n_threads} --wdir ${odir_blst} --fna ${fa1} > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir_dmnd} ../virsorter.sif wrapper_phage_contigs_sorter_iPlant.pl --diamond --db 2 -data-dir ${db} -ncpu ${n_threads} -wdir ${odir_dmnd} --fna ${fa1} >> ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${fa1},${odir_dmnd} ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --diamond --db 2 -data-dir ${db} -ncpu ${n_threads} -wdir ${odir_dmnd} --fna ${fa1} >> ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/blast/*.csv)

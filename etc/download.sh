@@ -39,7 +39,8 @@ git clone https://github.com/bbuchfink/diamond -b v2.1.10 --recursive
 # 0.9.36 can be installed successfully but yet has a version mismatch error of database for virsorter.
 #  as : Error: Database was built with an older version of Diamond and is incompatible.
 #git clone https://github.com/bbuchfink/diamond -b v0.9.14 --recursive diamond.0.9.14
-git clone https://github.com/bbuchfink/diamond -b v0.9.36 --recursive diamond.0.9.36
+#git clone https://github.com/bbuchfink/diamond -b v0.9.36 --recursive diamond.0.9.36
+git clone https://github.com/bbuchfink/diamond -b v0.9.30 --recursive diamond.0.9.25
 
 git clone https://github.com/BenLangmead/bowtie -b v1.3.1 --recursive
 git clone https://github.com/BenLangmead/bowtie2 -b v2.5.4 --recursive
@@ -76,6 +77,8 @@ wget https://figshare.com/ndownloader/articles/6200807/versions/1 -O mpa_v20_m20
 wget http://metagene.nig.ac.jp/metagene/mga_x86_64.tar.gz
 # VirSorter database
 wget https://zenodo.org/record/1168727/files/virsorter-data-v2.tar.gz
+# virsorter-data-v2.updated.tar.gz : VirSorterr database updated
+# see modules/virsorter/memo
 
 # VirSorter2 database
 wget https://osf.io/v46sc/download -O db.tar.gz
