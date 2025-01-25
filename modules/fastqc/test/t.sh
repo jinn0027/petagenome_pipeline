@@ -22,11 +22,14 @@ failed=""
 for i in $(ls ${refdir}/*.html)
 do
     j=${odir}/$(basename $i)
-    diff -q $i $j >> ${log} 2>&1 && :
+    sed 's#header_filename">[^<]*<##g' $i > _ref
+    sed 's#header_filename">[^<]*<##g' $j > _out
+    diff -q _ref _out >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         failed="${failed} $(basename $i)"
         ret=1
     fi
+    rm -f _ref _out
 done
 
 if [ ${ret} -eq 0 ]; then
