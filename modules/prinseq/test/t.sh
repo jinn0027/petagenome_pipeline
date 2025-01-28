@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 fq1=../../test/s_6_1.fastq.gz
 fq2=../../test/s_6_2.fastq.gz
@@ -15,6 +15,7 @@ wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir} ${wdir}
+rm -rf ${odir}/* ${wdir}/*
 
 wfq1=${wdir}/$(basename ${fq1} | sed 's#.gz$##')
 wfq2=${wdir}/$(basename ${fq2} | sed 's#.gz$##')

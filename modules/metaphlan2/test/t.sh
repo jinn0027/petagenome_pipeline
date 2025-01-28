@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 n_threads=$(nproc)
 
@@ -19,6 +19,7 @@ wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir} ${wdir}
+rm -rf ${odir}/* ${wdir}/*
 
 /usr/local/bin/apptainer exec --bind ${fq1},${odir} ../metaphlan2.sif sh -c "\
     zcat ${fq1} | \

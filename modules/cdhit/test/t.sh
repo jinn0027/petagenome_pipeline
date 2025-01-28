@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 n_threads=$(nproc)
 mem=128
@@ -21,6 +21,8 @@ ofa2=${odir}/$(basename ${fa2} | sed 's#.gz$##')
 ret=0
 
 mkdir -p ${odir}
+rm -rf ${odir}/*
+
 /usr/local/bin/apptainer exec --bind ${fa1},${fa2},${odir} ../cdhit.sif cd-hit-est -c 0.95 -G 1 -mask NX -d 150 -n 10 -T ${n_threads} -M ${mem}000 -i ${fa1} -o ${ofa1} > ${log} 2>&1
 
 failed=""

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 n_threads=$(nproc)
 n_al="1"
@@ -22,6 +22,7 @@ wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir} ${wdir}
+rm -rf ${odir}/* ${wdir}/*
 
 wfa1=${wdir}/$(basename ${fa1} | sed 's#.gz$##')
 db=${wdir}/$(basename ${fa1})

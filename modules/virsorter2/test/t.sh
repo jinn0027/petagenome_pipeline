@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 #fa1=../../test/NC_083851.1.fna
 #fa1=../../test/8seq.fa
@@ -16,6 +16,8 @@ fa1=$(cd $(dirname ${fa1}) && pwd)/$(basename ${fa1})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
+rm -rf ${odir}/*
+
 /usr/local/bin/apptainer exec --bind ${fa1},${odir} --writable ../virsorter2.sbx virsorter run -w ${odir} -i ${fa1} -j ${n_threads}  all > ${log} 2>&1
 
 failed=""

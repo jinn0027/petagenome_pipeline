@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 fq1=../../test/s_6_1.fastq.gz
 fq2=../../test/s_6_2.fastq.gz
@@ -14,6 +14,8 @@ log=t.log
 ret=0
 
 mkdir -p ${odir}
+rm -rf ${odir}/*
+
 /usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../bwa.sif bwa -h > ${log} 2>&1
 
 failed=""

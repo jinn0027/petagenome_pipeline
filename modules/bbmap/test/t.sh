@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 n_threads=$(nproc)
 mem=128
@@ -24,6 +24,8 @@ wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir} ${wdir}
+rm -rf ${odir}/* ${wdir}/*
+
 /usr/local/bin/apptainer exec --bind ${ref},${fq1},${fq2},${odir},${wdir} ../bbmap.sif bbmap.sh -Xmx${mem}g threads=${n_threads} ref=${ref} path=${wdir} > ${log} 2>&1
 
 /usr/local/bin/apptainer exec --bind ${ref},${fq1},${fq2},${odir},${wdir} ../bbmap.sif bbmap.sh -Xmx${mem}g threads=${n_threads} path=${wdir} in=${fq1} in2=${fq2} ambiguous=random minid=0.95 pairlen=1500 out=${odir}/out.sam scafstats=${odir}/out.scafstats >> ${log} 2>&1

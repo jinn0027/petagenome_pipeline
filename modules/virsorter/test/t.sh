@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 n_threads=$(nproc)
 
@@ -21,6 +21,7 @@ odir_blst=${odir}/blast
 odir_dmnd=${odir}/diamond
 
 mkdir -p ${odir_blst} ${odir_dmnd}
+rm -rf ${odir_blst}/* ${odir_dmnd}/*
 
 /usr/local/bin/apptainer exec --bind ${fa1},${odir_blst} ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --db 1 --data-dir ${db} --ncpu ${n_threads} --wdir ${odir_blst} --fna ${fa1} > ${log} 2>&1
 

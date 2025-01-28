@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 fa1=../../test/ecoli_1K_1.fa.gz
 
@@ -15,6 +15,7 @@ wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir} ${wdir}
+rm -rf ${odir}/* ${wdir}/*
 
 wfa1=${wdir}/$(basename ${fa1} | sed 's#.gz$##')
 

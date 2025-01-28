@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 fa1=../../test/hoge.fasta
 kv1=../../test/rename.tsv
@@ -15,6 +15,7 @@ kv1=$(cd $(dirname ${kv1}) && pwd)/$(basename ${kv1})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
+rm -rf ${odir}/*
 
 /usr/local/bin/apptainer exec --bind ${fa1},${kv1},${odir} ../seqkit.sif sh -c "\
     seqkit replace -p '^(\S+)' -r '{kv}' -k ${kv1} ${fa1} > ${odir}/out.replace.fasta" \

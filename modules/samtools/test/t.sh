@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 #n_threads=$(nproc)
 n_threads=16 # Since n_threads seems to affect the sorting result, it should be fixed here.
@@ -22,6 +22,7 @@ wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir} ${wdir}
+rm -rf ${odir}/* ${wdir}/*
 
 /usr/local/bin/apptainer exec --bind ${sam1},${odir} ../samtools.sif sh -c "\
     samtools sort -@ ${n_threads} -O bam -o ${odir}/out.sorted.bam ${sam1}" \
