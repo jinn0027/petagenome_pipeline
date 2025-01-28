@@ -2,10 +2,9 @@
 
 n_threads=$(nproc)
 
-#fa1=../../test/ecoli_1K_1.fa.gz
-#fa1=../../test/NC_086348.1.fna
-#fa1=../../test/NC_091965.1.fna
-fa1=../../test/NC_083851.1.fna
+#fa1=../../test/NC_083851.1.fna
+#fa1=../../test/8seq.fa
+fa1=../../test/1seq.fa
 db=/opt/VirSorter/virsorter-data
 
 odir=results
