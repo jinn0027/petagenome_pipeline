@@ -19,8 +19,11 @@ virsorter2.def.4 :
   データベースはvirsorter setupコマンドで設定。
   このためwgetコマンドもインストールした。
 
-
-
+virsorter2.def.5 :
+  virsorter2をソースから設定。
+  データベースはダウンロード済のものを利用
+  さらにprodigalとhmmerをソースからビルド。
+  
 
 
 
