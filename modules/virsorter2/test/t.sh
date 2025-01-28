@@ -1,7 +1,8 @@
 #!/bin/bash
 
-fq1=../../test/s_6_1.fastq.gz
-fq2=../../test/s_6_2.fastq.gz
+#fa1=../../test/8seq.fa
+fa1=../../test/NC_083851.1.fna
+n_threads=$(nproc)
 
 odir=results
 refdir=ref
@@ -10,15 +11,14 @@ log=t.log
 
 ret=0
 
-fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
-fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
+fa1=$(cd $(dirname ${fa1}) && pwd)/$(basename ${fa1})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../virsorter.sif virsorter -h > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${fa1},${odir} --writable ../virsorter2.sbx virsorter run -w ${odir} -i ${fa1} -j ${n_threads}  all > ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.fa)
+for i in $(ls ${refdir}/*.tsv)
 do
     j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :

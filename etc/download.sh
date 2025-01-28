@@ -70,17 +70,19 @@ wget https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/ncbi-blast-2.16.0+-sr
 # FastQC binary
 wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip
 
-# MetaPhlAn2 database
+# MetaPhlAn2 database @ 2025/1/22
 wget https://figshare.com/ndownloader/articles/6200807/versions/1 -O mpa_v20_m200.zip
 
-# VirSorter Metagenome Annotator
+# VirSorter Metagenome Annotator @ 2012/10/7 (retrieved at 2025/1/22)
 wget http://metagene.nig.ac.jp/metagene/mga_x86_64.tar.gz
-# VirSorter database
+# VirSorter database @ 2025/1/16
 wget https://zenodo.org/record/1168727/files/virsorter-data-v2.tar.gz
 # virsorter-data-v2.updated.tar.gz : VirSorterr database updated
 # see modules/virsorter/memo
 
-# VirSorter2 database
+# VirSorter2 database @ 2025/1/22
 wget https://osf.io/v46sc/download -O db.tar.gz
+# VirSorter2 test @ 2025/1/22
+wget https://raw.githubusercontent.com/jiarong/VirSorter2/master/test/8seq.fa
 
 popd
