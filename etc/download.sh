@@ -27,6 +27,10 @@ git clone https://github.com/samtools/htslib -b 1.21 --recursive
 git clone https://github.com/samtools/bcftools -b 1.21 --recursive
 
 git clone https://github.com/BioInfoTools/BBMap -b v36.20 --recursive
+#git clone https://github.com/BioInfoTools/BBMap.git --recursive
+#pushd BBMap
+#  git checkout 70b24bd416b158e1738f8b70682f3bd2e656ed60
+#popd
 
 git clone https://github.com/hyattpd/Prodigal -b v2.6.3 --recursive
 git clone https://github.com/algbioi/ppsplus --recursive
@@ -84,5 +88,9 @@ wget https://zenodo.org/record/1168727/files/virsorter-data-v2.tar.gz
 wget https://osf.io/v46sc/download -O db.tar.gz
 # VirSorter2 test @ 2025/1/22
 wget https://raw.githubusercontent.com/jiarong/VirSorter2/master/test/8seq.fa
+
+
+# Eclipse jar for compiling BBMap
+wget http://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops4/R-4.5.2-201602121500/ecj-4.5.2.jar -O ecj-4.5.2.jar
 
 popd

@@ -48,7 +48,7 @@ From: almalinux:9
         # cf) https://kazumaxneo.hatenablog.com/entry/2024/04/20/011400
         echo "############ falco ###############"
         tar xvfz falco.tar.gz
-	chown -R $(whoami) falco
+        chown -R $(whoami) falco
         pushd falco
             ./autogen.sh
             ./configure CXXFLAGS="-O3 -Wall" --enable-hts
