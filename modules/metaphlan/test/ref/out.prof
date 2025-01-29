@@ -1,0 +1,6 @@
+#mpa_vJun23_CHOCOPhlAnSGB_202403
+#/opt/miniconda3/bin/metaphlan --bowtie2db /opt/db --input_type fastq --bowtie2out /home/pezy/tmp/petagenome_pipeline/modules/metaphlan/test/work/out.all.sam --nproc 128
+#251 reads processed
+#SampleID	Metaphlan_Analysis
+#clade_name	NCBI_tax_id	relative_abundance	additional_species
+UNCLASSIFIED	-1	100.0	

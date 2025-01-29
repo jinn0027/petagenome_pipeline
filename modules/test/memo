@@ -26,3 +26,7 @@ zcat ecoli_1K_1.fa.gz | head -n 4 | tail -n 1 >> q.fa
 #./samtools/test/bedcov/bedcov.bam.bai
 ./samtools/test/bedcov/bedcov.bed
 ./samtools/test/sort/minimiser-basic.sam
+
+# test for seqkit ( http://yawak.jp/blog/?p=172 )
+hoge.fasta
+rename.tsv

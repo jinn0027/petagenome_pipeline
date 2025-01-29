@@ -74,6 +74,19 @@ wget https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/ncbi-blast-2.16.0+-sr
 # FastQC binary
 wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip
 
+# MetaPhlAn(4) database @ 2025/1/29
+metaphlan4_index=mpa_vJun23_CHOCOPhlAnSGB_202403
+#wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_latest
+echo ${metaphlan4_index} > mpa_latest
+wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}.md5
+wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}.tar
+gzip ${metaphlan4_index}.tar
+#wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}_marker_info.txt.bz2
+#wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}_species.txt.bz2
+wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan4_index}_bt2.md5
+wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan4_index}_bt2.tar
+gzip ${metaphlan4_index}_bt2.tar
+
 # MetaPhlAn2 database @ 2025/1/22
 wget https://figshare.com/ndownloader/articles/6200807/versions/1 -O mpa_v20_m200.zip
 

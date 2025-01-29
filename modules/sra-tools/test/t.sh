@@ -1,8 +1,5 @@
 #!/bin/bash
 
-fq1=../../test/s_6_1.fastq.gz
-fq2=../../test/s_6_2.fastq.gz
-
 odir=results
 refdir=ref
 
@@ -10,17 +7,16 @@ log=t.log
 
 ret=0
 
-fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
-fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../sra-tools.sif sra-tools -h > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${odir} ../sra-tools.sif sh -c "\
+    fastq-dump --stdout -X 2 SRR390728 > ${odir}/SRR390728.txt" > ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.html)
+for i in $(ls ${refdir}/*.txt)
 do
     j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
