@@ -10,11 +10,11 @@ zcat ecoli_1K_1.fa.gz | head -n 4 | tail -n 1 >> q.fa
 #./bcftools/test/idx.3.bed
 #./bcftools/test/idx.4.bed
 
-#./bcftools/test/idx.1.vcf
-#./bcftools/test/idx.2.vcf
-#./bcftools/test/idx.3.vcf
-#./bcftools/test/idx.4.vcf
-#./bcftools/test/idx.vcf
+./bcftools/test/idx.1.vcf
+./bcftools/test/idx.2.vcf
+./bcftools/test/idx.3.vcf
+./bcftools/test/idx.4.vcf
+./bcftools/test/idx.vcf
 
 ./bedtools2/test/test/merge/precisionTest2.bed
 ./bedtools2/test/getfasta/test.iupac.fa
