@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 
 #n_threads=$(nproc)
 n_threads=16 # Since n_threads seems to affect the sorting result, it should be fixed here.

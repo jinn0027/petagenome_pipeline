@@ -89,8 +89,8 @@ wget https://osf.io/v46sc/download -O db.tar.gz
 # VirSorter2 test @ 2025/1/22
 wget https://raw.githubusercontent.com/jiarong/VirSorter2/master/test/8seq.fa
 
-
+# BBMap v39.15
+wget https://sourceforge.net/projects/bbmap/files/BBMap_39.15.tar.gz/download -O BBMap_39.15.tar.gz
 # Eclipse jar for compiling BBMap
 wget http://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops4/R-4.5.2-201602121500/ecj-4.5.2.jar -O ecj-4.5.2.jar
-
 popd

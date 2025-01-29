@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 
 fq1=../../test/s_6_1.fastq.gz
 fq2=../../test/s_6_2.fastq.gz

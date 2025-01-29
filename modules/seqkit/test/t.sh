@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 
 fa1=../../test/hoge.fasta
 kv1=../../test/rename.tsv

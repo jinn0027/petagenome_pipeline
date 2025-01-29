@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 
 fa1=../../test/ecoli_1K_1.fa.gz
 

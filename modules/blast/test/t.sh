@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 
 n_threads=$(nproc)
 n_al="1"

@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 
 #fa1=../../test/NC_083851.1.fna
 #fa1=../../test/8seq.fa

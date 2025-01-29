@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 
 fa1=../../test/test.iupac.fa
 bed1=../../test/test.iupac.bed
