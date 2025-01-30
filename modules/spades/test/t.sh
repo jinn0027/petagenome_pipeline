@@ -2,7 +2,7 @@
 
 #n_threads=$(nproc)
 n_threads=4
-# Since #theads affects the results of spades, it's necessary to fix them.
+# Since #theads may affect the results of spades, it's necessary to fix them.
 mem=128
 
 fq1=../../test/ecoli_1K_1.fq.gz
