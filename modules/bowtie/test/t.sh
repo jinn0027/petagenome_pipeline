@@ -1,7 +1,14 @@
 #!/bin/bash
 
-fq1=../../test/s_6_1.fastq.gz
-fq2=../../test/s_6_2.fastq.gz
+#n_threads=$(nproc)
+n_threads=4
+# Since #theads may affect the results of bowtie, it's necessary to fix them.
+random_seed=1
+
+fa1=../../test/8seq.fa
+fa2=../../test/1seq.fa
+
+wdir=work
 odir=results
 refdir=ref
 
@@ -9,17 +16,26 @@ log=t.log
 
 ret=0
 
-fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
-fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
+fa1=$(cd $(dirname ${fa1}) && pwd)/$(basename ${fa1})
+fa2=$(cd $(dirname ${fa2}) && pwd)/$(basename ${fa2})
+wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
-mkdir -p ${odir}
-rm -rf ${odir}/*
+idx=${wdir}/$(basename ${fa1})
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../bowtie.sif bowtie -h > ${log} 2>&1
+mkdir -p ${wdir} ${odir}
+rm -rf ${wdir}/* ${odir}/*
+
+# create index
+/usr/local/bin/apptainer exec --bind ${fa1},${wdir} ../bowtie.sbx sh -c "\
+    bowtie-build ${fa1} ${idx} --threads ${n_threads} --seed ${random_seed}" > ${log} 2>&1
+
+# align
+/usr/local/bin/apptainer exec --bind ${fa2},${wdir},${odir} ../bowtie.sbx sh -c "\
+    bowtie -f -x ${idx} ${fa2} -p ${n_threads} --seed ${random_seed} > ${odir}/out.sam" >> ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.fa)
+for i in $(ls ${refdir}/*.sam)
 do
     j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
@@ -37,10 +53,7 @@ fi
 
 exit ${ret}
 
-# NOP
-
-
-
+# NOP : results seem to be used but command is not found
 
 
 

@@ -5,6 +5,9 @@ do
     if [ $i = "common" ] || [ $i == "test" ] || [ $i == "tmp" ] ; then
 	continue
     fi
+    if [ -f $i/test/skip_test ] ; then
+	echo "$i : SKIPPED"
+    fi
     if [ -f $i/$i.sif ] && [ -f $i/test/t.sh ] && [ -d $i/test/ref ] ; then
 	pushd $i/test >& /dev/null
 	echo -n "$i : "
