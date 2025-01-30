@@ -1,7 +1,12 @@
 #!/bin/bash
 
-fq1=../../test/s_6_1.fastq.gz
-fq2=../../test/s_6_2.fastq.gz
+#n_threads=$(nproc)
+n_threads=4
+# Since #theads may affect the results of megahit, it's necessary to fix them.
+mem=128
+
+fq1=../../test/ecoli_1K_1.fq.gz
+fq2=../../test/ecoli_1K_2.fq.gz
 
 odir=results
 refdir=ref
@@ -17,12 +22,13 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} megahit.sif ../megahit --help > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../megahit.sbx \
+    megahit -1 ${fq1} -2 ${fq2} -o ${odir}/out -m ${mem} -t ${n_threads} > ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.fa)
+for i in $(ls ${refdir}/out/*.fa)
 do
-    j=${odir}/$(basename $i)
+    j=${odir}/out/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         failed="${failed} $(basename $i)"
