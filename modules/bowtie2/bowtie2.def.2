@@ -24,13 +24,13 @@ From: almalinux:9
         /opt/miniconda3/bin/conda config --append channels bioconda
     
         # install bowtie2
-        if true ; then
-            tar xvfz bowtie2.tar.gz
-            pushd bowtie2
-                make -j$(nproc)
-                make install 
-            popd
-        fi
+        echo "############ bowtie2 ###############"
+        tar xvfz bowtie2.tar.gz
+	chown -R $(whoami) bowtie2
+        pushd bowtie2
+            make -j$(nproc)
+            make install 
+        popd
     popd
 
 %environment

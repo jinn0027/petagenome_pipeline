@@ -5,11 +5,20 @@ From: almalinux:9
 
 %files
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
+    ../../external/bowtie2.tar.gz /opt
     ../../external/MetaPhlAn.tar.gz /opt
-
+    ../../external/mpa_latest /opt
+    ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz /opt
+    ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz /opt
+    
 %post
     dnf -y install \
-        git-2.43.5-2.el9_5
+        git-2.43.5-2.el9_5 \
+        gcc-c++-11.5.0-2.el9.alma.1 \
+        make-1:4.3-8.el9 \
+        zlib-devel-1.2.11 \
+        perl-4:5.32.1-481.el9 \
+        bzip2-1.0.8-8.el9
 
     pushd /opt
         # install miniconda
@@ -25,11 +34,12 @@ From: almalinux:9
 	    
         # install bowtie2
         echo "############ bowtie2 ###############"
-        /opt/miniconda3/bin/conda install -y \
-            libmamba=2.0.5 \
-            libmambapy=2.0.5 \
-            libarchive=3.7.7 \
-            bowtie2=2.5.4
+        tar xvfz bowtie2.tar.gz
+	chown -R $(whoami) bowtie2
+        pushd bowtie2
+            make -j$(nproc)
+            make install 
+        popd
     
         # install metaphlan
         echo "############ metaphlan ###############"
@@ -38,9 +48,14 @@ From: almalinux:9
         /opt/miniconda3/bin/pip install -e MetaPhlAn
 	# install database
         mkdir -p /opt/db
-	/opt/miniconda3/bin/metaphlan metaphlan --install --index mpa_vJun23_CHOCOPhlAnSGB_202403 --bowtie2db db
-	chown -R $(whoami) data
-	chmod -R 777 data
+        mv /opt/mpa_latest /opt/db
+        tar xvfz /opt/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz -C /opt/db
+        rm -f /opt/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz
+        tar xvfz /opt/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz -C /opt/db
+        rm -f /opt/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz
+        bunzip2 /opt/db/*.bz2
+        chown -R $(whoami) /opt/db
+        chmod -R 777 /opt/db
     popd
 
 %environment

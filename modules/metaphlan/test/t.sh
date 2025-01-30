@@ -29,8 +29,8 @@ rm -rf ${odir}/* ${wdir}/*
         --bowtie2out ${wdir}/out.all.sam \
         --nproc ${n_threads} \
         > ${odir}/out.prof \
-    && head -n 100 ${wdir}/out.all.sam > ${odir}/out.sam \
-    && tail -n 100 ${wdir}/out.all.sam >> ${odir}/out.sam" > ${log} 2>&1
+    && sort ${wdir}/out.all.sam | head -n 100 > ${odir}/out.sam \
+    && sort ${wdir}/out.all.sam | tail -n 100 >> ${odir}/out.sam" > ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.prof ${refdir}/*.sam)

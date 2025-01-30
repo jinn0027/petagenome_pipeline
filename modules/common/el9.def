@@ -76,8 +76,7 @@ From: almalinux:9
         # install bowtie2
         echo "############ bowtie2 ###############"
         /opt/miniconda3/bin/conda install -y \
-            bowtie2=2.5.4 \
-	    --solver=classic
+            bowtie2=2.5.4
 	    
         # install metaphlan
         echo "############ metaphlan ###############"
