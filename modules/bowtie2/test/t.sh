@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#n_threads=$(nproc)
+n_threads=4
+# Since #theads may affect the results of bowtie2, it's necessary to fix them.
+random_seed=1
 fa1=../../test/8seq.fa
 fa2=../../test/s_6_1.fastq.gz
 
@@ -23,11 +27,11 @@ rm -rf ${wdir}/* ${odir}/*
 
 # create index
 /usr/local/bin/apptainer exec --bind ${fa1},${wdir} ../bowtie2.sbx \
-			 bowtie2-build ${fa1} ${idx} > ${log} 2>&1
+    bowtie2-build ${fa1} ${idx} > ${log} 2>&1
 
 # align
 /usr/local/bin/apptainer exec --bind ${fa2},${wdir},${odir} ../bowtie2.sbx sh -c "\
-			 bowtie2 -x ${idx} -U ${fa2} > ${odir}/out.sam" > ${log} 2>&1
+    bowtie2 -x ${idx} -U ${fa2} -n ${n_threads} --seed ${random_seed} > ${odir}/out.sam" > ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.sam)
