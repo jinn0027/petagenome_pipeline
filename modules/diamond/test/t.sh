@@ -1,8 +1,11 @@
 #!/bin/bash
 
-fq1=../../test/s_6_1.fastq.gz
-fq2=../../test/s_6_2.fastq.gz
+n_threads=$(nproc)
 
+fa1=../../test/1.faa
+fa2=../../test/2.faa
+
+wdir=work
 odir=results
 refdir=ref
 
@@ -10,17 +13,24 @@ log=t.log
 
 ret=0
 
-fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
-fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
+fa1=$(cd $(dirname ${fa1}) && pwd)/$(basename ${fa1})
+fa2=$(cd $(dirname ${fa2}) && pwd)/$(basename ${fa2})
+wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
-mkdir -p ${odir}
-rm -rf ${odir}/*
+db=${wdir}/db
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../diamond.sif diamond -h > ${log} 2>&1
+mkdir -p ${wdir} ${odir}
+rm -rf ${wdir}/* ${odir}/*
+
+/usr/local/bin/apptainer exec --bind ${fa1},${fa2},${wdir} ../diamond.sbx sh -c "\
+  diamond makedb --threads ${n_threads} --in ${fa1} -d ${db}" > ${log} 2>&1
+
+/usr/local/bin/apptainer exec --bind ${fa1},${fa2},${wdir} ../diamond.sbx sh -c "\
+  diamond blastp -d ${db} -q ${fa2} -o ${odir}/out.tsv" >> ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.fa)
+for i in $(ls ${refdir}/*.tsv)
 do
     j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
