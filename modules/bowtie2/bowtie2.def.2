@@ -14,7 +14,7 @@ From: almalinux:9
         make-1:4.3-8.el9 \
         zlib-devel-1.2.11 \
         perl-4:5.32.1-481.el9
-	
+        
     pushd /opt
         # install miniconda
         sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
@@ -26,7 +26,7 @@ From: almalinux:9
         # install bowtie2
         echo "############ bowtie2 ###############"
         tar xvfz bowtie2.tar.gz
-	chown -R $(whoami) bowtie2
+        chown -R $(whoami) bowtie2
         pushd bowtie2
             make -j$(nproc)
             make install 

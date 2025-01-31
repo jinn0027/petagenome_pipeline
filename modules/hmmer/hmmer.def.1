@@ -23,15 +23,15 @@ From: almalinux:9
         # install hmmer
         echo "############ hmmer ###############"
         tar xvfz hmmer.tar.gz
-	chown -R $(whoami) hmmer
+        chown -R $(whoami) hmmer
         pushd hmmer
             autoconf
             ./configure
             make -j$(nproc)
             make install
         popd
-	# install Pfam database
-	gunzip Pfam-A.hmm.gz
+        # install Pfam database
+        gunzip Pfam-A.hmm.gz
         # prepare an HMM database for faster hmmscan searches
         hmmpress Pfam-A.hmm
     popd

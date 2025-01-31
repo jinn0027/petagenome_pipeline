@@ -29,7 +29,7 @@ From: almalinux:9
         # install ncbi-vdb
         echo "############ ncbi-vdb ###############"
         tar xvfz ncbi-vdb.tar.gz
-	chown -R $(whoami) ncbi-vdb
+        chown -R $(whoami) ncbi-vdb
         pushd ncbi-vdb
             pushd build
                 cmake ..
@@ -37,11 +37,11 @@ From: almalinux:9
                 make install
             popd
         popd
-	
+        
         # install sra-tools
         echo "############ sra-tools ###############"
         tar xvfz sra-tools.tar.gz
-	chown -R $(whoami) sra-tools
+        chown -R $(whoami) sra-tools
         pushd sra-tools
             pushd build
                 cmake .. -D VDB_LIBDIR=/usr/local/lib64 -D USE_SRA=1 -D USE_SAIS=1

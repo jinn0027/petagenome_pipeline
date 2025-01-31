@@ -19,9 +19,9 @@ From: almalinux:9
         # install bedtools
         echo "############ bedtools ###############"
         tar xvfz bedtools2.tar.gz
-	chown -R $(whoami) bedtools2
+        chown -R $(whoami) bedtools2
         pushd bedtools2
-	    make autoversion
+            make autoversion
             make -j$(nproc)
             make install
         popd

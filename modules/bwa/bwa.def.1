@@ -17,7 +17,7 @@ From: almalinux:9
         # install bwa
         echo "############ bwa ###############"
         tar xvfz bwa.tar.gz
-	chown -R $(whoami) bwa
+        chown -R $(whoami) bwa
         pushd bwa
             make -j$(nproc)
             #make install

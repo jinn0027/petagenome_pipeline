@@ -23,15 +23,15 @@ From: almalinux:9
 
         # install python libraries
         /opt/miniconda3/bin/conda config --add channels conda-forge
-	/opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda config --append channels bioconda
         /opt/miniconda3/bin/conda install -y \
             python=3 \
             conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5
-	    
+            
         # install spades
         echo "############ spades ###############"
         tar xvfz spades.tar.gz
-	chown -R $(whoami) spades
+        chown -R $(whoami) spades
         pushd spades
            ./spades_compile.sh
         popd

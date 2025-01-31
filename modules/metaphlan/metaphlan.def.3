@@ -22,20 +22,20 @@ From: almalinux:9
 
     pushd /opt
         # install miniconda
-	sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
 
         # install python libraries
         /opt/miniconda3/bin/conda config --add channels conda-forge
-	/opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda config --append channels bioconda
         /opt/miniconda3/bin/conda install -y \
             python=3 numpy=1.26.4 \
             conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5 \
-	    biom-format=2.1.16 h5py=3.12.1
-	    
+            biom-format=2.1.16 h5py=3.12.1
+            
         # install bowtie2
         echo "############ bowtie2 ###############"
         tar xvfz bowtie2.tar.gz
-	chown -R $(whoami) bowtie2
+        chown -R $(whoami) bowtie2
         pushd bowtie2
             make -j$(nproc)
             make install 
@@ -44,9 +44,9 @@ From: almalinux:9
         # install metaphlan
         echo "############ metaphlan ###############"
         tar xvfz MetaPhlAn.tar.gz
-	chown -R $(whoami) MetaPhlAn
+        chown -R $(whoami) MetaPhlAn
         /opt/miniconda3/bin/pip install -e MetaPhlAn
-	# install database
+        # install database
         mkdir -p /opt/db
         mv /opt/mpa_latest /opt/db
         tar xvfz /opt/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz -C /opt/db

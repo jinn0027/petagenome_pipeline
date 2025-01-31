@@ -17,7 +17,7 @@ From: almalinux:9
         # install bowtie
         echo "############ bowtie ###############"
         tar xvfz bowtie.tar.gz
-	chown -R $(whoami) bowtie
+        chown -R $(whoami) bowtie
         pushd bowtie
             make -j$(nproc)
             make install

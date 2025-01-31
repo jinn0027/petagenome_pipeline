@@ -57,12 +57,12 @@ From: almalinux:9
         # install diamond
         echo "############ diamond.0.9.36 ###############"
         tar xvfz diamond.0.9.36.tar.gz
-	mv diamond.0.9.36 diamond
+        mv diamond.0.9.36 diamond
         chown -R $(whoami) diamond
         pushd diamond
             mkdir build
             pushd build
-		cmake -DZSTD_LIBRARY=/usr/lib64/libzstd.so ..	    
+                cmake -DZSTD_LIBRARY=/usr/lib64/libzstd.so ..            
                 make -j$(nproc)
                 make install
             popd
@@ -71,28 +71,28 @@ From: almalinux:9
         # install hmmer
         echo "############ hmmer ###############"
         tar xvfz hmmer.tar.gz
-	chown -R $(whoami) hmmer
+        chown -R $(whoami) hmmer
         pushd hmmer
             autoconf
             ./configure
             make -j$(nproc)
             make install
         popd
-	
+        
         # install virsorter
         echo "############ virsorter ###############"
         tar xvfz VirSorter.tar.gz
-	chown -R $(whoami) VirSorter
+        chown -R $(whoami) VirSorter
         pushd VirSorter
             pushd Scripts
-	        make clean
-	        make -j$(nproc)
-	    popd
-	    # install database
+                make clean
+                make -j$(nproc)
+            popd
+            # install database
             tar xvfz /opt/virsorter-data-v2.updated.tar.gz -C .
-	    mv virsorter-data-v2.updated virsorter-data
-	    # install MetaGeneAnnotator
-	    tar xvfz /opt/mga_x86_64.tar.gz -C .
+            mv virsorter-data-v2.updated virsorter-data
+            # install MetaGeneAnnotator
+            tar xvfz /opt/mga_x86_64.tar.gz -C .
         popd
     popd
 

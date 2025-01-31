@@ -1,1 +1,66 @@
-metaphlan.def.3
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
+    ../../external/bowtie2.tar.gz /opt
+    ../../external/MetaPhlAn.tar.gz /opt
+    ../../external/mpa_latest /opt
+    ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz /opt
+    ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz /opt
+    
+%post
+    dnf -y install \
+        git-2.43.5-2.el9_5 \
+        gcc-c++-11.5.0-2.el9.alma.1 \
+        make-1:4.3-8.el9 \
+        zlib-devel-1.2.11 \
+        perl-4:5.32.1-481.el9 \
+        bzip2-1.0.8-8.el9
+
+    pushd /opt
+        # install miniconda
+        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+
+        # install python libraries
+        /opt/miniconda3/bin/conda config --add channels conda-forge
+        /opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda install -y \
+            python=3 numpy=1.26.4 \
+            conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5 \
+            biom-format=2.1.16 h5py=3.12.1
+            
+        # install bowtie2
+        echo "############ bowtie2 ###############"
+        tar xvfz bowtie2.tar.gz
+        chown -R $(whoami) bowtie2
+        pushd bowtie2
+            make -j$(nproc)
+            make install 
+        popd
+    
+        # install metaphlan
+        echo "############ metaphlan ###############"
+        tar xvfz MetaPhlAn.tar.gz
+        chown -R $(whoami) MetaPhlAn
+        /opt/miniconda3/bin/pip install -e MetaPhlAn
+        # install database
+        mkdir -p /opt/db
+        mv /opt/mpa_latest /opt/db
+        tar xvfz /opt/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz -C /opt/db
+        rm -f /opt/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz
+        tar xvfz /opt/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz -C /opt/db
+        rm -f /opt/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz
+        bunzip2 /opt/db/*.bz2
+        chown -R $(whoami) /opt/db
+        chmod -R 777 /opt/db
+    popd
+
+%environment
+    export LC_ALL=C
+    export PATH=/opt/miniconda3/bin:$PATH
+
+%runscript
+    metaphlan --help   

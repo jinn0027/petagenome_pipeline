@@ -17,7 +17,7 @@ From: almalinux:9
         # install minimap2
         echo "############ minimap2 ###############"
         tar xvfz minimap2.tar.gz
-	chown -R $(whoami) minimap2
+        chown -R $(whoami) minimap2
         pushd minimap2
             make -j$(nproc)
             #make install

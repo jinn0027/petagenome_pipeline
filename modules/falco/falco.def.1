@@ -26,7 +26,7 @@ From: almalinux:9
 
         # install python libraries
         /opt/miniconda3/bin/conda config --add channels conda-forge
-	/opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda config --append channels bioconda
         /opt/miniconda3/bin/conda install -y \
             python=3 \
             conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5
@@ -35,7 +35,7 @@ From: almalinux:9
         # cf) https://kazumaxneo.hatenablog.com/entry/2024/05/10/024009
         echo "############ htslib ###############"
         tar xvfz htslib.tar.gz
-	chown -R $(whoami) htslib
+        chown -R $(whoami) htslib
         pushd htslib
             autoheader
             autoreconf -i

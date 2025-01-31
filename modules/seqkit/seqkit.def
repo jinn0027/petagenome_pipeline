@@ -11,7 +11,7 @@ From: almalinux:9
         # install seqkit
         echo "############ seqkit ###############"
         tar xvfz seqkit_linux_amd64.2.9.0.tar.gz
-	chown $(whoami) seqkit
+        chown $(whoami) seqkit
         mv -f seqkit /usr/local/bin
     popd
 

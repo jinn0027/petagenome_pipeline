@@ -11,7 +11,7 @@ From: almalinux:9
         # install blast
         echo "############ blast ###############"
         tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
-	chown -R $(whoami) ncbi-blast-2.16.0+
+        chown -R $(whoami) ncbi-blast-2.16.0+
     popd
 
 %environment

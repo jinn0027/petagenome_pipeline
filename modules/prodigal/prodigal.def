@@ -16,10 +16,10 @@ From: almalinux:9
         # install prodigal
         echo "############ prodigal ###############"
         tar xvfz Prodigal.tar.gz
-	chown -R $(whoami) Prodigal
+        chown -R $(whoami) Prodigal
         pushd Prodigal
             make -j$(nproc)
-	    make install
+            make install
         popd
     popd
 

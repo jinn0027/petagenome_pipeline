@@ -13,18 +13,18 @@ From: almalinux:9
 
     pushd /opt
         # install miniconda
-	sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
 
         # install virsorter2
         /opt/miniconda3/bin/conda config --add channels conda-forge
-	/opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda config --append channels bioconda
         /opt/miniconda3/bin/conda install -y \
             python=3 virsorter=2.2.4 \
             libarchive=3.7.7
         # install database
         tar xvfz /opt/db.tar.gz -C .
         chown -R $(whoami):$(whoami) db
-	chmod -R 777 db
+        chmod -R 777 db
         /opt/miniconda3/bin/virsorter config --init-source --db-dir=./db
     popd
 

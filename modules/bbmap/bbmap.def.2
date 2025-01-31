@@ -16,21 +16,21 @@ From: almalinux:9
 
     pushd /opt
         # install miniconda
-	sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
 
         # install python libraries
         /opt/miniconda3/bin/conda config --add channels conda-forge
-	/opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda config --append channels bioconda
         
         # install bbmap
         echo "############ bbmap ###############"
-	tar xvfz BBMap.modified.tar.gz
-	chown -R $(whoami) BBMap
+        tar xvfz BBMap.modified.tar.gz
+        chown -R $(whoami) BBMap
         pushd BBMap
             ant
         popd
-	# modify to use /opt/BBMap/sh/bbmap.sh
-	rm -f /opt/BBMap/sh/current
+        # modify to use /opt/BBMap/sh/bbmap.sh
+        rm -f /opt/BBMap/sh/current
         ln -s /opt/BBMap/build /opt/BBMap/sh/current
         ln -s /opt/BBMap/jni /opt/BBMap/sh/jni
     popd

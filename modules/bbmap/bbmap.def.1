@@ -9,14 +9,14 @@ From: almalinux:9
 %post
     dnf -y install \
         git-2.43.5-2.el9_5 \
-	
+        
     pushd /opt
         # install miniconda
-	sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
 
         # install python libraries
         /opt/miniconda3/bin/conda config --add channels conda-forge
-	/opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda config --append channels bioconda
         
         # install bbmap
         echo "############ bbmap ###############"
