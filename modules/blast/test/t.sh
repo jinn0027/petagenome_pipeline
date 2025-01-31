@@ -29,9 +29,9 @@ db=${wdir}/$(basename ${fa1})
 
 gunzip ${fa1} -c > ${wfa1}
 
-/usr/local/bin/apptainer exec --bind ${wdir} ../blast.sif makeblastdb -in ${wfa1} -out ${db} -dbtype nucl -parse_seqids > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${wdir} ../blast.sbx makeblastdb -in ${wfa1} -out ${db} -dbtype nucl -parse_seqids > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${wdir},${fa2},${odir} ../blast.sif blastn -task megablast -num_threads ${n_threads} -query ${fa2} -db ${db} -perc_identity ${pi_thre} -evalue ${e_thre} -outfmt 6 -num_alignments ${n_al} -out ${odir}/out.txt >> ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${wdir},${fa2},${odir} ../blast.sbx blastn -task megablast -num_threads ${n_threads} -query ${fa2} -db ${db} -perc_identity ${pi_thre} -evalue ${e_thre} -outfmt 6 -num_alignments ${n_al} -out ${odir}/out.txt >> ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.txt)

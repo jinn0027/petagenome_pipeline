@@ -16,7 +16,7 @@ mkdir -p ${odir}
 rm -rf ${odir}/*
 
 # get statics
-/usr/local/bin/apptainer exec --bind ${vcf1},${odir} ../bcftools.sif sh -c "\
+/usr/local/bin/apptainer exec --bind ${vcf1},${odir} ../bcftools.sbx sh -c "\
     bcftools stats ${vcf1} > ${odir}/stats.txt" > ${log} 2>&1
 
 failed=""

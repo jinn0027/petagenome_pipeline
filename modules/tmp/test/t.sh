@@ -15,7 +15,7 @@ fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
 mkdir -p ${odir}
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../SSS.sif SSS -h > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../SSS.sbx SSS -h > ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.fa)

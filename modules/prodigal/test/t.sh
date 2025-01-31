@@ -21,7 +21,7 @@ wfa1=${wdir}/$(basename ${fa1} | sed 's#.gz$##')
 
 gunzip ${fa1} -c > ${wfa1}
 
-/usr/local/bin/apptainer exec --bind ${wfa1},${odir} ../prodigal.sif prodigal -a ${odir}/out.faa -d ${odir}/out.ffn -p meta -i ${wfa1} -f gbk -o ${odir}/out.gbk > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${wfa1},${odir} ../prodigal.sbx prodigal -a ${odir}/out.faa -d ${odir}/out.ffn -p meta -i ${wfa1} -f gbk -o ${odir}/out.gbk > ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.faa ${refdir}/*.ffn ${refdir}/*.gbk)

@@ -23,7 +23,7 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${odir} ../metaphlan2.sif sh -c "\
+/usr/local/bin/apptainer exec --bind ${fq1},${odir} ../metaphlan2.sbx sh -c "\
     zcat ${fq1} | \
     metaphlan2.py \
         --bowtie2db ${db} \
