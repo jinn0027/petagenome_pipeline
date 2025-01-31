@@ -8,7 +8,7 @@ do
     if [ -f $i/test/skip_test ] ; then
 	echo "$i : SKIPPED"
     fi
-    if [ -f $i/$i.sif ] && [ -f $i/test/t.sh ] && [ -d $i/test/ref ] ; then
+    if [ -d $i/$i.sbx ] && [ -f $i/test/t.sh ] && [ -d $i/test/ref ] ; then
 	pushd $i/test >& /dev/null
 	echo -n "$i : "
 	./t.sh
