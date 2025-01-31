@@ -1,11 +1,17 @@
 #!/bin/bash
 
-fq1=../../test/s_6_1.fastq.gz
-fq2=../../test/s_6_2.fastq.gz
+# Since #threads may affect the result, it should be fixed here.
+#n_threads=$(nproc)
+n_threads=128
+
+fa1=../../test/8seq.fa
+fa2=../../test/1seq.fa
+wdir=work
 odir=results
 
-fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
-fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
+fa1=$(cd $(dirname ${fa1}) && pwd)/$(basename ${fa1})
+fa2=$(cd $(dirname ${fa2}) && pwd)/$(basename ${fa2})
+wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 refdir=ref
 
@@ -13,13 +19,20 @@ log=t.log
 
 ret=0
 
-mkdir -p ${odir}
-rm -rf ${odir}/*
+mkdir -p ${wdir} ${odir}
+rm -rf ${wdir}/* ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../bwa.sif bwa -h > ${log} 2>&1
+wfa1=${wdir}/$(basename ${fa1})
+
+/usr/local/bin/apptainer exec --bind ${fa1},${wdir} ../bwa.sbx sh -c "\
+    cp ${fa1} ${wdir} &&
+    bwa index ${wfa1}" > ${log} 2>&1
+
+/usr/local/bin/apptainer exec --bind ${fa2},${wdir},${odir} ../bwa.sbx sh -c "\
+    bwa mem -t ${n_threads} ${wfa1} ${fa2} > ${odir}/out.sam" > ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.fa)
+for i in $(ls ${refdir}/*.sam)
 do
     j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :

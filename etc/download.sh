@@ -36,6 +36,7 @@ git clone https://github.com/hyattpd/Prodigal -b v2.6.3 --recursive
 git clone https://github.com/algbioi/ppsplus --recursive
 git clone https://github.com/smithlabcode/falco -b v1.2.5 --recursive
 git clone https://github.com/lh3/bwa -b v0.7.18 --recursive
+git clone https://github.com/bwa-mem2/bwa-mem2.git -b v2.2.1 --recursive
 
 git clone https://github.com/bbuchfink/diamond -b v2.1.10 --recursive
 
