@@ -1,7 +1,8 @@
 #!/bin/bash
 
+# Since #threads may affect the sorting result, it should be fixed here.
 #n_threads=$(nproc)
-n_threads=16 # Since #threads may affect the sorting result, it should be fixed here.
+n_threads=16
 
 sam1=../../test/minimiser-basic.sam
 bam1=../../test/bedcov.bam

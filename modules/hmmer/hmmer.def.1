@@ -5,6 +5,7 @@ From: almalinux:9
 
 %files
     ../../external/hmmer.tar.gz /opt
+    ../../external/Pfam-A.hmm.gz /opt
 
 %post
     dnf -y install \
@@ -29,11 +30,15 @@ From: almalinux:9
             make -j$(nproc)
             make install
         popd
+	# install Pfam database
+	gunzip Pfam-A.hmm.gz
+        # prepare an HMM database for faster hmmscan searches
+        hmmpress Pfam-A.hmm
     popd
 
 %environment
     export LC_ALL=C
 
 %runscript
-    jackhmmer -h
+    hmmerscan -h
     

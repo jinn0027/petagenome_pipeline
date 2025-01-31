@@ -1,6 +1,8 @@
 #!/bin/bash
 
-n_threads=$(nproc)
+# Since #threads may affect the result, it should be fixed here.
+#n_threads=$(nproc)
+n_threads=128
 
 fq1=../../test/s_6_1.fastq.gz
 db=/opt/MetaPhlAn2/db_v20/mpa_v20_m200

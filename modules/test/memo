@@ -30,3 +30,13 @@ zcat ecoli_1K_1.fa.gz | head -n 4 | tail -n 1 >> q.fa
 # test for seqkit ( http://yawak.jp/blog/?p=172 )
 hoge.fasta
 rename.tsv
+
+# test for hmmer ( https://qiita.com/116ryusei/items/5fa0f1d8291c046cffe7 )
+#sample.fa
+
+# sample
+
+./diamond/src/test/1.faa
+./diamond/src/test/2.faa
+./diamond/src/test/3.faa
+./diamond/src/test/4.faa

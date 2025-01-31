@@ -37,14 +37,7 @@ git clone https://github.com/algbioi/ppsplus --recursive
 git clone https://github.com/smithlabcode/falco -b v1.2.5 --recursive
 git clone https://github.com/lh3/bwa -b v0.7.18 --recursive
 
-# diamond with blast seems not possible on v2.1.10
 git clone https://github.com/bbuchfink/diamond -b v2.1.10 --recursive
-# 0.9.14 has an installation bug : http://diamondsearch.org/forums/index.php?threads/diamond-installation-error.4/
-# 0.9.36 can be installed successfully but yet has a version mismatch error of database for virsorter.
-#  as : Error: Database was built with an older version of Diamond and is incompatible.
-#git clone https://github.com/bbuchfink/diamond -b v0.9.14 --recursive diamond.0.9.14
-#git clone https://github.com/bbuchfink/diamond -b v0.9.36 --recursive diamond.0.9.36
-git clone https://github.com/bbuchfink/diamond -b v0.9.30 --recursive diamond.0.9.25
 
 git clone https://github.com/BenLangmead/bowtie -b v1.3.1 --recursive
 git clone https://github.com/BenLangmead/bowtie2 -b v2.5.4 --recursive
@@ -106,4 +99,9 @@ wget https://raw.githubusercontent.com/jiarong/VirSorter2/master/test/8seq.fa
 wget https://sourceforge.net/projects/bbmap/files/BBMap_39.15.tar.gz/download -O BBMap_39.15.tar.gz
 # Eclipse jar for compiling BBMap
 wget http://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops4/R-4.5.2-201602121500/ecj-4.5.2.jar -O ecj-4.5.2.jar
+
+# hmmer Pfam database vir interpro @ 2025/1/31 via interpro( https://www.ebi.ac.uk/interpro/download/pfam/ )
+# ref) https://qiita.com/116ryusei/items/5fa0f1d8291c046cffe7
+wget https://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
+
 popd

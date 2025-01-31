@@ -1,9 +1,10 @@
 #!/bin/bash
 
-#fa1=../../test/NC_083851.1.fna
-#fa1=../../test/8seq.fa
+# Since #threads may affect the result, it should be fixed here.
+#n_threads=$(nproc)
+n_threads=128
+
 fa1=../../test/1seq.fa
-n_threads=$(nproc)
 
 odir=results
 refdir=ref
