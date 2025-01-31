@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Since #threads may affect the result, it should be fixed here.
+#n_threads=$(nproc)
+n_threads=128
+
 fq1=../../test/s_6_1.fastq.gz
 fq2=../../test/s_6_2.fastq.gz
 
@@ -18,10 +22,10 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../falco.sif falco -h > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../falco.sbx falco -t ${n_threads} -o ${odir} ${fq1} ${fq2} > ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.fa)
+for i in $(ls ${refdir}/*.txt)
 do
     j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
