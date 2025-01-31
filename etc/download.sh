@@ -46,6 +46,8 @@ git clone https://github.com/ncbi/sra-tools -b 3.2.0 --recursive
 git clone https://github.com/ncbi/ncbi-vdb -b 3.2.0 --recursive
 git clone https://github.com/voutcn/megahit -b v1.2.9 --recursive
 
+git clone https://github.com/lh3/minimap2.git -b v2.28 --recursive
+
 #git clone https://github.com/ncbi/ncbi-cxx-toolkit-public.git -b release-28.0.12 --recursive
 
 for i in $(ls)

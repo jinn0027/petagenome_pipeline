@@ -23,7 +23,7 @@ From: almalinux:9
 
         # install bwa-mem2
         /opt/miniconda3/bin/conda install -y \
-            bwa-mem2
+            bwa-mem2=2.2.1
     popd
 
 %environment
@@ -31,4 +31,4 @@ From: almalinux:9
     export PATH=/opt/miniconda3/bin:$PATH
 
 %runscript
-    bwa
+    bwa-mem2
