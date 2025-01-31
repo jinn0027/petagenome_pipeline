@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
+    ../../external/seqkit_linux_amd64.2.9.0.tar.gz /opt
+
+%post
+    pushd /opt
+        # install miniconda
+        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+
+        # install python libraries
+        /opt/miniconda3/bin/conda config --add channels conda-forge
+        /opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda install -y \
+            python=3
+	    
+        # install seqkit
+        echo "############ seqkit ###############"
+        tar xvfz seqkit_linux_amd64.2.9.0.tar.gz
+        chown $(whoami) seqkit
+        mv -f seqkit /usr/local/bin
+    popd
+
+%environment
+    export LC_ALL=C
+
+%runscript
+    seqkit --help    

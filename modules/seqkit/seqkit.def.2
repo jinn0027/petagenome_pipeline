@@ -1,0 +1,31 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
+
+%post
+    pushd /opt
+        # install miniconda
+        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+
+        # install python libraries
+        /opt/miniconda3/bin/conda config --add channels conda-forge
+        /opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda install -y \
+            python=3 \
+            mamba=1.5.8
+	    
+        # install seqkit
+        /opt/miniconda3/bin/conda install -y \
+            seqkit=2.9.0
+    popd
+
+%environment
+    export LC_ALL=C
+    export PATH=/opt/miniconda3/bin:$PATH
+
+%runscript
+    seqkit --help    
