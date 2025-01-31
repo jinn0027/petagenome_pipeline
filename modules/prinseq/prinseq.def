@@ -15,7 +15,7 @@ From: almalinux:9
         # install prinseq
         echo "############ prinseq ###############"
         tar xvfz prinseq.tar.gz
-	chown -R $(whoami) prinseq
+        chown -R $(whoami) prinseq
         chmod +x prinseq/*.pl
     popd
 

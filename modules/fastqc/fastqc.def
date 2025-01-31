@@ -17,7 +17,7 @@ From: almalinux:9
         # install fastqc
         echo "############ fastqc ###############"
         unzip fastqc_v0.12.1.zip
-	chown -R $(whoami) FastQC
+        chown -R $(whoami) FastQC
     popd
 
 %environment

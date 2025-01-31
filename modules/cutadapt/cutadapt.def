@@ -17,7 +17,7 @@ From: almalinux:9
 
         # install python libraries
         /opt/miniconda3/bin/conda config --add channels conda-forge
-	/opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda config --append channels bioconda
         /opt/miniconda3/bin/conda install -y \
             python=3 \
             conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5
@@ -25,7 +25,7 @@ From: almalinux:9
         # install cutadapt
         echo "############ cutadapt ###############"
         tar xvfz cutadapt.tar.gz
-	chown -R $(whoami) cutadapt
+        chown -R $(whoami) cutadapt
         /opt/miniconda3/bin/pip install cutadapt
     popd
 
