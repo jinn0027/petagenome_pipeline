@@ -6,7 +6,7 @@ conda経由でのインストールでvirsorterのdiamondのバージョンを�
 
 ---
 
-以下のうち(4)をvirsorter.defとしている。
+以下のうち(3)をvirsorter.defとしている。
 
 (1) virsorter.def.1 : blastとdiamondをどちらもソースからビルドしたもの。動作はする。
   diamondは2.x.xではそもそもblastと関連付けができないが、0.9.x(xがある程度大きいもの)では出ないっぽいので
@@ -25,7 +25,10 @@ conda経由でのインストールでvirsorterのdiamondのバージョンを�
   ただしdiamondのバージョンが低いので、その後の不具合修正等が反映されていないのが問題。
 
 
-(3) virsorter.def.3 : condaでblast=2.16.0 diamond=0.9.14をインストール、
+(3) virsorter.def.3 : blast=2.16.0 diamond=0.9.36 とcondaでインストールしたもの。動作する。
+　　diamondデータベースはアップデート済のもの(virsorter-data-v2.updated.tar.gz)を利用。
+
+(4) virsorter.def.4 : condaでblast=2.16.0 diamond=0.9.14をインストール、
     ソースからdiamond v0.9.36をビルドしたもの。
     これはdiamondデータベースをアップデートするために用いた。
 
@@ -38,9 +41,6 @@ conda経由でのインストールでvirsorterのdiamondのバージョンを�
   　  　/opt/miniconda3/bin/diamond getseq -d $i | /usr/local/bin/diamond makedb -d $j
         mv -f $j $i
       done
-
-(4) virsorter.def.4 : blast=2.16.0 diamond=0.9.36 とcondaでインストールしたもの。動作する。
-　　diamondデータベースはアップデート済のもの(virsorter-data-v2.updated.tar.gz)を利用。
 
 
 

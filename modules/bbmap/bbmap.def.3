@@ -5,7 +5,7 @@ From: almalinux:9
 
 %files
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
-    ../../external/BBMap.latest.modified.tar.gz /opt
+    ../../external/BBMap_39.15.modified.tar.gz /opt
     ../../external/ecj-4.5.2.jar /opt
 
 %post
@@ -23,21 +23,17 @@ From: almalinux:9
         
         # install bbmap
         echo "############ bbmap ###############"
-        tar xvfz BBMap.latest.modified.tar.gz
-        chown -R $(whoami) BBMap
-        pushd BBMap
+        tar xvfz BBMap_39.15.modified.tar.gz
+        chown -R $(whoami) bbmap
+        pushd bbmap
             ant
         popd
-        # modify to use /opt/BBMap/sh/bbmap.sh
-        #rm -f /opt/BBMap/sh/current
-        #ln -s /opt/BBMap/build /opt/BBMap/sh/current
-        #ln -s /opt/BBMap/jni /opt/BBMap/sh/jni
     popd
 
 %environment
     export LC_ALL=C
     export PATH=/opt/miniconda3/bin:$PATH
-    export PATH=/opt/BBMap/sh:$PATH
+    export PATH=/opt/bbmap:$PATH
 
 %runscript
     bbmap.sh --help

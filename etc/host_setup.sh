@@ -58,3 +58,8 @@ chmod +x nextflow
 sudo mv nextflow /usr/local/bin
 nextflow -v
 #nextflow version 24.10.2.5932
+
+###############################################
+
+sudo dnf -y install squashfuse
+sudo setenforce 0

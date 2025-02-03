@@ -7,10 +7,6 @@ build.xmlの修正やbbmap.def.2の中でシンボリックリンクを貼りな
 一応動くがbbmap.def.1とは答えが違う。
 
 bbmap.def.3
-ソースコード（Commit ID : 70b24bd416b158e1738f8b70682f3bd2e656ed60 : おそらく最新版）からビルドするもの。
-ただしビルドエラーが発生している。
-
-bbmap.def.4
 sourceforgeからダウンロードしたソースコード(v39.15)をビルドしたもの。
 
 
