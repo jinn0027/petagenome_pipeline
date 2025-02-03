@@ -34,7 +34,7 @@ From: almalinux:9
             perl-parallel-forkmanager=2.03 perl-list-moreutils=0.430 \
             blast=2.16.0 diamond=0.9.36 hmmer=3.1b2
             
-            # NOTE : latest diamond(=2.1.10) is not comiled with blast database support.
+            # NOTE : latest diamond(=2.1.10) is not compiled with blast database support.
         
         # install virsorter
         echo "############ virsorter ###############"
@@ -47,7 +47,6 @@ From: almalinux:9
             popd
             # install database
             tar xvfz /opt/virsorter-data-v2.updated.tar.gz -C .
-            mv virsorter-data-v2.updated virsorter-data
             # install MetaGeneAnnotator
             tar xvfz /opt/mga_x86_64.tar.gz -C .
         popd
