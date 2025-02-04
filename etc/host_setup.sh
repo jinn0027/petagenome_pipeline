@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# apptainer/singularityにgo必要なのでインストール
-if [ ! -d /usr/local/go ] ; then
-    if [ ! -f go1.23.3.linux-amd64.tar.gz ] ; then
-        wget https://go.dev/dl/go1.23.3.linux-amd64.tar.gz
-    fi
-    sudo tar -C /usr/local -xzf go1.23.3.linux-amd64.tar.gz
-fi
-export PATH=/usr/local/go/bin:$PATH
-
 sudo dnf -y groupinstall 'Development Tools'
 sudo dnf -y install openssl-devel libuuid-devel libseccomp-devel \
                     wget squashfs-tools glib2-devel-2.68.4-14.el9_4.1.x86_64 \
@@ -16,9 +7,19 @@ sudo dnf -y install openssl-devel libuuid-devel libseccomp-devel \
                     fakeroot \
                     cryptsetup \
                     libsubid-dev \
+                    pigz-2.5-4.el9 \
 #                    wget git
 
 sudo dnf --enablerepo=devel install -y shadow-utils-subid-devel
+
+# apptainer/singularityにgo必要なのでインストール
+if [ ! -d /usr/local/go ] ; then
+    if [ ! -f go1.23.3.linux-amd64.tar.gz ] ; then
+        wget https://go.dev/dl/go1.23.3.linux-amd64.tar.gz
+    fi
+    sudo tar -I pigz -C /usr/local -xf go1.23.3.linux-amd64.tar.gz
+fi
+export PATH=/usr/local/go/bin:$PATH
 
 # apptainerインストール
 if [ ! -d apptainer ] ; then

@@ -8,10 +8,11 @@ From: almalinux:9
     ../../external/VirSorter.tar.gz /opt
     ../../external/virsorter-data-v2.tar.gz /opt
     ../../external/mga_x86_64.tar.gz /opt
-    
+
 %post
     dnf -y install \
         git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9 \
         gcc-c++-11.5.0-2.el9.alma.1 \
         make-1:4.3-8.el9 \
         zlib-devel-1.2.11 \
@@ -33,12 +34,12 @@ From: almalinux:9
             python=3 mcl=14.137 muscle=5.3 perl-bioperl=1.7.8 perl-file-which=1.24 \
             perl-parallel-forkmanager=2.03 perl-list-moreutils=0.430 \
             blast=2.16.0 diamond=0.9.14 hmmer=3.1b2
-            
+
             # NOTE : latest diamond(=2.1.10) is not compiled with blast database support.
-        
+
         # install virsorter
         echo "############ virsorter ###############"
-        tar xvfz VirSorter.tar.gz
+        tar -I pigz -xvf VirSorter.tar.gz
         chown -R $(whoami) VirSorter
         pushd VirSorter
             pushd Scripts
@@ -46,9 +47,9 @@ From: almalinux:9
                 make -j$(nproc)
             popd
             # install database
-            tar xvfz /opt/virsorter-data-v2.tar.gz -C .
+            tar -I pigz -xvf /opt/virsorter-data-v2.tar.gz -C . --no-same-owner
             # install MetaGeneAnnotator
-            tar xvfz /opt/mga_x86_64.tar.gz -C .
+            tar -I pigz -xvf /opt/mga_x86_64.tar.gz -C . --no-same-owner
         popd
     popd
 

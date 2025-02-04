@@ -11,6 +11,7 @@ From: almalinux:9
 %post
     dnf -y install \
         git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9 \
         ant-openjdk17-1.10.9-11.el9_5 openmpi-java-2:4.1.1-7.el9
 
     pushd /opt
@@ -20,10 +21,10 @@ From: almalinux:9
         # install python libraries
         /opt/miniconda3/bin/conda config --add channels conda-forge
         /opt/miniconda3/bin/conda config --append channels bioconda
-        
+
         # install bbmap
         echo "############ bbmap ###############"
-        tar xvfz BBMap_39.15.modified.tar.gz
+        tar -I pigz -xvf BBMap_39.15.modified.tar.gz
         chown -R $(whoami) bbmap
         pushd bbmap
             ant

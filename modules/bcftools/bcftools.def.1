@@ -11,6 +11,7 @@ From: almalinux:9
 %post
     dnf -y install \
         git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9 \
         gcc-c++-11.5.0-2.el9.alma.1 \
         make-1:4.3-8.el9 \
         zlib-devel-1.2.11 \
@@ -33,10 +34,10 @@ From: almalinux:9
         /opt/miniconda3/bin/conda install -y \
             python=3 \
             conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5
-    
+
         # install htslib
         echo "############ htslib ###############"
-        tar xvfz htslib.tar.gz
+        tar -I pigz -xvf htslib.tar.gz
         chown -R $(whoami) htslib
         pushd htslib
             autoreconf
@@ -47,7 +48,7 @@ From: almalinux:9
 
         # install bcftools
         echo "############ bcftools ###############"
-        tar xvfz bcftools.tar.gz
+        tar -I pigz -xvf bcftools.tar.gz
         chown -R $(whoami) bcftools
         pushd bcftools
             autoreconf

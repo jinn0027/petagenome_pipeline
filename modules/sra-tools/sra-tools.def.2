@@ -8,7 +8,8 @@ From: almalinux:9
 
 %post
     dnf -y install \
-        git-2.43.5-2.el9_5
+        git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9
 
     pushd /opt
         # install miniconda
@@ -27,4 +28,4 @@ From: almalinux:9
 
 %runscript
     fasterq-dump -h
-    
+

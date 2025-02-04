@@ -15,6 +15,7 @@ From: almalinux:9
 %post
     dnf -y install \
         git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9 \
         gcc-c++-11.5.0-2.el9.alma.1 \
         make-1:4.3-8.el9 \
         zlib-devel-1.2.11 \
@@ -44,9 +45,9 @@ From: almalinux:9
 
         # install blast
         #echo "############ blast ###############"
-        ##tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
+        ##tar -I pigz -xvf ncbi-blast-2.16.0+-x64-linux.tar.gz
         ##chown -R $(whoami) ncbi-blast-2.16.0+
-        #tar xvfz ncbi-blast-2.16.0+-src.tar.gz
+        #tar -I pigz -xvf ncbi-blast-2.16.0+-src.tar.gz
         #chown -R $(whoami) ncbi-blast-2.16.0+-src
         #pushd ncbi-blast-2.16.0+-src/c++
         #    ./configure --prefix=/usr/local/ncbi
@@ -56,7 +57,7 @@ From: almalinux:9
 
         # install diamond
         echo "############ diamond.0.9.36 ###############"
-        tar xvfz diamond.0.9.36.tar.gz
+        tar -I pigz -xvf diamond.0.9.36.tar.gz
         mv diamond.0.9.36 diamond
         chown -R $(whoami) diamond
         pushd diamond
@@ -70,7 +71,7 @@ From: almalinux:9
 
         # install hmmer
         echo "############ hmmer ###############"
-        tar xvfz hmmer.tar.gz
+        tar -I pigz -xvf hmmer.tar.gz
         chown -R $(whoami) hmmer
         pushd hmmer
             autoconf
@@ -78,10 +79,10 @@ From: almalinux:9
             make -j$(nproc)
             make install
         popd
- 
+
         # install virsorter
         echo "############ virsorter ###############"
-        tar xvfz VirSorter.tar.gz
+        tar -I pigz -xvf VirSorter.tar.gz
         chown -R $(whoami) VirSorter
         pushd VirSorter
             pushd Scripts
@@ -89,9 +90,9 @@ From: almalinux:9
                 make -j$(nproc)
             popd
             # install database
-            tar xvfz /opt/virsorter-data-v2.tar.gz -C .
+            tar -I pigz -xvf /opt/virsorter-data-v2.tar.gz -C .
             # install MetaGeneAnnotator
-            tar xvfz /opt/mga_x86_64.tar.gz -C .
+            tar -I pigz -xvf /opt/mga_x86_64.tar.gz -C .
         popd
     popd
 
@@ -113,6 +114,6 @@ From: almalinux:9
                i=$(echo $j | sed 's#.dmnd.new.dmnd$#.dmnd#')
                mv -f $j $i
            done
-           tar cvfz virsorter-data-v2.updated.tar.gz virsorter-data
+           tar -I pigz -cvf virsorter-data-v2.updated.tar.gz virsorter-data
         fi
     popd

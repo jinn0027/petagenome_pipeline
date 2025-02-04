@@ -9,6 +9,7 @@ From: almalinux:9
 %post
     dnf -y install \
         git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9 \
         gcc-c++-11.5.0-2.el9.alma.1 \
         make-1:4.3-8.el9 \
         zlib-devel-1.2.11
@@ -16,7 +17,7 @@ From: almalinux:9
     pushd /opt
         # install bwa-mem2
         echo "############ bwa-mem2 ###############"
-        tar xvfz bwa-mem2.tar.gz
+        tar -I pigz -xvf bwa-mem2.tar.gz
         chown -R $(whoami) bwa-mem2
         pushd bwa-mem2
             #make -j$(nproc)

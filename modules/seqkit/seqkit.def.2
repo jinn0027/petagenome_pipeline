@@ -7,6 +7,10 @@ From: almalinux:9
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
 
 %post
+    dnf -y install \
+        git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9
+
     pushd /opt
         # install miniconda
         sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
@@ -17,7 +21,7 @@ From: almalinux:9
         /opt/miniconda3/bin/conda install -y \
             python=3 \
             mamba=1.5.8
-	    
+
         # install seqkit
         /opt/miniconda3/bin/conda install -y \
             seqkit=2.9.0

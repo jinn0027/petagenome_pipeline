@@ -9,7 +9,8 @@ From: almalinux:9
 
 %post
     dnf -y install \
-        git-2.43.5-2.el9_5
+        git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9
 
     pushd /opt
         # install miniconda
@@ -22,7 +23,7 @@ From: almalinux:9
             python=3 virsorter=2.2.4 \
             libarchive=3.7.7
         # install database
-        tar xvfz /opt/db.tar.gz -C .
+        tar -I pigz -xvf /opt/db.tar.gz -C . --no-same-owner 
         chown -R $(whoami):$(whoami) db
         chmod -R 777 db
         /opt/miniconda3/bin/virsorter config --init-source --db-dir=./db

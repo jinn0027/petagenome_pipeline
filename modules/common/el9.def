@@ -36,6 +36,7 @@ From: almalinux:9
 %post
     dnf -y install \
         git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9 \
         gcc-c++-11.5.0-2.el9.alma.1 \
         make-1:4.3-8.el9 \
         zlib-devel-1.2.11 \
@@ -80,13 +81,13 @@ From: almalinux:9
             
         # install metaphlan
         echo "############ metaphlan ###############"
-        tar xvfz MetaPhlAn.tar.gz
+        tar -I pigz -xvf MetaPhlAn.tar.gz
         chown -R $(whoami) MetaPhlAn
         /opt/miniconda3/bin/pip install -e MetaPhlAn
 
         # install metaphlan2
         echo "############ metaphlan2 ###############"
-        tar xvfz MetaPhlAn2.tar.gz
+        tar -I pigz -xvf MetaPhlAn2.tar.gz
         mkdir -p MetaPhlAn2/db_v20
         unzip -d MetaPhlAn2/db_v20 /opt/mpa_v20_m200.zip
         chown -R $(whoami) MetaPhlAn2
@@ -97,7 +98,7 @@ From: almalinux:9
 
         # install htslib
         echo "############ htslib ###############"
-        tar xvfz htslib.tar.gz
+        tar -I pigz -xvf htslib.tar.gz
         chown -R $(whoami) htslib
         pushd htslib
             autoreconf
@@ -108,7 +109,7 @@ From: almalinux:9
 
         # install bcftools
         echo "############ bcftools ###############"
-        tar xvfz bcftools.tar.gz
+        tar -I pigz -xvf bcftools.tar.gz
         chown -R $(whoami) bcftools
         pushd bcftools
             autoreconf
@@ -119,7 +120,7 @@ From: almalinux:9
 
         # install samtools
         echo "############ samtools ###############"
-        tar xvfz samtools.tar.gz
+        tar -I pigz -xvf samtools.tar.gz
         chown -R $(whoami) samtools
         pushd samtools
             autoreconf
@@ -130,7 +131,7 @@ From: almalinux:9
 
         # install ncbi-vdb
         echo "############ ncbi-vdb ###############"
-        tar xvfz ncbi-vdb.tar.gz
+        tar -I pigz -xvf ncbi-vdb.tar.gz
         chown -R $(whoami) ncbi-vdb
         pushd ncbi-vdb
             pushd build
@@ -139,10 +140,10 @@ From: almalinux:9
                 make install
             popd
         popd
-        
+
         # install sra-tools
         echo "############ sra-tools ###############"
-        tar xvfz sra-tools.tar.gz
+        tar -I pigz -xvf sra-tools.tar.gz
         chown -R $(whoami) sra-tools
         pushd sra-tools
             pushd build
@@ -151,31 +152,31 @@ From: almalinux:9
                 make install
             popd
         popd
-        
+
         # install bedtools2
         echo "############ bedtools2 ###############"
-        tar xvfz bedtools2.tar.gz
+        tar -I pigz -xvf bedtools2.tar.gz
         chown -R $(whoami) bedtools2
         pushd bedtools2
             make autoversion
             make -j$(nproc)
             make install
         popd
-        
+ 
         # install blast
         echo "############ blast ###############"
-        tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
+        tar -I pigz -xvf ncbi-blast-2.16.0+-x64-linux.tar.gz
         chown -R $(whoami) ncbi-blast-2.16.0+
 
         # install seqkit
         echo "############ seqkit ###############"
-        tar xvfz seqkit_linux_amd64.2.9.0.tar.gz
+        tar -I pigz -xvf seqkit_linux_amd64.2.9.0.tar.gz
         chown $(whoami) seqkit
         mv -f seqkit /usr/local/bin
 
         # install cdhit
         echo "############ cdhit ###############"
-        tar xvfz cdhit.tar.gz
+        tar -I pigz -xvf cdhit.tar.gz
         chown -R $(whoami) cdhit
         pushd cdhit
             make -j$(nproc)
@@ -189,25 +190,25 @@ From: almalinux:9
 
         # install cutadapt
         echo "############ cutadapt ###############"
-        tar xvfz cutadapt.tar.gz
+        tar -I pigz -xvf cutadapt.tar.gz
         chown -R $(whoami) cutadapt
         /opt/miniconda3/bin/pip install cutadapt
-        
+
         # install prinseq
         echo "############ prinseq ###############"
-        tar xvfz prinseq.tar.gz
+        tar -I pigz -xvf prinseq.tar.gz
         chown -R $(whoami) prinseq
         chmod +x prinseq/*.pl
-        
+
         # install bwa
         echo "############ bwa ###############"
-        tar xvfz bwa.tar.gz
+        tar -I pigz -xvf bwa.tar.gz
         chown -R $(whoami) bwa
         pushd bwa
             make -j$(nproc)
             #make install
         popd
-        
+
         # install fastqc
         echo "############ fastqc ###############"
         unzip fastqc_v0.12.1.zip
@@ -216,7 +217,7 @@ From: almalinux:9
         # install falco
         # cf) https://kazumaxneo.hatenablog.com/entry/2024/04/20/011400
         echo "############ falco ###############"
-        tar xvfz falco.tar.gz
+        tar -I pigz -xvf falco.tar.gz
         chown -R $(whoami) falco
         pushd falco
             ./autogen.sh
@@ -224,27 +225,27 @@ From: almalinux:9
             make -j$(nproc) HAVE_HTSLIB=1 all
             make HAVE_HTSLIB=1 install
         popd
-        
+
         # install spades
         echo "############ spades ###############"
-        tar xvfz spades.tar.gz
+        tar -I pigz -xvf spades.tar.gz
         chown -R $(whoami) spades
         pushd spades
            ./spades_compile.sh
         popd
-        
+
         # install prodigal
         echo "############ prodigal ###############"
-        tar xvfz Prodigal.tar.gz
+        tar -I pigz -xvf Prodigal.tar.gz
         chown -R $(whoami) Prodigal
         pushd Prodigal
             make -j$(nproc)
             make install
         popd
-        
+
         # install hmmer
         echo "############ hmmer ###############"
-        tar xvfz hmmer.tar.gz
+        tar -I pigz -xvf hmmer.tar.gz
         chown -R $(whoami) hmmer
         pushd hmmer
             autoconf
@@ -252,10 +253,10 @@ From: almalinux:9
             make -j$(nproc)
             make install
         popd
-        
+
         # install megahit
         echo "############ megahit ###############"
-        tar xvfz megahit.tar.gz
+        tar -I pigz -xvf megahit.tar.gz
         chown -R $(whoami) megahit
         pushd megahit
             mkdir -p build
@@ -265,10 +266,10 @@ From: almalinux:9
                 make install
             popd
         popd
-        
+
         # install diamond
         echo "############ diamond ###############"
-        tar xvfz diamond.tar.gz
+        tar -I pigz -xvf diamond.tar.gz
         chown -R $(whoami) diamond
         pushd diamond
             mkdir build
@@ -278,10 +279,10 @@ From: almalinux:9
                 make install
             popd
         popd
-        
+
         # install bowtie
         echo "############ bowtie ###############"
-        tar xvfz bowtie.tar.gz
+        tar -I pigz -xvf bowtie.tar.gz
         chown -R $(whoami) bowtie
         pushd bowtie
             make -j$(nproc)
@@ -290,7 +291,7 @@ From: almalinux:9
 
         # install virsorter
         echo "############ virsorter ###############"
-        tar xvfz VirSorter.tar.gz
+        tar -I pigz -xvf VirSorter.tar.gz
         chown -R $(whoami) VirSorter
         pushd VirSorter
             pushd Scripts
@@ -298,14 +299,14 @@ From: almalinux:9
                 make -j$(nproc)
             popd
             # install MetaGeneAnnotator
-            tar xvfz /opt/mga_x86_64.tar.gz -C .
+            tar -I pigz -xvf /opt/mga_x86_64.tar.gz -C .
             # install database
-            tar xvfz /opt/virsorter-data-v2.tar.gz -C .
+            tar -I pigz -xvf /opt/virsorter-data-v2.tar.gz -C .
         popd
 
         # install virsorter2
         echo "############ virsorter2 ###############"
-        tar xvfz VirSorter2.tar.gz
+        tar -I pigz -xvf VirSorter2.tar.gz
         chown -R $(whoami) VirSorter2
         pushd VirSorter2
             /opt/miniconda3/bin/pip install -e .

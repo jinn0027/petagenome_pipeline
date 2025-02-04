@@ -9,7 +9,8 @@ From: almalinux:9
 
 %post
     dnf -y install \
-        git-2.43.5-2.el9_5
+        git-2.43.5-2.el9_5 \
+        pigz-2.5-4.el9
 
     pushd /opt
         # install miniconda
@@ -21,10 +22,10 @@ From: almalinux:9
         /opt/miniconda3/bin/conda install -y \
             python=3 \
             conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5
-    
+
         # install cutadapt
         echo "############ cutadapt ###############"
-        tar xvfz cutadapt.tar.gz
+        tar -I pigz -xvf cutadapt.tar.gz
         chown -R $(whoami) cutadapt
         /opt/miniconda3/bin/pip install cutadapt
     popd

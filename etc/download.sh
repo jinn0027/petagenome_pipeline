@@ -128,7 +128,7 @@ for i in $(ls)
 do
     if [ -d $i ] ; then
         echo $i
-        tar cvfz ${i}.tar.gz ${i}
+        tar -I pigz -cvf ${i}.tar.gz ${i}
         rm -rf $i
     fi
 done
@@ -234,19 +234,19 @@ fi
 
 # modify BBMap
 if [ ! -f BBMap.modified.tar.gz ] ; then
-    tar xvfz BBMap.tar.gz
+    tar -I pigz -xvf BBMap.tar.gz
     sed -i -e 's#/usr/common/usg/hpc/openmpi/gnu4.6/sge/1.8.1/ib_2.1-1.0.0/lib/mpi.jar#/usr/lib64/openmpi/lib/mpi.jar#g' \
            -e 's#compiler="${jcompiler}"##g' BBMap/build.xml
-    tar cvfz BBMap.modified.tar.gz BBMap
+    tar -I pigz -cvf BBMap.modified.tar.gz BBMap
     rm -rf BBMap
 fi
 
 # modify BBMap_39.15
 if [ ! -f BBMap_39.15.modified.tar.gz ] ; then
-    tar xvfz BBMap_39.15.tar.gz
+    tar -I pigz -xvf BBMap_39.15.tar.gz
     sed -i -e 's#/usr/common/usg/hpc/openmpi/gnu4.6/sge/1.8.1/ib_2.1-1.0.0/lib/mpi.jar#/usr/lib64/openmpi/lib/mpi.jar#g' \
            -e 's#compiler="${jcompiler}"##g' bbmap/build.xml
-    tar cvfz BBMap_39.15.modified.tar.gz bbmap
+    tar -I pigz -cvf BBMap_39.15.modified.tar.gz bbmap
     rm -rf bbmap
 fi
 
