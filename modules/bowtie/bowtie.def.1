@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/bowtie.tar.gz /opt
+
+%post
+    dnf -y install \
+        git-2.43.5-2.el9_5 \
+        gcc-c++-11.5.0-2.el9.alma.1 \
+        make-1:4.3-8.el9 \
+        zlib-devel-1.2.11
+   
+    pushd /opt
+        # install bowtie
+        echo "############ bowtie ###############"
+        tar xvfz bowtie.tar.gz
+        chown -R $(whoami) bowtie
+        pushd bowtie
+            make -j$(nproc)
+            make install
+        popd
+    popd
+
+%environment
+    export LC_ALL=C
+
+%runscript
+    bowtie --help
+    

@@ -1,0 +1,22 @@
+Bootstrap: docker
+From: almalinux:9
+
+%setup
+
+%files
+    ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
+
+%post
+    pushd /opt
+        # install blast
+        echo "############ blast ###############"
+        tar xvfz ncbi-blast-2.16.0+-x64-linux.tar.gz
+        chown -R $(whoami) ncbi-blast-2.16.0+
+    popd
+
+%environment
+    export LC_ALL=C
+    export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
+
+%runscript
+    blastn -help
