@@ -1,11 +1,14 @@
 #!/bin/bash
 
+rm -f makesbx.log
 for i in $(ls)
 do
     if [ $i = "common" ] || [ $i == "test" ] || [ $i == "tmp" ] ; then
-	continue
+        continue
     fi
     if [ -d $i ] ; then
-	    make -C $i all
+        echo "$(date) $i" | tee -a makeall.log
+	    make -C $i all | tee -a makeall.log
     fi
 done
+echo "$(date) complete" | tee -a makeall.log
