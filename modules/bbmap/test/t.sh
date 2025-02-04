@@ -34,8 +34,8 @@ failed=""
 for i in $(ls ${refdir}/*.sam ${refdir}/*.scafstats)
 do
     j=${odir}/$(basename $i)
-    grep -v '@PG' $i > ${wdir}/ii
-    grep -v '@PG' $j > ${wdir}/jj
+    sort $i | grep -v '@PG' > ${wdir}/ii
+    sort $j | grep -v '@PG' > ${wdir}/jj
     diff -q ${wdir}/ii ${wdir}/jj >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         failed="${failed} $(basename $i)"

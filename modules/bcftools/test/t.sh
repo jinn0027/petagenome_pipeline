@@ -24,8 +24,8 @@ failed=""
 for i in $(ls ${refdir}/*.txt)
 do
     j=${odir}/$(basename $i)
-    grep -v $i > ${wdir}/ii
-    grep -v $j > ${wdir}/jj
+    grep -v -e 'ID	' -e '^#' $i > ${wdir}/ii
+    grep -v -e 'ID	' -e '^#' $j > ${wdir}/jj
     diff -q ${wdir}/ii ${wdir}/jj >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         failed="${failed} $(basename $i)"
