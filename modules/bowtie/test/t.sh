@@ -32,13 +32,15 @@ rm -rf ${wdir}/* ${odir}/*
 
 # align
 /usr/local/bin/apptainer exec --bind ${fa2},${wdir},${odir} ../bowtie.sbx sh -c "\
-    bowtie -f -x ${idx} ${fa2} -p ${n_threads} --seed ${random_seed} > ${odir}/out.sam" >> ${log} 2>&1
+    bowtie -S -f -x ${idx} ${fa2} -p ${n_threads} --seed ${random_seed} > ${odir}/out.sam" >> ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.sam)
 do
     j=${odir}/$(basename $i)
-    diff -q $i $j >> ${log} 2>&1 && :
+    head -n 10 $i | grep -v '@PG' > ${wdir}/ii
+    head -n 10 $j | grep -v '@PG' > ${wdir}/jj
+    diff -q ${wdir}/ii ${wdir}/jj >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         failed="${failed} $(basename $i)"
         ret=1

@@ -8,7 +8,7 @@ do
     fi
     if [ -d $i ] ; then
         echo "$(date) $i" | tee -a makeall.log
-	    make -C $i all | tee -a makeall.log
+	    make -C $i all
     fi
 done
 echo "$(date) complete" | tee -a makeall.log
