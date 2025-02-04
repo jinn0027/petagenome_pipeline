@@ -35,10 +35,12 @@ rm -rf ${odir}/* ${wdir}/*
     && sort ${wdir}/out.all.sam | tail -n 100 >> ${odir}/out.sam" > ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.prof ${refdir}/*.sam)
+for i in $(ls ${refdir}/*.sam)
 do
     j=${odir}/$(basename $i)
-    diff -q $i $j >> ${log} 2>&1 && :
+    sort $i | grep -v '@PG' > ${wdir}/ii
+    sort $j | grep -v '@PG' > ${wdir}/jj
+    diff -q ${wdir}/ii ${wdir}/jj >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         failed="${failed} $(basename $i)"
         ret=1

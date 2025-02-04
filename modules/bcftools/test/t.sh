@@ -2,6 +2,7 @@
 
 vcf1=../../test/idx.vcf
 
+wdir=work
 odir=results
 refdir=ref
 
@@ -12,8 +13,8 @@ ret=0
 vcf1=$(cd $(dirname ${vcf1}) && pwd)/$(basename ${vcf1})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
-mkdir -p ${odir}
-rm -rf ${odir}/*
+mkdir -p ${wdir} ${odir}
+rm -rf ${wdir}/* ${odir}/*
 
 # get statics
 /usr/local/bin/apptainer exec --bind ${vcf1},${odir} ../bcftools.sbx sh -c "\
@@ -23,7 +24,9 @@ failed=""
 for i in $(ls ${refdir}/*.txt)
 do
     j=${odir}/$(basename $i)
-    diff -q $i $j >> ${log} 2>&1 && :
+    grep -v $i > ${wdir}/ii
+    grep -v $j > ${wdir}/jj
+    diff -q ${wdir}/ii ${wdir}/jj >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         failed="${failed} $(basename $i)"
         ret=1

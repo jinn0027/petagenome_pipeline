@@ -35,7 +35,9 @@ failed=""
 for i in $(ls ${refdir}/*.sam)
 do
     j=${odir}/$(basename $i)
-    diff -q $i $j >> ${log} 2>&1 && :
+    grep -v '@PG' $i > ${wdir}/ii
+    grep -v '@PG' $j > ${wdir}/jj
+    diff -q ${wdir}/ii ${wdir}/jj >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
         failed="${failed} $(basename $i)"
         ret=1
