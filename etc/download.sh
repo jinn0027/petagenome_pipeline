@@ -250,4 +250,14 @@ if [ ! -f BBMap_39.15.modified.tar.gz ] ; then
     rm -rf bbmap
 fi
 
+# update virsorter database
+if [ ! -f virsorter-data-v2.updated.tar.gz ] ; then
+    pushd ../modules/virsorter
+    apptainer build --fakeroot --sandbox virsorter_update_db.sbx virsorter_update_db.def
+    apptainer run --fakeroot --writable virsorter_update_db.sbx
+    mv virsorter_update_db.sbx/opt/VirSorter/virsorter-data-v2.updated.tar.gz ../../external
+    sudo rm -rf virsorter_update_db.sbx
+    popd
+fi
+
 popd

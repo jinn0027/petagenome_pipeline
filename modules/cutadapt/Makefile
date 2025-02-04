@@ -11,14 +11,14 @@ clean :
 	sudo rm -rf ${SBX} ${SIF} build-temp-* *~
 
 ${SBX} : ${DEF}
-	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
+	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX} ${DEF}
 
 ${SIF} : ${SBX}
-	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
+	${SINGULARITY} build --fakeroot --fix-perms ${SIF} ${SBX}
 
 .PHONY : shell
 shell : ${SBX}
-	sudo ${SINGULARITY} shell --writable ${SBX}
+	${SINGULARITY} shell --fakeroot --writable ${SBX}
 
 .PHONY : help
 help : ${SIF}

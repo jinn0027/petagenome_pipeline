@@ -63,3 +63,7 @@ nextflow -v
 
 sudo dnf -y install squashfuse
 sudo setenforce 0
+
+mkdir -p /dev/shm/.apptainer
+export APPTAINER_CACHEDIR=/dev/shm/.apptainer
+
