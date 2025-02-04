@@ -6,6 +6,7 @@ do
 	continue
     fi
     if [ -d $i ] ; then
-	    make -C $i all
+	    #make -C $i all
+        make -C $i ${i}.sbx
     fi
 done

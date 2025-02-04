@@ -133,7 +133,7 @@ do
     fi
 done
 
-if [ ! -f seqkit_linux_amd64.tar.gz ] ; then
+if [ ! -f seqkit_linux_amd64.2.9.0.tar.gz ] ; then
     wget -O seqkit_linux_amd64.2.9.0.tar.gz  https://github.com/shenwei356/seqkit/releases/download/v2.9.0/seqkit_linux_amd64.tar.gz
 fi
 
