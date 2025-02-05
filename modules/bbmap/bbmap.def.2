@@ -5,9 +5,7 @@ From: almalinux:9
 
 %files
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
-    # modified not to use jcompiler and changed mpivar default value.
     ../../external/BBMap.modified.tar.gz /opt
-    ../../external/ecj-4.5.2.jar /opt
 
 %post
     dnf -y install \
