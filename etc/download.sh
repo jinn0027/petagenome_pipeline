@@ -203,9 +203,6 @@ if [ ! -f virsorter-data-v2.tar.gz ] ; then
     wget https://zenodo.org/record/1168727/files/virsorter-data-v2.tar.gz
 fi
 
-# virsorter-data-v2.updated.tar.gz : VirSorterr database updated
-# see modules/virsorter/memo
-
 # VirSorter2 database @ 2025/1/22
 if [ ! -f db.tar.gz ] ; then
     wget https://osf.io/v46sc/download -O db.tar.gz
@@ -222,9 +219,9 @@ if [ ! -f BBMap_39.15.tar.gz ] ; then
 fi
 
 # Eclipse jar for compiling BBMap
-if [ ! -f ecj-4.5.2.jar ] ; then
-    wget http://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops4/R-4.5.2-201602121500/ecj-4.5.2.jar -O ecj-4.5.2.jar
-fi
+#if [ ! -f ecj-4.5.2.jar ] ; then
+#    wget http://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops4/R-4.5.2-201602121500/ecj-4.5.2.jar -O ecj-4.5.2.jar
+#fi
 
 # hmmer Pfam database vir interpro @ 2025/1/31 via interpro( https://www.ebi.ac.uk/interpro/download/pfam/ )
 # ref) https://qiita.com/116ryusei/items/5fa0f1d8291c046cffe7
@@ -251,6 +248,7 @@ if [ ! -f BBMap_39.15.modified.tar.gz ] ; then
 fi
 
 # update virsorter database
+# see modules/virsorter/memo
 if [ ! -f virsorter-data-v2.updated.tar.gz ] ; then
     pushd ../modules/virsorter
     apptainer build --fakeroot --sandbox virsorter_update_db.sbx virsorter_update_db.def
