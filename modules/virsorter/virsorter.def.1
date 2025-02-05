@@ -10,11 +10,19 @@ From: ../common/gcc.sif
     ../../external/virsorter-data-v2.updated.tar.gz /opt
     ../../external/mga_x86_64.tar.gz /opt
     ../../external/ncbi-blast-2.16.0+-src.tar.gz /opt
+    ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
 
 %post
     pushd /opt
+        /opt/miniconda3/bin/conda install -y \
+            mcl=14.137 muscle=5.3 perl-bioperl=1.7.8 perl-file-which=1.24 \
+            perl-parallel-forkmanager=2.03 perl-list-moreutils=0.430
+
         # install blast
-        echo "############ blast ###############"
+        echo "############ blast bin ###############"
+        tar -I pigz -xvf ncbi-blast-2.16.0+-x64-linux.tar.gz
+        chown -R $(whoami) ncbi-blast-2.16.0+
+        echo "############ blast src ###############"
         tar -I pigz -xvf ncbi-blast-2.16.0+-src.tar.gz
         chown -R $(whoami) ncbi-blast-2.16.0+-src
         pushd ncbi-blast-2.16.0+-src/c++
@@ -65,6 +73,7 @@ From: ../common/gcc.sif
     popd
 
 %environment
+    export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
     export PATH=/opt/VirSorter:$PATH
     export LD_LIBRARY_PATH=/usr/lib64:$LD_LIBRARY_PATH
 
