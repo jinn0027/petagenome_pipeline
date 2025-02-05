@@ -7,10 +7,6 @@ From: ../common/gcc.sif
     ../../external/bowtie2.tar.gz /opt
 
 %post
-    # install perl
-    dnf -y install \
-        perl-4:5.32.1-481.el9
-
     pushd /opt
         # install bowtie2
         echo "############ bowtie2 ###############"
