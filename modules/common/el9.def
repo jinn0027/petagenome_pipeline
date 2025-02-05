@@ -11,7 +11,8 @@ From: almalinux:9
         pigz-2.5-4.el9 \
         unzip-6.0-57.el9 \
         bzip2-1.0.8-8.el9 \
-        pbzip2-1.1.13-6.el9
+        pbzip2-1.1.13-6.el9 \
+        cpio-2.13-16.el9
 
     pushd /opt
         # install miniconda

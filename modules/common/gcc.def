@@ -13,4 +13,8 @@ From: ./el9.sif
         bzip2-devel-1.0.8-8.el9 \
         libcurl-devel-7.76.1-31.el9 \
         ncurses-devel-6.2-10.20210508.el9 \
-        gsl-devel-2.6-7.el9
+        gsl-devel-2.6-7.el9 \
+        lmdb-libs-0.9.29-3.el9 \
+        libzstd-devel-1.5.1-2.el9 \
+        libcom_err-devel-1.46.5-5.el9 \
+        krb5-devel-1.21.1-4.el9_5
