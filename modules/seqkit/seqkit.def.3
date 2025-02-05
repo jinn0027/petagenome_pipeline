@@ -1,5 +1,5 @@
 Bootstrap: localimage
-From: ../common/gcc.sif
+From: ../common/golang.sif
 
 %setup
 
@@ -7,9 +7,6 @@ From: ../common/gcc.sif
     ../../external/seqkit.tar.gz /opt
 
 %post
-    dnf -y install \
-        golang
-
     pushd /opt
         # install seqkit
         echo "############ seqkit ###############"
