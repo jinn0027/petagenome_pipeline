@@ -1,7 +1,7 @@
 SINGULARITY?=/usr/local/bin/apptainer
 
 .PHONY : all
-all : el9.sif gcc.sif java.sif
+all : el9.sif gcc.sif java.sif golang.sif
 
 .PHONY : clean
 clean :
@@ -30,5 +30,13 @@ java.sbx : java.def el9.sif
 
 java.sif : java.sbx
 	${SINGULARITY} build --fakeroot --fix-perms java.sif java.sbx
+
+### golang
+
+golang.sbx : golang.def el9.sif
+	${SINGULARITY} build --fakeroot --fix-perms --sandbox golang.sbx golang.def
+
+golang.sif : golang.sbx
+	${SINGULARITY} build --fakeroot --fix-perms golang.sif golang.sbx
 
 
