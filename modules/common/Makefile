@@ -1,30 +1,34 @@
 SINGULARITY?=/usr/local/bin/apptainer
-DEF=el9.def
-SBX=el9.sbx
-SIF=el9.sif
 
 .PHONY : all
-all : ${SBX} ${SIF}
+all : el9.sif gcc.sif java.sif
 
 .PHONY : clean
 clean :
-	sudo rm -rf ${SBX} ${SIF} build-temp-* *~
+	sudo rm -rf *.sif *.sbx build-temp-* *~
 
-${SBX} : ${DEF}
-	sudo ${SINGULARITY} build --fix-perms --sandbox ${SBX} ${DEF}
+### almalinux9
 
-${SIF} : ${SBX}
-	sudo ${SINGULARITY} build --fix-perms ${SIF} ${SBX}
+el9.sbx : el9.def
+	${SINGULARITY} build --fakeroot --fix-perms --sandbox el9.sbx el9.def
 
-.PHONY : shell
-shell : ${SBX}
-	sudo ${SINGULARITY} shell --writable ${SBX}
+el9.sif : el9.sbx
+	${SINGULARITY} build --fakeroot --fix-perms el9.sif el9.sbx
 
-.PHONY : help
-help : ${SIF}
-	${SINGULARITY} exec ${SIF} fastqc --help
+### gcc
 
-.PHONY : version
-version : ${SIF}
-	${SINGULARITY} exec ${SIF} fastqc --version
+gcc.sbx : gcc.def el9.sif
+	${SINGULARITY} build --fakeroot --fix-perms --sandbox gcc.sbx gcc.def
+
+gcc.sif : gcc.sbx
+	${SINGULARITY} build --fakeroot --fix-perms gcc.sif gcc.sbx
+
+### java
+
+java.sbx : java.def el9.sif
+	${SINGULARITY} build --fakeroot --fix-perms --sandbox java.sbx java.def
+
+java.sif : java.sbx
+	${SINGULARITY} build --fakeroot --fix-perms java.sif java.sbx
+
 

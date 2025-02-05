@@ -1,5 +1,5 @@
-Bootstrap: docker
-From: almalinux:9
+Bootstrap: localimage
+From: ../common/el9.sif
 
 %setup
 
@@ -7,10 +7,6 @@ From: almalinux:9
     ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
 
 %post
-    dnf -y install \
-        git-2.43.5-2.el9_5 \
-        pigz-2.5-4.el9
-
     pushd /opt
         # install blast
         echo "############ blast ###############"
@@ -19,8 +15,6 @@ From: almalinux:9
     popd
 
 %environment
-    export LC_ALL=C
     export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
 
 %runscript
-    blastn -help

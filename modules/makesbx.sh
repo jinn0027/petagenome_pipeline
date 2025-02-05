@@ -8,7 +8,7 @@ do
     fi
     if [ -d $i ] ; then
         echo "$(date) $i" | tee -a makesbx.log
-        make -C $i ${i}.sbx
+        make -j$(nproc) -C $i ${i}.sbx
     fi
 done
 echo "$(date) complete" | tee -a makesbx.log
