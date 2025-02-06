@@ -37,7 +37,15 @@ $ ./download.sh
 ## モジュール
 
 モジュール名 foo の場合、モジュールは petagenome_pipeline/modules/foo 以下にある。
-以下の手順でsandboxとコンテナをfoo.sbx、foo.sif という名前で作成する。
+
+最初に各モジュールが利用する共有のsifファイルを作成する必要がある。
+
+```
+$ cd petagenome_pipeline/common
+$ make
+```
+
+次に以下の手順でsandboxとコンテナをfoo.sbx、foo.sif という名前で作成する。
 
 ```
 $ cd petagenome_pipeline/foo
