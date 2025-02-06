@@ -41,21 +41,21 @@ $ ./download.sh
 最初に各モジュールが利用する共有のsifファイルを作成する必要がある。
 
 ```
-$ cd petagenome_pipeline/common
+$ cd petagenome_pipeline/modules/common
 $ make
 ```
 
 次に以下の手順でsandboxとコンテナをfoo.sbx、foo.sif という名前で作成する。
 
 ```
-$ cd petagenome_pipeline/foo
+$ cd petagenome_pipeline/modules/foo
 $ make
 ```
 
 モジュール毎の各ディレクトリにはtestサブディレクトリがあり、ここで簡易テストを行える。
 
 ```
-$ cd petagenome_pipeline/foo/test
+$ cd petagenome_pipeline/modules/foo/test
 $ ./t.sh
 ```
 
