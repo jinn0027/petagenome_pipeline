@@ -10,7 +10,8 @@ $ git clone https://github.com/jinn0027/petagenome_pipeline.git
 
 almalinux9にて実行。
 
-```$ cd petagenome_pipeline/etc
+```
+$ cd petagenome_pipeline/etc
 $ ./host_setup.sh
 ```
 
@@ -25,7 +26,8 @@ $ ./host_setup.sh
 
 almalinux9にて実行。
 
-```$ cd petagenome_pipeline/etc
+```
+$ cd petagenome_pipeline/etc
 $ ./download.sh
 ```
 
