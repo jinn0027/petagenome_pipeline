@@ -3,4 +3,4 @@ From: ./el9.sif
 
 %post
     dnf -y install \
-        golang
+        golang-1.22.9-2.el9_5

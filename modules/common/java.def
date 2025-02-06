@@ -3,4 +3,5 @@ From: ./el9.sif
 
 %post
     dnf -y install \
-        ant-openjdk17-1.10.9-11.el9_5 openmpi-java-2:4.1.1-7.el9
+        ant-openjdk17-1.10.9-11.el9_5 \
+        openmpi-java-2:4.1.1-7.el9
