@@ -20,11 +20,11 @@ From: almalinux:9
         /opt/miniconda3/bin/conda config --add channels conda-forge
         /opt/miniconda3/bin/conda config --append channels bioconda
         /opt/miniconda3/bin/conda install -y \
-            python=3 virsorter=2.2.4 \
+            python=3.9.21 virsorter=2.2.4 \
             libarchive=3.7.7
         # install database
         tar -I pigz -xvf /opt/db.tar.gz -C . --no-same-owner 
-        chown -R $(whoami):$(whoami) db
+        chown -R $(whoami) db
         chmod -R 777 db
         /opt/miniconda3/bin/virsorter config --init-source --db-dir=./db
     popd
