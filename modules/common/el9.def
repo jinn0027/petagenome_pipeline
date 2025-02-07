@@ -5,7 +5,10 @@ From: almalinux:9
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
 
 %post
-    dnf -y install \
+    dnf install -y epel-release
+    dnf makecache
+
+    dnf install -y \
         git-2.43.5-2.el9_5 \
         perl-4:5.32.1-481.el9 \
         pigz-2.5-4.el9 \

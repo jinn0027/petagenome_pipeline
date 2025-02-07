@@ -1,1 +1,24 @@
-bedtools2.def.1
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/bedtools2.tar.gz /opt
+
+%post
+    pushd /opt
+        # install bedtools
+        echo "############ bedtools ###############"
+        tar -I pigz -xvf bedtools2.tar.gz
+        chown -R $(whoami) bedtools2
+        pushd bedtools2
+            make autoversion
+            make -j$(nproc)
+            make install
+        popd
+    popd
+
+%environment
+
+%runscript

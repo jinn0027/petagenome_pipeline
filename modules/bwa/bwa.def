@@ -1,1 +1,25 @@
-bwa.def.1
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/bwa.tar.gz /opt
+
+%post
+    pushd /opt
+        # install bwa
+        echo "############ bwa ###############"
+        tar -I pigz -xvf bwa.tar.gz
+        chown -R $(whoami) bwa
+        pushd bwa
+            make -j$(nproc)
+            #make install
+        popd
+    popd
+
+%environment
+    export PATH=/opt/bwa:$PATH
+
+%runscript
+

@@ -7,12 +7,12 @@ From: ../common/el9.sif
 
 %post
     pushd /opt
-        # install bwa-mem2
+        # install fastp
+        echo "############ fastp ###############"
         /opt/miniconda3/bin/conda install -y \
-            bwa-mem2=2.2.1
+            bioconda::fastp=0.24.0
     popd
 
 %environment
 
 %runscript
-

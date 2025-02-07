@@ -124,6 +124,26 @@ if [ ! -f minimap2.tar.gz ] ; then
     git clone https://github.com/lh3/minimap2.git -b v2.28 --recursive
 fi
 
+#if [ ! -f yasm.tar.gz ] ; then
+#    git clone https://github.com/yasm/yasm.git -b v1.3.0 --recursive
+#fi
+
+#if [ ! -f nasm.tar.gz ] ; then
+#    git clone https://github.com/netwide-assembler/nasm.git -b nasm-2.16.03 --recursive
+#fi
+
+#if [ ! -f isa-l.tar.gz ] ; then
+#    git clone https://github.com/intel/isa-l.git -b v2.31.1 --recursive
+#fi
+
+#if [ ! -f libdeflate.tar.gz ] ; then
+#    git clone https://github.com/ebiggers/libdeflate.git -b v1.23 --recursive
+#fi
+
+if [ ! -f fastp.tar.gz ] ; then
+    git clone https://github.com/OpenGene/fastp.git -b v0.24.0 --recursive
+fi
+
 for i in $(ls)
 do
     if [ -d $i ] ; then

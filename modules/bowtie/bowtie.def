@@ -1,1 +1,24 @@
-bowtie.def.1
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/bowtie.tar.gz /opt
+
+%post
+    pushd /opt
+        # install bowtie
+        echo "############ bowtie ###############"
+        tar -I pigz -xvf bowtie.tar.gz
+        chown -R $(whoami) bowtie
+        pushd bowtie
+            make -j$(nproc)
+            make install
+        popd
+    popd
+
+%environment
+
+%runscript
+

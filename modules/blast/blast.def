@@ -1,1 +1,20 @@
-blast.def.1
+Bootstrap: localimage
+From: ../common/el9.sif
+
+%setup
+
+%files
+    ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
+
+%post
+    pushd /opt
+        # install blast
+        echo "############ blast ###############"
+        tar -I pigz -xvf ncbi-blast-2.16.0+-x64-linux.tar.gz
+        chown -R $(whoami) ncbi-blast-2.16.0+
+    popd
+
+%environment
+    export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
+
+%runscript

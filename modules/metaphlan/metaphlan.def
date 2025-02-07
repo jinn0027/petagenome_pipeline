@@ -1,1 +1,47 @@
-metaphlan.def.3
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/bowtie2.tar.gz /opt
+    ../../external/MetaPhlAn.tar.gz /opt
+    ../../external/mpa_latest /opt
+    ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz /opt
+    ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz /opt
+
+%post
+    pushd /opt
+        # install python libraries
+        /opt/miniconda3/bin/conda install -y \
+            biom-format=2.1.16 h5py=3.12.1
+
+        # install bowtie2
+        echo "############ bowtie2 ###############"
+        tar -I pigz -xvf bowtie2.tar.gz
+        chown -R $(whoami) bowtie2
+        pushd bowtie2
+            make -j$(nproc)
+            make install 
+        popd
+
+        # install metaphlan
+        echo "############ metaphlan ###############"
+        tar -I pigz -xvf MetaPhlAn.tar.gz
+        chown -R $(whoami) MetaPhlAn
+        /opt/miniconda3/bin/pip install -e MetaPhlAn
+        # install database
+        mkdir -p /opt/db
+        mv /opt/mpa_latest /opt/db
+        tar -I pigz -xvf /opt/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz -C /opt/db --no-same-owner
+        rm -f /opt/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz
+        tar -I pigz -xvf /opt/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz -C /opt/db --no-same-owner
+        rm -f /opt/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz
+        pbunzip2 /opt/db/*.bz2
+        chown -R $(whoami) /opt/db
+        chmod -R 777 /opt/db
+    popd
+
+%environment
+
+%runscript

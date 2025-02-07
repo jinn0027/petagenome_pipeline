@@ -1,0 +1,23 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/fastp.tar.gz /opt
+
+%post
+    pushd /opt
+        # install fastp
+        echo "############ fastp ###############"
+        tar -I pigz -xvf fastp.tar.gz
+        chown -R $(whoami) fastp
+        pushd fastp
+            make -j$(nproc)
+            make install
+        popd
+    popd
+
+%environment
+
+%runscript

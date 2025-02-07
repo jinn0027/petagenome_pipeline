@@ -1,1 +1,80 @@
-virsorter.def.1
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/diamond.0.9.36.tar.gz /opt
+    ../../external/hmmer.tar.gz /opt
+    ../../external/VirSorter.tar.gz /opt
+    ../../external/virsorter-data-v2.updated.tar.gz /opt
+    ../../external/mga_x86_64.tar.gz /opt
+    ../../external/ncbi-blast-2.16.0+-src.tar.gz /opt
+    ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
+
+%post
+    pushd /opt
+        /opt/miniconda3/bin/conda install -y \
+            mcl=14.137 muscle=5.3 perl-bioperl=1.7.8 perl-file-which=1.24 \
+            perl-parallel-forkmanager=2.03 perl-list-moreutils=0.430
+
+        # install blast
+        echo "############ blast bin ###############"
+        tar -I pigz -xvf ncbi-blast-2.16.0+-x64-linux.tar.gz
+        chown -R $(whoami) ncbi-blast-2.16.0+
+        echo "############ blast src ###############"
+        tar -I pigz -xvf ncbi-blast-2.16.0+-src.tar.gz
+        chown -R $(whoami) ncbi-blast-2.16.0+-src
+        pushd ncbi-blast-2.16.0+-src/c++
+            ./configure --prefix=/usr/local/ncbi
+            make -j$(nproc)
+            make install
+        popd
+
+        # install diamond
+        echo "############ diamond.0.9.36 ###############"
+        tar -I pigz -xvf diamond.0.9.36.tar.gz
+        mv diamond.0.9.36 diamond
+        chown -R $(whoami) diamond
+        pushd diamond
+            mkdir build
+            pushd build
+                cmake -DZSTD_LIBRARY=/usr/lib64/libzstd.so ..            
+                make -j$(nproc)
+                make install
+            popd
+        popd
+
+        # install hmmer
+        echo "############ hmmer ###############"
+        tar -I pigz -xvf hmmer.tar.gz
+        chown -R $(whoami) hmmer
+        pushd hmmer
+            autoconf
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
+
+        # install virsorter
+        echo "############ virsorter ###############"
+        tar -I pigz -xvf VirSorter.tar.gz
+        chown -R $(whoami) VirSorter
+        pushd VirSorter
+            pushd Scripts
+                make clean
+                make -j$(nproc)
+            popd
+            # install database
+            tar -I pigz -xvf /opt/virsorter-data-v2.updated.tar.gz -C . --no-same-owner
+            # install MetaGeneAnnotator
+            tar -I pigz -xvf /opt/mga_x86_64.tar.gz -C . --no-same-owner
+        popd
+    popd
+
+%environment
+    export PATH=/opt/ncbi-blast-2.16.0+/bin:$PATH
+    export PATH=/opt/VirSorter:$PATH
+    export LD_LIBRARY_PATH=/usr/lib64:$LD_LIBRARY_PATH
+
+%runscript
