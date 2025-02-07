@@ -1,25 +1,14 @@
-Bootstrap: docker
-From: almalinux:9
+Bootstrap: localimage
+From: ../common/el9.sif
 
 %setup
 
 %files
-    ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
     ../../external/db.tar.gz /opt
 
 %post
-    dnf install -y \
-        git-2.43.5-2.el9_5 \
-        pigz-2.5-4.el9
-
     pushd /opt
-        # install miniconda
-        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
-
-        # install virsorter2
-        /opt/miniconda3/bin/conda config --add channels conda-forge
-        /opt/miniconda3/bin/conda config --append channels bioconda
-        /opt/miniconda3/bin/conda install -y \
+        /opt/miniconda3/bin/mamba install -y \
             python=3.9.21 virsorter=2.2.4 \
             libarchive=3.7.7
         # install database
