@@ -25,8 +25,12 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
-/usr/local/bin/apptainer exec --bind ${sam1},${odir} ../samtools.sbx sh -c "\
-    samtools sort -@ ${n_threads} -O bam -o ${odir}/out.sorted.bam ${sam1}" \
+/usr/local/bin/apptainer exec --bind ${sam1},${wdir} ../samtools.sbx sh -c "\
+    samtools sort -@ ${n_threads} -O bam -o ${wdir}/out.sorted.bam ${sam1}" \
+> ${log} 2>&1
+
+/usr/local/bin/apptainer exec --bind ${sam1},${wdir},${odir} ../samtools.sbx sh -c "\
+    samtools view -@ ${n_threads} -h ${wdir}/out.sorted.bam -o ${odir}/out.sorted.sam" \
 > ${log} 2>&1
 
 /usr/local/bin/apptainer exec --bind ${bam1},${wdir},${odir} ../samtools.sbx sh -c "\
@@ -45,7 +49,7 @@ rm -rf ${odir}/* ${wdir}/*
 >> ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.txt ${refdir}/*.bam ${refdir}/*.bai)
+for i in $(ls ${refdir}/*.txt ${refdir}/*.sam ${refdir}/*.bai)
 do
     j=${odir}/$(basename $i)
     diff -q $i $j >> ${log} 2>&1 && :
