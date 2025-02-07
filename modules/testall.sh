@@ -13,8 +13,8 @@ do
     fi
     if [ -d $i/$i.sbx ] && [ -f $i/test/t.sh ] && [ -d $i/test/ref ] ; then
         pushd $i/test >& /dev/null
-        echo -n "$i : " | tee -a ../testall.log
-        ./t.sh | tee -a ../testall.log
+        echo -n "$i : " | tee -a ../../testall.log
+        ./t.sh | tee -a ../../testall.log
         popd >& /dev/null
     fi
 done
