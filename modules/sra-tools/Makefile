@@ -22,8 +22,9 @@ shell : ${SBX}
 
 .PHONY : help
 help : ${SIF}
-	${SINGULARITY} exec ${SIF} sratools -h
+	${SINGULARITY} exec ${SIF} fastq-dump -h
 
 .PHONY : version
 version : ${SIF}
-	${SINGULARITY} exec ${SIF} sratools -h
+	${SINGULARITY} exec ${SIF} fastq-dump -h | tail -n 2
+
