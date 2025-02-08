@@ -1,5 +1,5 @@
-Bootstrap: docker
-From: almalinux:9
+Bootstrap: localimage
+From: ../common/gcc.sif
 
 %setup
 
@@ -7,27 +7,18 @@ From: almalinux:9
     ../../external/bwa-mem2.tar.gz /opt
 
 %post
-    dnf install -y \
-        git-2.43.5-2.el9_5 \
-        pigz-2.5-4.el9 \
-        gcc-c++-11.5.0-2.el9.alma.1 \
-        make-1:4.3-8.el9 \
-        zlib-devel-1.2.11
-
     pushd /opt
         # install bwa-mem2
         echo "############ bwa-mem2 ###############"
         tar -I pigz -xvf bwa-mem2.tar.gz
         chown -R $(whoami) bwa-mem2
         pushd bwa-mem2
-            #make -j$(nproc)
-            #make install
+            make -j$(nproc)
+            make install
         popd
     popd
 
 %environment
-    export LC_ALL=C
     export PATH=/opt/bwa-mem2:$PATH
 
 %runscript
-    bwa
