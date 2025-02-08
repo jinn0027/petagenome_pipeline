@@ -3,27 +3,11 @@ virsorter2.def.1 :
   データベースはダウンロード済のものを利用
 
 virsorter2.def.2 :
-  virsorter2をconda経由で設定。
-  データベースはvirsorter setupコマンドで設定。
-  このためwgetコマンドもインストールした。
-
-# 以下はcondaのバージョン整合が難しく、 https://github.com/jiarong/VirSorter2/tree/v2.2.4
-# の通りにやらないと正しくビルドできなかった。
+  virsorter2をソースから設定。
+  データベースはダウンロード済のものを利用
+  prodigalとhmmerはcondaから設定。
 
 virsorter2.def.3 :
   virsorter2をソースから設定。
   データベースはダウンロード済のものを利用
-
-virsorter2.def.4 :
-  virsorter2をソースから設定。
-  データベースはvirsorter setupコマンドで設定。
-  このためwgetコマンドもインストールした。
-
-virsorter2.def.5 :
-  virsorter2をソースから設定。
-  データベースはダウンロード済のものを利用
   さらにprodigalとhmmerをソースからビルド。
-  
-
-
-
