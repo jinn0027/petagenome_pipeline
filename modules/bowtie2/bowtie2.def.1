@@ -1,37 +1,18 @@
-Bootstrap: docker
-From: almalinux:9
+Bootstrap: localimage
+From: ../common/el9.sif
 
 %setup
 
 %files
-    ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
 
 %post
-    dnf install -y \
-        git-2.43.5-2.el9_5 \
-        pigz-2.5-4.el9
-
     pushd /opt
-        # install miniconda
-        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
-
-        # install python libraries
-        /opt/miniconda3/bin/conda config --add channels conda-forge
-        /opt/miniconda3/bin/conda config --append channels bioconda
-
         # install bowtie2
         echo "############ bowtie2 ###############"
-        /opt/miniconda3/bin/conda install -y \
-            conda-libmamba-solver=24.11.1 \
-            libmamba=2.0.5 \
-            libmambapy=2.0.5 \
-            libarchive=3.7.7 \
+        /opt/miniconda3/bin/mamba install -y \
             bowtie2=2.5.4
     popd
 
 %environment
-    export LC_ALL=C
-    export PATH=/opt/miniconda3/bin:$PATH
 
 %runscript
-    bowtie2 --help
