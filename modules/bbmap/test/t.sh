@@ -26,12 +26,17 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
-/usr/local/bin/apptainer exec --bind ${ref},${fq1},${fq2},${odir},${wdir} ../bbmap.sbx bbmap.sh -Xmx${mem}g threads=${n_threads} ref=${ref} path=${wdir} > ${log} 2>&1
+# create index
+/usr/local/bin/apptainer exec --bind ${ref},${wdir} ../bbmap.sbx sh -c "\
+    bbmap.sh -Xmx${mem}g threads=${n_threads} ref=${ref} path=${wdir}" > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${ref},${fq1},${fq2},${odir},${wdir} ../bbmap.sbx bbmap.sh -Xmx${mem}g threads=${n_threads} path=${wdir} in=${fq1} in2=${fq2} ambiguous=random minid=0.95 pairlen=1500 out=${odir}/out.sam scafstats=${odir}/out.scafstats >> ${log} 2>&1
+# align
+/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir},${wdir} ../bbmap.sbx sh -c "\
+    bbmap.sh -Xmx${mem}g threads=${n_threads} path=${wdir} in=${fq1} in2=${fq2} \
+        ambiguous=random minid=0.95 pairlen=1500 out=${odir}/out.sam" >> ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.sam ${refdir}/*.scafstats)
+for i in $(ls ${refdir}/*.sam)
 do
     j=${odir}/$(basename $i)
     sort $i | grep -v '@PG' > ${wdir}/ii
