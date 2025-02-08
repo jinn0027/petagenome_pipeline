@@ -1,5 +1,5 @@
-Bootstrap: docker
-From: almalinux:9
+Bootstrap: localimage
+From: ../common/gcc.sif
 
 %setup
 
@@ -9,19 +9,8 @@ From: almalinux:9
 
 %post
     dnf install -y \
-        git-2.43.5-2.el9_5 \
-        pigz-2.5-4.el9 \
-        gcc-c++-11.5.0-2.el9.alma.1 \
-        make-1:4.3-8.el9 \
-        zlib-devel-1.2.11 \
-        cmake-3.26.5-2.el9 \
-        xz-devel-5.2.5-8.el9_0 \
-        autoconf-2.69-39.el9 \
-        automake-1.16.2-8.el9 \
-        bzip2-devel-1.0.8-8.el9 \
         flex-2.6.4-9.el9 \
         bison-3.7.4-5.el9 \
-        libxml2-devel-2.9.13-6.el9_4 \
         java-21-openjdk-devel-1:21.0.5.0.11-2.el9.alma.1 \
         which-2.21-29.el9 \
         perl-4:5.32.1-481.el9
@@ -53,7 +42,6 @@ From: almalinux:9
     popd
 
 %environment
-    export LC_ALL=C
 
 %runscript
-    fasterq-dump -h
+
