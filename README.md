@@ -37,6 +37,7 @@ $ ./download.sh
 ## モジュール
 
 モジュール名 foo の場合、モジュールは petagenome_pipeline/modules/foo 以下にある。
+モジュール一覧は[こちら](doc/modules.md)。
 
 最初に各モジュールが利用する共有のsifファイルを作成する必要がある。
 
