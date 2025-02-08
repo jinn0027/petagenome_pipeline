@@ -8,7 +8,7 @@ conda経由でのインストールでvirsorterのdiamondのバージョンを�
 
 以下のうち(3)をvirsorter.defとしている。
 
-(1) virsorter.def.1 : blastとdiamondをどちらもソースからビルドしたもの。動作はする。
+(1) virsorter.def.1 : blast=2.16.0/diamond=0.9.36/hmmer=infernal-1.1.5をいずれもソースからビルドしたもの。動作はする。
   diamondは2.x.xではそもそもblastと関連付けができないが、0.9.x(xがある程度大きいもの)では出ないっぽいので
   0.9.36を用いることとした。
   これは関連付けはできるけど、従来のvirsorter-data-v2.tar.gzだとデータベースのバージョンミスマッチが発生。
@@ -20,12 +20,12 @@ conda経由でのインストールでvirsorterのdiamondのバージョンを�
   データベースの更新は(3)の環境で行った。
 
 
-(2) virsorter.def.2 : blast=2.16.0 diamond=0.9.14 とcondaでインストールしたもの。動作する。
+(2) virsorter.def.2 : blast=2.16.0 diamond=0.9.14 hmmer=3.1b2 とcondaでインストールしたもの。動作する。
   基本的に従来の利用方法。
   ただしdiamondのバージョンが低いので、その後の不具合修正等が反映されていないのが問題。
 
 
-(3) virsorter.def.3 : blast=2.16.0 diamond=0.9.36 とcondaでインストールしたもの。動作する。
+(3) virsorter.def.3 : blast=2.16.0 diamond=0.9.36 hmmer=3.1b2 とcondaでインストールしたもの。動作する。
 　　diamondデータベースはアップデート済のもの(virsorter-data-v2.updated.tar.gz)を利用。
 
 (*) virsorter_update_db.def : condaでblast=2.16.0 diamond=0.9.14をインストール、
@@ -41,8 +41,3 @@ conda経由でのインストールでvirsorterのdiamondのバージョンを�
   　  　/opt/miniconda3/bin/diamond getseq -d $i | /usr/local/bin/diamond makedb -d $j
         mv -f $j $i
       done
-
-
-
-
-
