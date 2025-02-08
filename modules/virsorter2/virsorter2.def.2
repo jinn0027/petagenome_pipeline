@@ -13,7 +13,7 @@ From: ../common/gcc.sif
     pushd /opt
         # install python libraries
         # (ref) https://github.com/jiarong/VirSorter2/tree/v2.2.4
-        /opt/miniconda3/bin/mamba install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             python=3.8.20 \
             scikit-learn=0.22.1 \
             imbalanced-learn=0.7.0 \
@@ -25,12 +25,12 @@ From: ../common/gcc.sif
 
         # install prodigal
         echo "############ prodigal ###############"
-        /opt/miniconda3/bin/mamba install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             prodigal=2.6.3
 
         # install hmmer
         echo "############ hmmer ###############"
-        /opt/miniconda3/bin/mamba install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             hmmer=3.3
 
         # install virsorter2

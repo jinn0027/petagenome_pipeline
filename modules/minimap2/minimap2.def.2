@@ -18,12 +18,12 @@ From: almalinux:9
         # install python libraries
         /opt/miniconda3/bin/conda config --add channels conda-forge
         /opt/miniconda3/bin/conda config --append channels bioconda
-        /opt/miniconda3/bin/conda install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             python=3 \
             conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5
 
         # install minimap2
-        /opt/miniconda3/bin/conda install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             minimap2=2.1.1
     popd
 

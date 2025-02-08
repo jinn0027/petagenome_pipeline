@@ -25,7 +25,7 @@ From: almalinux:9
         # install python libraries
         echo "############ python libraries ###############"
         /opt/miniconda3/bin/conda config --add channels conda-forge
-        /opt/miniconda3/bin/conda config --append channels bioconda
+        /opt/miniconda3/bin/conda config --add channels bioconda
         /opt/miniconda3/bin/conda install -y \
             python=3.12.8 \
             libarchive=3.7.7 \

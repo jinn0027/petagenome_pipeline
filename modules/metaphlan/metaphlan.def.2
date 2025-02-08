@@ -1,9 +1,10 @@
 Bootstrap: localimage
-From: ../common/el9.sif
+From: ../common/gcc.sif
 
 %setup
 
 %files
+    ../../external/bowtie2.tar.gz /opt
     ../../external/MetaPhlAn.tar.gz /opt
     ../../external/mpa_latest /opt
     ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz /opt
@@ -12,14 +13,18 @@ From: ../common/el9.sif
 %post
     pushd /opt
         # install python libraries
-        /opt/miniconda3/bin/mamba install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             biom-format=2.1.16 \
             h5py=3.12.1
 
         # install bowtie2
         echo "############ bowtie2 ###############"
-        /opt/miniconda3/bin/mamba install -y \
-            bowtie2=2.5.4
+        tar -I pigz -xvf bowtie2.tar.gz
+        chown -R $(whoami) bowtie2
+        pushd bowtie2
+            make -j$(nproc)
+            make install 
+        popd
 
         # install metaphlan
         echo "############ metaphlan ###############"
@@ -41,5 +46,3 @@ From: ../common/el9.sif
 %environment
 
 %runscript
-
-

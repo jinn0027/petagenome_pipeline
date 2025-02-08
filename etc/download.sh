@@ -88,7 +88,7 @@ if [ ! -f bwa.tar.gz ] ; then
 fi
 
 if [ ! -f bwa-mem2.tar.gz ] ; then
-    git clone https://github.com/bwa-mem2/bwa-mem2.git -b v2.2.1 --recursive
+    git clone https://github.com/bwa-mem2/bwa-mem2 -b v2.2.1 --recursive
 fi
 
 if [ ! -f diamond.0.9.36.tar.gz ] ; then
@@ -121,27 +121,27 @@ if [ ! -f megahit.tar.gz ] ; then
 fi
 
 if [ ! -f minimap2.tar.gz ] ; then
-    git clone https://github.com/lh3/minimap2.git -b v2.28 --recursive
+    git clone https://github.com/lh3/minimap2 -b v2.28 --recursive
 fi
 
 #if [ ! -f yasm.tar.gz ] ; then
-#    git clone https://github.com/yasm/yasm.git -b v1.3.0 --recursive
+#    git clone https://github.com/yasm/yasm -b v1.3.0 --recursive
 #fi
 
 #if [ ! -f nasm.tar.gz ] ; then
-#    git clone https://github.com/netwide-assembler/nasm.git -b nasm-2.16.03 --recursive
+#    git clone https://github.com/netwide-assembler/nasm -b nasm-2.16.03 --recursive
 #fi
 
 #if [ ! -f isa-l.tar.gz ] ; then
-#    git clone https://github.com/intel/isa-l.git -b v2.31.1 --recursive
+#    git clone https://github.com/intel/isa-l -b v2.31.1 --recursive
 #fi
 
 #if [ ! -f libdeflate.tar.gz ] ; then
-#    git clone https://github.com/ebiggers/libdeflate.git -b v1.23 --recursive
+#    git clone https://github.com/ebiggers/libdeflate -b v1.23 --recursive
 #fi
 
 if [ ! -f fastp.tar.gz ] ; then
-    git clone https://github.com/OpenGene/fastp.git -b v0.24.0 --recursive
+    git clone https://github.com/OpenGene/fastp -b v0.24.0 --recursive
 fi
 
 for i in $(ls)
@@ -164,12 +164,12 @@ fi
 
 # Blast+ binary
 if [ ! -f ncbi-blast-2.16.0+-x64-linux.tar.gz ] ; then
-    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.16.0+-x64-linux.tar.gz
+    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.16.0/ncbi-blast-2.16.0+-x64-linux.tar.gz
 fi
 
 # Blast+ source
 if [ ! -f ncbi-blast-2.16.0+-src.tar.gz ] ; then
-    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/ncbi-blast-2.16.0+-src.tar.gz
+    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/2.16.0/ncbi-blast-2.16.0+-src.tar.gz
 fi
 
 # FastQC binary
@@ -178,8 +178,9 @@ if [ ! -f fastqc_v0.12.1.zip ] ; then
 fi
 
 # MetaPhlAn(4) database @ 2025/1/29
+#wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_latest -O mpa_latest
+#metaphlan4_index=$(cat mpa_latest)
 metaphlan4_index=mpa_vJun23_CHOCOPhlAnSGB_202403
-
 echo ${metaphlan4_index} > mpa_latest
 
 if [ ! -f ${metaphlan4_index}.md5 ] ; then

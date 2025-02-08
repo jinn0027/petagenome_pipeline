@@ -7,19 +7,19 @@
 | [bowtie](https://github.com/BenLangmead/bowtie) | v1.3.1 |
 | [bowtie2](https://github.com/BenLangmead/bowtie2) | v2.5.4 |
 | [bwa](https://github.com/lh3/bwa) | v0.7.18 |
-| [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) | v2.2.1 |
+| [bwamem2](https://github.com/bwa-mem2/bwa-mem2) | v2.2.1 |
 | [cdhit](https://github.com/weizhongli/cdhit) | v4.8.1 |
 | [cutadapt](https://github.com/marcelm/cutadapt) | v5.0 |
 | [diamond](https://github.com/bbuchfink/diamond) | v2.1.10 |
 | [falco](https://github.com/smithlabcode/falco) | v1.2.5 |
 | [fastp](https://github.com/OpenGene/fastp) | v0.24.0 |
 | [fastqc](https://www.bioinformatics.babraham.ac.uk/projects/fastqc) | v0.12.1 |
-| [hmmer](https://github.com/EddyRivasLab/hmmer) | infernal-1.1.5 |
+| [hmmer](https://github.com/EddyRivasLab/hmmer) | 3.4(infernal-1.1.5) |
 | [megahit](https://github.com/voutcn/megahit) | v1.2.9 |
 | [metaphlan](https://github.com/biobakery/MetaPhlAn) | 4.1.1 |
-| [metaphlan2](https://github.com/biobakery/MetaPhlAn2) |  |
+| [metaphlan2](https://github.com/biobakery/MetaPhlAn2) | 2.6.0 |
 | [minimap2](https://github.com/lh3/minimap2) | v2.28 |
-| [prinseq](https://github.com/uwb-linux/prinseq) |  |
+| [prinseq](https://github.com/uwb-linux/prinseq) | 0.20.4 |
 | [prodigal](https://github.com/hyattpd/Prodigal) | v2.6.3 |
 | [samtools](https://github.com/samtools/samtools) | 1.21 |
 | [seqkit](https://github.com/shenwei356/seqkit) | v2.9.0 |

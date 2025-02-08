@@ -8,7 +8,7 @@ From: ../common/el9.sif
 %post
     pushd /opt
         # install sra-tools
-        /opt/miniconda3/bin/mamba install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             sra-tools=3.2.0
     popd
 

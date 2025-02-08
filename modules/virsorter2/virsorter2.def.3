@@ -13,7 +13,7 @@ From: ../common/gcc.sif
     pushd /opt
         # install python libraries
         # (ref) https://github.com/jiarong/VirSorter2/tree/v2.2.4
-        /opt/miniconda3/bin/mamba install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             python=3.8.20 \
             scikit-learn=0.22.1 \
             imbalanced-learn=0.7.0 \

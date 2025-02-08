@@ -5,17 +5,20 @@ From: ../common/el9.sif
 
 %files
     ../../external/MetaPhlAn.tar.gz /opt
+    ../../external/mpa_latest /opt
+    ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz /opt
+    ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz /opt
 
 %post
     pushd /opt
         # install python libraries
-        /opt/miniconda3/bin/mamba install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             biom-format=2.1.16 \
             h5py=3.12.1
 
         # install bowtie2
         echo "############ bowtie2 ###############"
-        /opt/miniconda3/bin/mamba install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             bowtie2=2.5.4
 
         # install metaphlan
@@ -25,11 +28,18 @@ From: ../common/el9.sif
         /opt/miniconda3/bin/pip install -e MetaPhlAn
         # install database
         mkdir -p /opt/db
-        /opt/miniconda3/bin/metaphlan metaphlan --install --index mpa_vJun23_CHOCOPhlAnSGB_202403 --bowtie2db db
-        chown -R $(whoami) data
-        chmod -R 777 data
+        mv /opt/mpa_latest /opt/db
+        tar -I pigz -xvf /opt/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz -C /opt/db --no-same-owner
+        rm -f /opt/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz
+        tar -I pigz -xvf /opt/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz -C /opt/db --no-same-owner
+        rm -f /opt/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz
+        pbunzip2 /opt/db/*.bz2
+        chown -R $(whoami) /opt/db
+        chmod -R 777 /opt/db
     popd
 
 %environment
 
 %runscript
+
+

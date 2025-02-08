@@ -5,7 +5,7 @@ all : el9.sif gcc.sif java.sif golang.sif
 
 .PHONY : clean
 clean :
-	sudo rm -rf *.sif *.sbx build-temp-* *~
+	/bin/rm -rf *.sif *.sbx build-temp-* *~
 
 ### almalinux9
 

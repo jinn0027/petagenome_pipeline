@@ -10,12 +10,12 @@ From: ../common/el9.sif
 %post
     pushd /opt
         # install python libraries
-        /opt/miniconda3/bin/conda install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             biom-format=2.1.16 h5py=3.12.1
 
         # install bowtie2
         echo "############ bowtie2 ###############"
-        /opt/miniconda3/bin/conda install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             libmamba=2.0.5 \
             libmambapy=2.0.5 \
             libarchive=3.7.7 \

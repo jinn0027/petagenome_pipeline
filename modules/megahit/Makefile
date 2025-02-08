@@ -8,7 +8,7 @@ all : ${SBX} ${SIF}
 
 .PHONY : clean
 clean :
-	sudo rm -rf ${SBX} ${SIF} build-temp-*
+	/bin/rm -rf ${SBX} ${SIF} build-temp-* *~
 
 ${SBX} : ${DEF}
 	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX} ${DEF}
@@ -18,7 +18,7 @@ ${SIF} : ${SBX}
 
 .PHONY : shell
 shell : ${SBX}
-	${SINGULARITY} shell --fakeroot --writable ${SBX} *~
+	${SINGULARITY} shell --fakeroot --writable ${SBX}
 
 .PHONY : help
 help : ${SIF}

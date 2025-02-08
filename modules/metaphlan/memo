@@ -1,14 +1,9 @@
 metaphlan.def.1 :
   metaphlanはダウンロードされたソースから設定。
-  データベースはmetaphlan --installコマンドで設定。
-  bowtie2はcondaから設定。
-
-metaphlan.def.2 :
-  metaphlanはダウンロードされたソースから設定。
   データベースはダウンロード済のものを利用。
   bowtie2はcondaから設定。
 
-metaphlan.def.3 :
+metaphlan.def.2 :
   metaphlanはダウンロードされたソースから設定。
   データベースはダウンロード済のものを利用。
   bowtie2はダウンロードされたソースから設定。

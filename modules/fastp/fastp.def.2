@@ -9,7 +9,7 @@ From: ../common/el9.sif
     pushd /opt
         # install fastp
         echo "############ fastp ###############"
-        /opt/miniconda3/bin/conda install -y \
+        /opt/miniconda3/bin/mamba install -y -q \
             bioconda::fastp=0.24.0
     popd
 
