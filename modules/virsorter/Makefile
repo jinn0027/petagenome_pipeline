@@ -3,18 +3,33 @@ DEF=virsorter.def
 SBX=virsorter.sbx
 SIF=virsorter.sif
 
+DEF_UPDATE_DB=virsorter_update_db.def
+SBX_UPDATE_DB=virsorter_update_db.sbx
+DB_UPDATED=virsorter-data-v2.updated.tar.gz
+EXTERNAL_DB_UPDATED=../../external/${DB_UPDATED}
+
 .PHONY : all
-all : ${SBX} ${SIF}
+all : ${SBX} ${SIF} ${SBX_UPDATE_DB}
 
 .PHONY : clean
 clean :
-	sudo rm -rf ${SBX} ${SIF} build-temp-* *~
+	sudo rm -rf ${SBX} ${SIF} ${SBX_UPDATE_DB} build-temp-* *~
 
 ${SBX} : ${DEF}
 	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX} ${DEF}
 
 ${SIF} : ${SBX}
 	${SINGULARITY} build --fakeroot --fix-perms ${SIF} ${SBX}
+
+${SBX_UPDATE_DB} : ${DEF_UPDATE_DB}
+	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX_UPDATE_DB} ${DEF_UPDATE_DB}
+
+../../external/${DB_UPDATED} : ${SBX_UPDATE_DB}
+	${SINGULARITY} run --fakeroot --writable ${SBX_UPDATE_DB}
+	mv -f ${SBX_UPDATE_DB}/opt/VirSorter/${DB_UPDATED} ../../external/${DB_UPDATED}
+
+.PHONY : db_updated
+db_updated : ../../external/${DB_UPDATED}
 
 .PHONY : shell
 shell : ${SBX}

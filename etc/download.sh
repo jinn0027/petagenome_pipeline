@@ -271,9 +271,10 @@ fi
 # see modules/virsorter/memo
 if [ ! -f virsorter-data-v2.updated.tar.gz ] ; then
     pushd ../modules/virsorter
-    apptainer build --fakeroot --sandbox virsorter_update_db.sbx virsorter_update_db.def
-    apptainer run --fakeroot --writable virsorter_update_db.sbx
-    mv virsorter_update_db.sbx/opt/VirSorter/virsorter-data-v2.updated.tar.gz ../../external
+    make db_updated
+    #apptainer build --fakeroot --sandbox virsorter_update_db.sbx virsorter_update_db.def
+    #apptainer run --fakeroot --writable virsorter_update_db.sbx
+    #mv virsorter_update_db.sbx/opt/VirSorter/virsorter-data-v2.updated.tar.gz ../../external
     sudo rm -rf virsorter_update_db.sbx
     popd
 fi
