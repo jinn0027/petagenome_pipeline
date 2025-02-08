@@ -13,7 +13,7 @@ all : ${SBX} ${SIF} ${SBX_UPDATE_DB}
 
 .PHONY : clean
 clean :
-	/bin/rm -rf ${SBX} ${SIF} ${SBX_UPDATE_DB} build-temp-* *~
+	rm -rf ${SBX} ${SIF} ${SBX_UPDATE_DB} build-temp-* *~
 
 ${SBX} : ${DEF}
 	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX} ${DEF}

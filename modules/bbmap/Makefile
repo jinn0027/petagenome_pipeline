@@ -8,7 +8,11 @@ all : ${SBX} ${SIF}
 
 .PHONY : clean
 clean :
-	/bin/rm -rf ${SBX} ${SIF} build-temp-* *~
+	if [ -d ${SBX} ] ; then \
+	    ${SINGULARITY} exec --fakeroot --writable ${SBX} sh -c \
+	        "rm -rf /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
+	fi
+	rm -rf ${SBX} ${SIF} build-temp-* *~
 
 ${SBX} : ${DEF}
 	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX} ${DEF}

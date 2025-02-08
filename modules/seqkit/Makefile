@@ -8,7 +8,7 @@ all : ${SBX} ${SIF}
 
 .PHONY : clean
 clean :
-	/bin/rm -rf ${SBX} ${SIF} build-temp-* *~
+	rm -rf ${SBX} ${SIF} build-temp-* *~
 
 ${SBX} : ${DEF}
 	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX} ${DEF}
