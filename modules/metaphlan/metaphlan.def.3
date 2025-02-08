@@ -13,8 +13,9 @@ From: ../common/gcc.sif
 %post
     pushd /opt
         # install python libraries
-        /opt/miniconda3/bin/conda install -y \
-            biom-format=2.1.16 h5py=3.12.1
+        /opt/miniconda3/bin/mamba install -y \
+            biom-format=2.1.16 \
+            h5py=3.12.1
 
         # install bowtie2
         echo "############ bowtie2 ###############"

@@ -1,39 +1,24 @@
-Bootstrap: docker
-From: almalinux:9
+Bootstrap: localimage
+From: ../common/el9.sif
 
 %setup
 
 %files
-    ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
     ../../external/MetaPhlAn.tar.gz /opt
     ../../external/mpa_latest /opt
     ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.gz /opt
     ../../external/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.gz /opt
 
 %post
-    dnf install -y \
-        git-2.43.5-2.el9_5 \
-        pigz-2.5-4.el9 \
-        pbzip2-1.1.13-6.el9
-
     pushd /opt
-        # install miniconda
-        sh Miniconda3-py39_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
-
         # install python libraries
-        /opt/miniconda3/bin/conda config --add channels conda-forge
-        /opt/miniconda3/bin/conda config --append channels bioconda
-        /opt/miniconda3/bin/conda install -y \
-            python=3 numpy=1.26.4 \
-            conda-libmamba-solver=24.11.1 libmamba=2.0.5 libmambapy=2.0.5 \
-            biom-format=2.1.16 h5py=3.12.1
- 
+        /opt/miniconda3/bin/mamba install -y \
+            biom-format=2.1.16 \
+            h5py=3.12.1
+
         # install bowtie2
         echo "############ bowtie2 ###############"
-        /opt/miniconda3/bin/conda install -y \
-            libmamba=2.0.5 \
-            libmambapy=2.0.5 \
-            libarchive=3.7.7 \
+        /opt/miniconda3/bin/mamba install -y \
             bowtie2=2.5.4
 
         # install metaphlan
@@ -54,9 +39,7 @@ From: almalinux:9
     popd
 
 %environment
-    export LC_ALL=C
-    export PATH=/opt/miniconda3/bin:$PATH
 
 %runscript
-    metaphlan --help
+
 
