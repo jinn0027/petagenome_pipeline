@@ -1,18 +1,1 @@
-Bootstrap: localimage
-From: ../common/el9.sif
-
-%setup
-
-%files
-
-%post
-    pushd /opt
-        # install bwa-mem2
-        /opt/miniconda3/bin/conda install -y \
-            bwa-mem2=2.2.1
-    popd
-
-%environment
-
-%runscript
-
+bwamem2.def.2
