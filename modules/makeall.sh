@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rm -f makesbx.log
+rm -f makeall.log
 for i in $(ls)
 do
     if [ $i = "common" ] || [ $i == "test" ] || [ $i == "tmp" ] ; then
