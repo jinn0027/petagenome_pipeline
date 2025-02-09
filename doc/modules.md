@@ -1,5 +1,5 @@
-| module name | version |
-|-------------|---------|
+| モジュール名 | バージョン |
+|--------------|------------|
 | [bbmap](https://sourceforge.net/projects/bbmap/) | 39.15 |
 | [bcftools](https://github.com/samtools/bcftools) | 1.21 |
 | [bedtools2](https://github.com/arq5x/bedtools2) | v2.31.1 |
