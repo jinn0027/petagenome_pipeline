@@ -280,4 +280,15 @@ if [ ! -f virsorter-data-v2.updated.tar.gz ] ; then
     popd
 fi
 
-popd
+popd # external
+
+pushd ../pezy
+    for i in $(ls)
+    do
+        if [ -d $i ] ; then
+            echo $i
+            tar -I pigz -cvf ${i}.tar.gz ${i}
+            rm -rf $i
+        fi
+    done
+popd # pezy
