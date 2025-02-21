@@ -5,8 +5,8 @@ all : el9.sif gcc.sif java.sif golang.sif
 
 .PHONY : clean
 clean :
-	for i in $(find . -name *.sbx) ; do \
-	    ${SINGULARITY} exec --fakeroot --writable ${i} sh -c \
+	@for i in $$(ls | grep '.sbx') ; do \
+	    ${SINGULARITY} exec --fakeroot --writable $$i sh -c \
 	        "rm -rf /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
 	done
 	rm -rf *.sif *.sbx build-temp-* *~
