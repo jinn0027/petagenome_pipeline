@@ -3,6 +3,9 @@ SINGULARITY?=/usr/local/bin/apptainer
 .PHONY : all
 all : el9.sif gcc.sif java.sif golang.sif
 
+.PHONY : sbx
+sbx : el9.sbx gcc.sbx java.sbx golang.sbx
+
 .PHONY : clean
 clean :
 	@for i in $$(ls | grep '.sbx') ; do \
