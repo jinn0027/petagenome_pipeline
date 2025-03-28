@@ -1,18 +1,18 @@
 #                                                                             --- full sequence --- -------------- this domain -------------   hmm coord   ali coord   env coord
 # target name        accession   tlen query name            accession   qlen   E-value  score  bias   #  of  c-Evalue  i-Evalue  score  bias  from    to  from    to  from    to  acc description of target
 #------------------- ---------- -----  -------------------- ---------- ----- --------- ------ ----- --- --- --------- --------- ------ ----- ----- ----- ----- ----- ----- ----- ---- ---------------------
-DMA                  PF03474.20    37 NP_001001178.1alias1 -            527     0.094   12.7   0.0   1   2      0.16   1.2e+03   -0.5   0.0    20    31   204   215   199   216 0.89 DMRTA motif
-DMA                  PF03474.20    37 NP_001001178.1alias1 -            527     0.094   12.7   0.0   2   2    0.0001      0.82    9.7   0.0     4    19   222   237   221   240 0.93 DMRTA motif
-TBP-TOTE             PF22721.1     78 NP_001001178.1alias1 -            527     0.097   12.7   0.1   1   1   4.4e-05      0.35   10.9   0.1    25    48   238   261   218   280 0.92 TATA-binding-like protein domain of the TOTE conflict systems
-SoxA-TsdA_cyt-c      PF21342.2     88 NP_001001178.1alias1 -            527       1.6    9.1   5.0   1   2       1.1     9e+03   -2.9   0.0    47    58    23    34    18    38 0.84 SoxA/TsdA, cytochrome c domain
+DMA                  PF03474.20    37 NP_001001178.1alias1 -            527     0.095   12.7   0.0   1   2      0.16   1.3e+03   -0.5   0.0    20    31   204   215   199   216 0.89 DMRTA motif
+DMA                  PF03474.20    37 NP_001001178.1alias1 -            527     0.095   12.7   0.0   2   2    0.0001      0.83    9.7   0.0     4    19   222   237   221   240 0.93 DMRTA motif
+TBP-TOTE             PF22721.1     78 NP_001001178.1alias1 -            527     0.098   12.7   0.1   1   1   4.4e-05      0.36   10.9   0.1    25    48   238   261   218   280 0.92 TATA-binding-like protein domain of the TOTE conflict systems
+SoxA-TsdA_cyt-c      PF21342.2     88 NP_001001178.1alias1 -            527       1.6    9.1   5.0   1   2       1.1   9.1e+03   -2.9   0.0    47    58    23    34    18    38 0.84 SoxA/TsdA, cytochrome c domain
 SoxA-TsdA_cyt-c      PF21342.2     88 NP_001001178.1alias1 -            527       1.6    9.1   5.0   2   2   0.00023       1.8    9.0   2.3    28    73   300   345   284   389 0.90 SoxA/TsdA, cytochrome c domain
 #
 # Program:         hmmscan
 # Version:         3.4 (Aug 2023)
 # Pipeline mode:   SCAN
-# Query file:      /home/pezy/tmp/petagenome_pipeline/modules/test/1.faa
+# Query file:      /dev/shm/petagenome_pipeline/modules/test/1.faa
 # Target file:     /opt/Pfam-A.hmm
-# Option settings: hmmscan --domtblout /home/pezy/tmp/petagenome_pipeline/modules/hmmer/test/results/sample_hmmscan.txt --seed 1 --cpu 128 /opt/Pfam-A.hmm /home/pezy/tmp/petagenome_pipeline/modules/test/1.faa 
-# Current dir:     /home/pezy/tmp/petagenome_pipeline/modules/hmmer/test
-# Date:            Fri Jan 31 15:24:26 2025
+# Option settings: hmmscan --domtblout /dev/shm/petagenome_pipeline/modules/hmmer/test/results/sample_hmmscan.txt --seed 1 --cpu 128 /opt/Pfam-A.hmm /dev/shm/petagenome_pipeline/modules/test/1.faa 
+# Current dir:     /dev/shm/petagenome_pipeline/modules/hmmer/test
+# Date:            Fri Mar 28 13:38:34 2025
 # [ok]

@@ -169,7 +169,7 @@ fi
 
 # Blast+ source
 if [ ! -f ncbi-blast-2.16.0+-src.tar.gz ] ; then
-    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/2.16.0/ncbi-blast-2.16.0+-src.tar.gz
+    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.16.0/ncbi-blast-2.16.0+-src.tar.gz
 fi
 
 # FastQC binary
