@@ -5,6 +5,7 @@ params.spades_memory = 20
 
 process spades {
     tag "${pair_id}"
+    container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/03_spades/spades", mode: 'copy'
     input:
         tuple val(pair_id), path(reads)
@@ -21,6 +22,7 @@ process spades {
 
 process spades_error_correction {
     tag "${pair_id}"
+    container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/03_spades/error_correction", mode: 'copy'
     input:
         tuple val(pair_id), path(reads)
@@ -37,6 +39,7 @@ process spades_error_correction {
 
 process spades_assembler {
     tag "${pair_id}"
+    container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/03_spades/assembly", mode: 'copy'
     input:
         tuple val(pair_id), path(reads)
