@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { fastp } from "${params.topDir}/test/fastp.nf"
+include { fastp } from "${projectDir}/fastp.nf"
 
-params.reads = "$baseDir/../../test/s_6_{1,2}.fastq.gz"
+params.reads = "${projectDir}/../modules/test/s_6_{1,2}.fastq.gz"
 params.output = "output"
 //params.threads = 4
 //params.fastp_cut_mean_quality = 15

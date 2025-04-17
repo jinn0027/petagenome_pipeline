@@ -1,7 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.reads = "${projectDir}/../../test/s_6_{1,2}.fastq.gz"
 params.output = "output"
 params.threads = 4
 params.fastp_cut_mean_quality = 15
