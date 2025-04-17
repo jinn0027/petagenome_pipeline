@@ -16,8 +16,11 @@ sudo dnf -y install \
      libsubid-dev \
      pigz
 
-sudo dnf --enablerepo=devel install -y \
-     shadow-utils-subid-devel
+#sudo dnf --enablerepo=devel install -y \
+#     shadow-utils-subid-devel
+
+sudo dnf install -y \
+     shadow-utils-subid
 
 # apptainer/singularityにgo必要なのでインストール
 if ! (type "go" > /dev/null 2>&1); then
