@@ -7,5 +7,6 @@ include { spades; spades_error_correction; spades_assembler } from "${projectDir
 workflow {
    raw_short_reads = channel.fromFilePairs(params.reads, checkIfExists: true)
    fastp = fastp(raw_short_reads)
-   spades = spades_error_correction(fastp)
+   //spades = spades_error_correction(fastp)
+   spades = spades_assembler(fastp)
 }

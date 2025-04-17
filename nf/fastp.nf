@@ -3,7 +3,6 @@ nextflow.enable.dsl=2
 
 params.fastp_cut_mean_quality = 15
 params.fastp_reads_minlength = 15
-params.fastp_memory = 10
 
 process fastp {
     tag "${pair_id}"
@@ -26,6 +25,6 @@ process fastp {
 }
 
 workflow {
-   raw_short_reads = channel.fromFilePairs(params.reads, checkIfExists: true)
-   fastp = fastp(raw_short_reads)
+   test_fastp_reads = channel.fromFilePairs(params.test_fastp_reads, checkIfExists: true)
+   fastp(test_fastp_reads)
 }
