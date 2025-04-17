@@ -1,10 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { fastp } from "${projectDir}/fastp.nf"
-include { spades } from "${projectDir}/spades.nf"
-include { spades_error_correction } from "${projectDir}/spades.nf"
-include { spades_assembler } from "${projectDir}/spades.nf"
+include { fastp } from "${projectDir}/fastp"
+include { spades; spades_error_correction; spades_assembler } from "${projectDir}/spades"
 
 params.reads = "${projectDir}/../modules/test/s_6_{1,2}.fastq.gz"
 params.output = "output"
