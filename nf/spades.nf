@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 process spades_error_correction {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    publishDir "${params.output}/03_spades", mode: 'copy'
+    publishDir "${params.output}/spades", mode: 'copy'
     input:
         tuple val(pair_id), path(reads)
 
@@ -21,7 +21,7 @@ process spades_error_correction {
 process spades_assembler {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    publishDir "${params.output}/03_spades", mode: 'copy'
+    publishDir "${params.output}/spades", mode: 'copy'
     input:
         tuple val(pair_id), path(reads)
 
@@ -38,7 +38,7 @@ process spades_assembler {
 process spades {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    publishDir "${params.output}/03_spades", mode: 'copy'
+    publishDir "${params.output}/spades", mode: 'copy'
     input:
         tuple val(pair_id), path(reads)
 

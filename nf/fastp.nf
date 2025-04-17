@@ -7,7 +7,7 @@ params.fastp_reads_minlength = 15
 process fastp {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastp/fastp.sif"
-    publishDir "${params.output}/01_fastp", mode: 'copy'
+    publishDir "${params.output}/fastp", mode: 'copy'
     input:
         tuple val(pair_id), path(reads)
 
