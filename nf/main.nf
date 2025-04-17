@@ -3,6 +3,8 @@ nextflow.enable.dsl=2
 
 include { fastp } from "${projectDir}/fastp.nf"
 include { spades } from "${projectDir}/spades.nf"
+include { spades_error_correction } from "${projectDir}/spades.nf"
+include { spades_assembler } from "${projectDir}/spades.nf"
 
 params.reads = "${projectDir}/../modules/test/s_6_{1,2}.fastq.gz"
 params.output = "output"
@@ -16,5 +18,5 @@ workflow {
    raw_short_reads = channel.fromFilePairs(params.reads, checkIfExists: true)
    //raw_short_reads.view{ raw_short_pairs -> "$pairs"}
    fastp = fastp(raw_short_reads)
-   spades = spades(fastp)
+   spades = spades_error_correction(fastp)
 }
