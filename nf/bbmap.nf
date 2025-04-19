@@ -5,6 +5,8 @@ params.bbmap_ambiguous = "random"
 params.bbmap_minid = 0.95
 params.bbmap_pairlen = 1500
 
+params.test_bbmap_separate = true
+
 process bbmap_make_index {
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/bbmap/${ref_id}", mode: 'copy'
@@ -16,8 +18,10 @@ process bbmap_make_index {
     script:
     """
     bbmap.sh \\
-        -Xmx${params.memory}g threads=${params.threads} \\
-        ref=${ref} path=index
+        -Xmx${params.memory}g \\
+        threads=${params.threads} \\
+        ref=${ref} \\
+        path=index
     """
 }
 
@@ -32,10 +36,14 @@ process bbmap_align {
     script:
     """
     bbmap.sh \\
-        -Xmx${params.memory}g threads=${params.threads} \\
-        ambiguous=${params.bbmap_ambiguous} minid=${params.bbmap_minid} \\
+        -Xmx${params.memory}g \\
+        threads=${params.threads} \\
+        ambiguous=${params.bbmap_ambiguous} \\
+        minid=${params.bbmap_minid} \\
         pairlen=${params.bbmap_pairlen} \\
-        path=${index} in=${reads[0]} in2=${reads[1]} \\
+        path=${index} \\
+        in=${reads[0]} \\
+        in2=${reads[1]} \\
         out=${ref_id}_@_${pair_id}_bbmap_out.sam
     """
 }
@@ -50,12 +58,20 @@ process bbmap {
         tuple val(ref_id), val(pair_id), path("*.sam")
     script:
     """
-    bbmap.sh -Xmx${params.memory}g threads=${params.threads} ref=${ref} path=index
     bbmap.sh \\
-        -Xmx${params.memory}g threads=${params.threads} \\
-        ambiguous=${params.bbmap_ambiguous} minid=${params.bbmap_minid} \\
+        -Xmx${params.memory}g \\
+        threads=${params.threads} \\
+        ref=${ref} \\
+        path=index
+    bbmap.sh \\
+        -Xmx${params.memory}g \\
+        threads=${params.threads} \\
+        ambiguous=${params.bbmap_ambiguous} \\
+        minid=${params.bbmap_minid} \\
         pairlen=${params.bbmap_pairlen} \\
-        path=index in=${reads[0]} in2=${reads[1]} \\
+        path=index \\
+        in=${reads[0]} \\
+        in2=${reads[1]} \\
         out=${ref_id}_@_${pair_id}_bbmap_out.sam
     """
 }
@@ -70,18 +86,20 @@ workflow {
 
     reads = channel.fromFilePairs(params.test_bbmap_reads, checkIfExists: true)
    
-    //ref.view { i -> "ref: ${i}" }
-    //reads.view { i -> "reads: ${i}" }
+    //ref.view { i -> "$i" }
+    //reads.view { i -> "$i" }
 
-    if (true) {
+    if (params.test_bbmap_separate) {
         index = bbmap_make_index(ref)
-        //index.view { i -> "index: ${i}" }
+        //index.view { i -> "$i" }
         align_input = index.combine(reads)
-        //align_input.view { i -> "align_input: ${i}" }
-        bbmap_align(align_input)
+        //align_input.view { i -> "$i" }
+        bbmap_align = bbmap_align(align_input)
+        //bbmap_align.view { i -> "$i" }
     } else {
         bbmap_input = ref.combine(reads)
-        bbmap(bbmap_input)
+        bbmap = bbmap(bbmap_input)
+        //bbmap.view { i -> "$i" }
     }
 }
 
