@@ -15,12 +15,13 @@ process fastp {
         tuple val(pair_id), path("${pair_id}_fastp_out*")
     script:
     """
-    fastp -w ${params.threads} -y \\
-    -i ${reads[0]} -o ${pair_id}_fastp_out1.fastq.gz \\
-    -I ${reads[1]} -O ${pair_id}_fastp_out2.fastq.gz \\
-    --cut_front --cut_tail \\
-    --cut_mean_quality ${params.fastp_cut_mean_quality} \\
-    --length_required ${params.fastp_reads_minlength}
+    fastp \\
+        -w ${params.threads} -y \\
+        -i ${reads[0]} -o ${pair_id}_fastp_out1.fastq.gz \\
+        -I ${reads[1]} -O ${pair_id}_fastp_out2.fastq.gz \\
+        --cut_front --cut_tail \\
+        --cut_mean_quality ${params.fastp_cut_mean_quality} \\
+        --length_required ${params.fastp_reads_minlength}
     """
 }
 

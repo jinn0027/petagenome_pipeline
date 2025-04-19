@@ -17,11 +17,11 @@ process cutadapt {
     script:
     """
     cutadapt \\
-    -a ${params.cutadapt_fwd} -g ${params.cutadapt_rev} \\
-    -o ${pair_id}_cutadapt_out1.fastq.gz \\
-    -p ${pair_id}_cutadapt_out2.fastq.gz \\
-    --minimum-length ${params.cutadapt_minimum_length} \\
-    ${reads[0]} ${reads[1]}
+        -a ${params.cutadapt_fwd} -g ${params.cutadapt_rev} \\
+        -o ${pair_id}_cutadapt_out1.fastq.gz \\
+        -p ${pair_id}_cutadapt_out2.fastq.gz \\
+        --minimum-length ${params.cutadapt_minimum_length} \\
+        ${reads[0]} ${reads[1]}
     """
 }
 
