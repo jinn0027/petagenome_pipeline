@@ -26,6 +26,7 @@ process fastp {
 }
 
 workflow {
-   test_fastp_reads = channel.fromFilePairs(params.test_fastp_reads, checkIfExists: true)
-   fastp(test_fastp_reads)
+   reads = channel.fromFilePairs(params.test_fastp_reads, checkIfExists: true)
+   fastp = fastp(reads)
+   //fastp.view { i -> "$i" }
 }

@@ -56,7 +56,7 @@ process prinseq {
 }
 
 workflow {
-   test_prinseq_reads = channel.fromFilePairs(params.test_prinseq_reads, checkIfExists: true)
-   out = prinseq(test_prinseq_reads)
+   reads = channel.fromFilePairs(params.test_prinseq_reads, checkIfExists: true)
+   out = prinseq(reads)
    //out.view { o -> "${o}" }
 }

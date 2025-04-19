@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.test_spades_separate = true
+
 process spades_error_correction {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
@@ -60,12 +62,14 @@ process spades {
 
 workflow {
    reads = channel.fromFilePairs(params.test_spades_reads, checkIfExists: true)
-   if (true) {
+   if (params.test_spades_separate) {
        error_correction = spades_error_correction(reads)
            .map { pair_id, reads, unpaired -> tuple( pair_id, reads ) }
        //error_correction.view { i -> "$i" }
-       spades_assembler(error_correction)
+       spades_assembler = spades_assembler(error_correction)
+       //spades_assembler.view { i -> "$i" }
    } else {
-       spades(reads)
+       spades = spades(reads)
+       //spades.view { i -> "$i" }
    }
 }
