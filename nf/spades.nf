@@ -11,14 +11,18 @@ process spades_error_correction {
         tuple val(pair_id), path(reads)
 
     output:
-        tuple val(pair_id), path("${pair_id}/corrected/*.cor.fastq.gz"), \
+        tuple val(pair_id), \
+              path("${pair_id}/corrected/*.cor.fastq.gz"), \
 	      path("${pair_id}/corrected/unpaired/*.cor.fastq.gz")
     script:
     """
     spades.py \\
+        --threads ${params.threads} \\
+        --memory ${params.memory} \\
         --only-error-correction \\
-        --pe1-1 ${reads[0]} --pe1-2 ${reads[1]} \\
-        --threads ${params.threads} --memory ${params.memory} -o ${pair_id}
+        --pe1-1 ${reads[0]} \\
+        --pe1-2 ${reads[1]} \\
+        -o ${pair_id}
     mkdir -p ${pair_id}/corrected/unpaired
     mv ${pair_id}/corrected/*unpaired*.cor.fastq.gz ${pair_id}/corrected/unpaired
     """
@@ -36,9 +40,13 @@ process spades_assembler {
     script:
     """
     spades.py \\
-        --only-assembler --meta \\
-        --pe1-1 ${reads[0]} --pe1-2 ${reads[1]} \\
-        --threads ${params.threads} --memory ${params.memory} -o ${pair_id}
+        --threads ${params.threads} \\
+        --memory ${params.memory} \\
+        --only-assembler \\
+        --meta \\
+        --pe1-1 ${reads[0]} \\
+        --pe1-2 ${reads[1]} \\
+        -o ${pair_id}
     """
 }
 
@@ -54,9 +62,12 @@ process spades {
     script:
     """
     spades.py \\
+        --threads ${params.threads} \\
+        --memory ${params.memory} \\
         --meta \\
-        --pe1-1 ${reads[0]} --pe1-2 ${reads[1]} \\
-        --threads ${params.threads} --memory ${params.memory} -o ${pair_id}
+        --pe1-1 ${reads[0]} \\
+        --pe1-2 ${reads[1]} \\
+        -o ${pair_id}
     """
 }
 
