@@ -16,7 +16,8 @@ process fastp {
     script:
     """
     fastp \\
-        -w ${params.threads} -y \\
+        -w ${params.threads} \\
+        --low_complexity_filter \\
         -i ${reads[0]} \\
         -I ${reads[1]} \\
         -o ${pair_id}_fastp_out1.fastq.gz \\
@@ -28,7 +29,7 @@ process fastp {
 }
 
 workflow {
-   reads = channel.fromFilePairs(params.test_fastp_reads, checkIfExists: true)
-   fastp = fastp(reads)
-   //fastp.view { i -> "$i" }
+    reads = channel.fromFilePairs(params.test_fastp_reads, checkIfExists: true)
+    fastp = fastp(reads)
+    //fastp.view { i -> "$i" }
 }
