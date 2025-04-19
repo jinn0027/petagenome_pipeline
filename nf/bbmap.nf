@@ -51,8 +51,12 @@ process bbmap {
     script:
     """
     bbmap.sh -Xmx${params.memory}g threads=${params.threads} ref=${ref} path=index
-    bbmap.sh -Xmx${params.memory}g threads=${params.threads} path=${index} in=${reads[0]} in2=${reads[1]} \\
-        ambiguous=random minid=0.95 pairlen=1500 out=${ref_id}_@_${pair_id}_bbmap_out.sam
+    bbmap.sh \\
+        -Xmx${params.memory}g threads=${params.threads} \\
+        ambiguous=${params.bbmap_ambiguous} minid=${params.bbmap_minid} \\
+        pairlen=${params.bbmap_pairlen} \\
+        path=index in=${reads[0]} in2=${reads[1]} \\
+        out=${ref_id}_@_${pair_id}_bbmap_out.sam
     """
 }
 
@@ -64,16 +68,20 @@ workflow {
             tuple(ref_id, ref_path)
         }
 
-    //ref.view { i -> "ref: ${i}" }
-
-    index = bbmap_make_index(ref)
-    //index.view { i -> "index: ${i}" }
-
     reads = channel.fromFilePairs(params.test_bbmap_reads, checkIfExists: true)
    
-    align_input = index.combine(reads)
-    //align_input.view { i -> "align_input: ${i}" }
-   
-    bbmap_align(align_input)
+    //ref.view { i -> "ref: ${i}" }
+    //reads.view { i -> "reads: ${i}" }
+
+    if (true) {
+        index = bbmap_make_index(ref)
+        //index.view { i -> "index: ${i}" }
+        align_input = index.combine(reads)
+        //align_input.view { i -> "align_input: ${i}" }
+        bbmap_align(align_input)
+    } else {
+        bbmap_input = ref.combine(reads)
+        bbmap(bbmap_input)
+    }
 }
 
