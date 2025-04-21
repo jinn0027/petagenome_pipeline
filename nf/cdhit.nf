@@ -7,7 +7,7 @@ params.cdhit_description_length = 150
 params.cdhit_word_length = 5
 params.cdhit_mask = "NX"
 
-process cdhit {
+process cdhit_est {
     tag "${read_id}"
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
     publishDir "${params.output}/cdhit/${read_id}", mode: 'copy'
@@ -38,6 +38,6 @@ workflow {
             def read_id = basename.substring(0, basename.indexOf('.'))
             tuple(read_id, read_path)
         }
-    cdhit = cdhit(read)
-    //cdhit.view { i -> "$i" }
+    cdhit_est = cdhit_est(read)
+    //cdhit_est.view { i -> "$i" }
 }

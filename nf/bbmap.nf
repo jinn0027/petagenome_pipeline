@@ -8,6 +8,7 @@ params.bbmap_pairlen = 1500
 params.test_bbmap_separate = true
 
 process bbmap_make_index {
+    tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/bbmap/${ref_id}", mode: 'copy'
     input:
@@ -26,6 +27,7 @@ process bbmap_make_index {
 }
 
 process bbmap_align {
+    tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/bbmap/${ref_id}/${pair_id}", mode: 'copy'
     input:
@@ -49,6 +51,7 @@ process bbmap_align {
 }
 
 process bbmap {
+    tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/bbmap/${ref_id}/${pair_id}", mode: 'copy'
     input:
