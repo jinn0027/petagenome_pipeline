@@ -32,11 +32,13 @@ process prinseq {
     gzipped="FALSE"
     echo ${reads[0]} | grep -e ".gz\$" >& /dev/null && :
     if [ \$? -eq 0 ] ; then
-      read0=\${read0%%.gz}
-      read1=\${read1%%.gz}
-      gunzip -c ${reads[0]} > \${read0}
-      gunzip -c ${reads[1]} > \${read1}
-      gzipped="TRUE"
+        read0=\${read0%%.gz}
+        read1=\${read1%%.gz}
+        #gunzip -c ${reads[0]} > \${read0}
+        #gunzip -c ${reads[1]} > \${read1}
+        unpigz -c ${reads[0]} > \${read0}
+        unpigz -c ${reads[1]} > \${read1}
+        gzipped="TRUE"
     fi
 
     prinseq-lite.pl \\
@@ -57,13 +59,14 @@ process prinseq {
         -fastq2 \${read1}
 
     if [ \${gzipped} = "TRUE" ] ; then
-      gzip good* bad*
+        #gzip good* bad*
+        pigz good* bad*
     fi
     """
 }
 
 workflow {
-   reads = channel.fromFilePairs(params.test_prinseq_reads, checkIfExists: true)
-   prinseq = prinseq(reads)
-   //prinseq.view { i -> "${i}" }
+    reads = channel.fromFilePairs(params.test_prinseq_reads, checkIfExists: true)
+    prinseq = prinseq(reads)
+    //prinseq.view { i -> "${i}" }
 }

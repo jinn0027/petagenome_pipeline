@@ -23,7 +23,8 @@ process blast_makedb {
     echo ${ref} | grep -e ".gz\$" >& /dev/null && :
     if [ \$? -eq 0 ] ; then
       ref_=\${ref_%%.gz}
-      gunzip -c ${ref} > \${ref_}
+      #gunzip -c ${ref} > \${ref_}
+      unpigz -c ${ref} > \${ref_}
       gzipped="TRUE"
     fi
     mkdir -p db
@@ -36,7 +37,7 @@ process blast_makedb {
 }
 
 process blastn {
-    tag "${ref_id}_@_${pair_id}"
+    tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/blast/${ref_id}/${qry_id}", mode: 'copy'
     input:
