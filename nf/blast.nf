@@ -8,7 +8,7 @@ params.blast_perc_identity = "95"
 params.blast_evalue = "1e-20"
 params.blast_outfmt = 6
 
-process blast_makeblastdb {
+process blast_makedb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/blast/${ref_id}", mode: 'copy'
@@ -69,11 +69,11 @@ workflow {
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 
-    db = blast_makeblastdb(ref)
-    db.view { i -> "$i" }
+    db = blast_makedb(ref)
+    //db.view { i -> "$i" }
     blastn_input = db.combine(qry)
-    blastn_input.view { i -> "$i" }
+    //blastn_input.view { i -> "$i" }
     blastn = blastn(blastn_input)
-    blastn.view { i -> "$i" }
+    //blastn.view { i -> "$i" }
 }
 
