@@ -14,7 +14,6 @@ process blast_makedb {
     publishDir "${params.output}/blast/${ref_id}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1')
-
     output:
         tuple val(ref_id), path("db")
     script:
@@ -70,9 +69,9 @@ workflow {
 
     db = blast_makedb(ref)
     //db.view { i -> "$i" }
-    blastn_input = db.combine(qry)
-    //blastn_input.view { i -> "$i" }
-    blastn = blastn(blastn_input)
-    //blastn.view { i -> "$i" }
+    in = db.combine(qry)
+    //in.view { i -> "$i" }
+    out = blastn(in)
+    //out.view { i -> "$i" }
 }
 
