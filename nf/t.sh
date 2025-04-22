@@ -1,10 +1,17 @@
 #!/bin/bash
 
-#nextflow run main.nf --reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --threads $(nproc) --petagenomeDir=$(pwd)/..
+export TMPDIR=/dev/shm/tmp
 
-#nextflow run fastp.nf --test_fastp_reads "../modules/test/s_6_{1,2}.fastq.gz" --threads $(nproc) --petagenomeDir=$(pwd)/..
+threads=$(nproc)
+cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 
-#nextflow run spades.nf --test_spades_reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --threads $(nproc) --petagenomeDir=$(pwd)/..
+#nextflow run main.nf --reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+
+#nextflow run fastp.nf --test_fastp_reads "../modules/test/s_6_{1,2}.fastq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+
+#nextflow run fastqc.nf --test_fastqc_reads "../modules/test/s_6_{1,2}.fastq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+
+#nextflow run spades.nf --test_spades_reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 #nextflow run cutadapt.nf --test_cutadapt_reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --petagenomeDir=$(pwd)/..
 
@@ -14,12 +21,15 @@
 
 #nextflow run cdhit.nf --test_cdhit_read "../modules/test/ecoli_1K_1.fa.gz" --petagenomeDir=$(pwd)/..
 
-#nextflow run megahit.nf --test_megahit_reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --threads $(nproc) --petagenomeDir=$(pwd)/..
+#nextflow run megahit.nf --test_megahit_reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
-#nextflow run blast.nf --test_blast_ref "../modules/test/ecoli_1K_1.fa.gz" --test_blast_qry "../modules/test/q1.fasta" --petagenomeDir=$(pwd)/..
+#nextflow run blast.nf --test_blast_ref "../modules/test/ecoli_1K_1.fa.gz" --test_blast_qry "../modules/test/q1.fasta" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
-nextflow run diamond.nf --test_diamond_ref "../modules/test/1.faa" --test_diamond_qry "../modules/test/2.faa" --petagenomeDir=$(pwd)/..
+#nextflow run diamond.nf --test_diamond_ref "../modules/test/1.faa.gz" --test_diamond_qry "../modules/test/2.faa" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+
+#nextflow run virsorter.nf --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db refseq --virsorter_aligner blast --petagenomeDir=$(pwd)/..
+nextflow run virsorter.nf --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db virome --virsorter_aligner diamond --petagenomeDir=$(pwd)/..
 
 ################################# NG
-#nextflow run spades.nf --test_spades_reads "../modules/test/s_6_{1,2}.fastq.gz" --threads $(nproc) --petagenomeDir=$(pwd)/..
+#nextflow run spades.nf --test_spades_reads "../modules/test/s_6_{1,2}.fastq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
