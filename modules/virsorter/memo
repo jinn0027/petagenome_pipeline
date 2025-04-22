@@ -1,3 +1,5 @@
+参考url https://github.com/simroux/VirSorter
+
 conda経由でのインストールでvirsorterのdiamondのバージョンを最新(2.1.10)にした場合、
 
 　　Opening the database... Error: This executable was not compiled with support for BLAST databases.

@@ -13,7 +13,7 @@ process blast_makedb {
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/blast/${ref_id}", mode: 'copy'
     input:
-        tuple val(ref_id), path(ref)
+        tuple val(ref_id), path(ref, arity: '1')
 
     output:
         tuple val(ref_id), path("db")
@@ -41,7 +41,7 @@ process blastn {
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/blast/${ref_id}/${qry_id}", mode: 'copy'
     input:
-        tuple val(ref_id), path(db), val(qry_id), path(qry)
+        tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
 
     output:
         tuple val(ref_id), val(qry_id), path("${ref_id}_@_${qry_id}_out.txt")

@@ -12,7 +12,7 @@ process cdhit_est {
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
     publishDir "${params.output}/cdhit/${read_id}", mode: 'copy'
     input:
-        tuple val(read_id), path(read)
+        tuple val(read_id), path(read, arity: '1')
 
     output:
         tuple val(read_id), path("${read_id}_cdhit_out.fasta")

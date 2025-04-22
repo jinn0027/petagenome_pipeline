@@ -20,8 +20,7 @@ process prinseq {
     container = "${params.petagenomeDir}/modules/prinseq/prinseq.sif"
     publishDir "${params.output}/prinseq/${pair_id}", mode: 'copy'
     input:
-        tuple val(pair_id), path(reads)
-
+        tuple val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), path("good*"), path("bad*")
     script:

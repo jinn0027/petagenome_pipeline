@@ -8,11 +8,11 @@ process spades_error_correction {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/spades", mode: 'copy'
     input:
-        tuple val(pair_id), path(reads)
+        tuple val(pair_id), path(reads, arity: '2')
 
     output:
         tuple val(pair_id), \
-              path("${pair_id}/corrected/*.cor.fastq.gz"), \
+              path("${pair_id}/corrected/*.cor.fastq.gz", arity: '2'), \
 	      path("${pair_id}/corrected/unpaired/*.cor.fastq.gz")
     script:
     """
@@ -33,10 +33,12 @@ process spades_assembler {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/spades", mode: 'copy'
     input:
-        tuple val(pair_id), path(reads)
+        tuple val(pair_id), path(reads, arity: '2')
 
     output:
-        tuple val(pair_id), path("${pair_id}/scaffolds.fasta"), path("${pair_id}/contigs.fasta")
+        tuple val(pair_id), \
+              path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
+              path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
     """
     spades.py \\
@@ -55,10 +57,12 @@ process spades {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/spades", mode: 'copy'
     input:
-        tuple val(pair_id), path(reads)
+        tuple val(pair_id), path(reads, arity: '2')
 
     output:
-        tuple val(pair_id), path("${pair_id}/scaffolds.fasta"), path("${pair_id}/contigs.fasta")
+        tuple val(pair_id), \
+              path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
+              path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
     """
     spades.py \\
@@ -78,7 +82,7 @@ workflow {
            .map { pair_id, reads, unpaired -> tuple( pair_id, reads ) }
        //error_correction.view { i -> "$i" }
        spades_assembler = spades_assembler(error_correction)
-       //spades_assembler.view { i -> "$i" }
+       spades_assembler.view { i -> "$i" }
    } else {
        spades = spades(reads)
        //spades.view { i -> "$i" }

@@ -6,7 +6,7 @@ process fastqc {
     container = "${params.petagenomeDir}/modules/fastqc/fastqc.sif"
     publishDir "${params.output}/fastqc/${pair_id}", mode: 'copy'
     input:
-        tuple val(pair_id), path(reads)
+        tuple val(pair_id), path(reads, arity: '2')
 
     output:
         tuple val(pair_id), path("out")

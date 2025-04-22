@@ -12,7 +12,7 @@ process bbmap_makedb {
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/bbmap/${ref_id}", mode: 'copy'
     input:
-        tuple val(ref_id), path(ref)
+        tuple val(ref_id), path(ref, arity: '1')
 
     output:
         tuple val(ref_id), path("db")
@@ -31,10 +31,10 @@ process bbmap_align {
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/bbmap/${ref_id}/${pair_id}", mode: 'copy'
     input:
-        tuple val(ref_id), path(db), val(pair_id), path(reads)
+        tuple val(ref_id), path(db, arity: '1'), val(pair_id), path(reads, arity: '2')
 
     output:
-        tuple val(ref_id), val(pair_id), path("*.sam")
+        tuple val(ref_id), val(pair_id), path("${ref_id}_@_${pair_id}_bbmap_out.sam")
     script:
     """
     bbmap.sh \\
@@ -55,10 +55,10 @@ process bbmap {
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/bbmap/${ref_id}/${pair_id}", mode: 'copy'
     input:
-        tuple val(ref_id), path(ref), val(pair_id), path(reads)
+        tuple val(ref_id), path(ref, arity: '1'), val(pair_id), path(reads, arity: '2')
 
     output:
-        tuple val(ref_id), val(pair_id), path("*.sam")
+        tuple val(ref_id), val(pair_id), path("${ref_id}_@_${pair_id}_bbmap_out.sam")
     script:
     """
     bbmap.sh \\

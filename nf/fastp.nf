@@ -9,10 +9,10 @@ process fastp {
     container = "${params.petagenomeDir}/modules/fastp/fastp.sif"
     publishDir "${params.output}/fastp/${pair_id}", mode: 'copy'
     input:
-        tuple val(pair_id), path(reads)
+        tuple val(pair_id), path(reads, arity: '2')
 
     output:
-        tuple val(pair_id), path("${pair_id}_fastp_out*")
+        tuple val(pair_id), path("${pair_id}_fastp_out*", arity: '2')
     script:
     """
     fastp \\

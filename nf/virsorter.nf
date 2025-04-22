@@ -12,10 +12,10 @@ process virsorter {
     container = "${params.petagenomeDir}/modules/virsorter/virsorter.sif"
     publishDir "${params.output}/virsorter/${params.virsorter_db}/${qry_id}", mode: 'copy'
     input:
-        tuple val(qry_id), path(qry)
+        tuple val(qry_id), path(qry, arity: '1')
 
     output:
-        tuple val(qry_id) , path("${params.virsorter_aligner}/*.csv")
+        tuple val(qry_id) , path("${params.virsorter_aligner}/*.csv", arity: '1')
     script:
     """
     qry_=${qry}

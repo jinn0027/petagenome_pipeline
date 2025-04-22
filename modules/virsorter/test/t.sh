@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# Since #threads may affect the result, it should be fixed here.
-#n_threads=$(nproc)
-n_threads=128
+# Since #cpus may affect the result, it should be fixed here.
+n_cpus=1
 
 fa1=../../test/1seq.fa
 db=/opt/VirSorter/virsorter-data
@@ -23,9 +22,9 @@ odir_dmnd=${odir}/diamond
 mkdir -p ${odir_blst} ${odir_dmnd}
 rm -rf ${odir_blst}/* ${odir_dmnd}/*
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir_blst} ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --db 1 --data-dir ${db} --ncpu ${n_threads} --wdir ${odir_blst} --fna ${fa1} > ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${fa1},${odir_blst} ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --db 1 --data-dir ${db} --ncpu ${n_cpus} --wdir ${odir_blst} --fna ${fa1} > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir_dmnd} ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --diamond --db 2 -data-dir ${db} -ncpu ${n_threads} -wdir ${odir_dmnd} --fna ${fa1} >> ${log} 2>&1
+/usr/local/bin/apptainer exec --bind ${fa1},${odir_dmnd} ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --diamond --db 2 -data-dir ${db} -ncpu ${n_cpus} -wdir ${odir_dmnd} --fna ${fa1} >> ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/blast/*.csv)

@@ -10,10 +10,10 @@ process cutadapt {
     container = "${params.petagenomeDir}/modules/cutadapt/cutadapt.sif"
     publishDir "${params.output}/cutadapt/${pair_id}", mode: 'copy'
     input:
-        tuple val(pair_id), path(reads)
+        tuple val(pair_id), path(reads, arity: '2')
 
     output:
-        tuple val(pair_id), path("${pair_id}_*.fastq.gz")
+        tuple val(pair_id), path("${pair_id}_*.fastq.gz", arity: '2')
     script:
     """
     cutadapt \\

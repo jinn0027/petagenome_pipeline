@@ -22,7 +22,7 @@ shell : ${SBX}
 
 .PHONY : help
 help : ${SIF}
-	${SINGULARITY} exec ${SIF} virsorter --help
+	${SINGULARITY} exec ${SIF} virsorter run --help
 
 .PHONY : version
 version : ${SIF}

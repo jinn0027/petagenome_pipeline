@@ -12,6 +12,7 @@ cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 #nextflow run fastqc.nf --test_fastqc_reads "../modules/test/s_6_{1,2}.fastq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 #nextflow run spades.nf --test_spades_reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+#nextflow run spades.nf --test_spades_reads "../modules/test/s_6_{1,2}.fastq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 #nextflow run cutadapt.nf --test_cutadapt_reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --petagenomeDir=$(pwd)/..
 
@@ -31,5 +32,4 @@ cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 nextflow run virsorter.nf --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db virome --virsorter_aligner diamond --petagenomeDir=$(pwd)/..
 
 ################################# NG
-#nextflow run spades.nf --test_spades_reads "../modules/test/s_6_{1,2}.fastq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
