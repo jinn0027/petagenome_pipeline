@@ -11,15 +11,15 @@ process megahit {
     output:
         tuple val(pair_id), path("out/${pair_id}.contigs.fa")
     script:
-    """
-    megahit \\
-        -m ${params.memory} \\
-        -t ${params.threads} \\
-        -1 ${reads[0]} \\
-        -2 ${reads[1]} \\
-        -o out \\
-        --out-prefix ${pair_id}
-    """
+        """
+        megahit \\
+            -m ${params.memory} \\
+            -t ${params.threads} \\
+            -1 ${reads[0]} \\
+            -2 ${reads[1]} \\
+            -o out \\
+            --out-prefix ${pair_id}
+        """
 }
 
 workflow {

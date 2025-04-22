@@ -11,13 +11,13 @@ process fastqc {
     output:
         tuple val(pair_id), path("out")
     script:
-    """
-    mkdir -p out
-    fastqc \\
-        -o out\\
-        ${reads[0]} \\
-        ${reads[1]}
-    """
+        """
+        mkdir -p out
+        fastqc \\
+            -o out\\
+            ${reads[0]} \\
+            ${reads[1]}
+        """
 }
 
 workflow {

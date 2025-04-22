@@ -17,13 +17,13 @@ process bbmap_makedb {
     output:
         tuple val(ref_id), path("db")
     script:
-    """
-    bbmap.sh \\
-        -Xmx${params.memory}g \\
-        threads=${params.threads} \\
-        ref=${ref} \\
-        path=db
-    """
+        """
+        bbmap.sh \\
+            -Xmx${params.memory}g \\
+            threads=${params.threads} \\
+            ref=${ref} \\
+            path=db
+        """
 }
 
 process bbmap_align {
@@ -36,18 +36,18 @@ process bbmap_align {
     output:
         tuple val(ref_id), val(pair_id), path("${ref_id}_@_${pair_id}_bbmap_out.sam")
     script:
-    """
-    bbmap.sh \\
-        -Xmx${params.memory}g \\
-        threads=${params.threads} \\
-        ambiguous=${params.bbmap_ambiguous} \\
-        minid=${params.bbmap_minid} \\
-        pairlen=${params.bbmap_pairlen} \\
-        path=${db} \\
-        in=${reads[0]} \\
-        in2=${reads[1]} \\
-        out=${ref_id}_@_${pair_id}_bbmap_out.sam
-    """
+        """
+        bbmap.sh \\
+            -Xmx${params.memory}g \\
+            threads=${params.threads} \\
+            ambiguous=${params.bbmap_ambiguous} \\
+            minid=${params.bbmap_minid} \\
+            pairlen=${params.bbmap_pairlen} \\
+            path=${db} \\
+            in=${reads[0]} \\
+            in2=${reads[1]} \\
+            out=${ref_id}_@_${pair_id}_bbmap_out.sam
+        """
 }
 
 process bbmap {
@@ -60,23 +60,23 @@ process bbmap {
     output:
         tuple val(ref_id), val(pair_id), path("${ref_id}_@_${pair_id}_bbmap_out.sam")
     script:
-    """
-    bbmap.sh \\
-        -Xmx${params.memory}g \\
-        threads=${params.threads} \\
-        ref=${ref} \\
-        path=db
-    bbmap.sh \\
-        -Xmx${params.memory}g \\
-        threads=${params.threads} \\
-        ambiguous=${params.bbmap_ambiguous} \\
-        minid=${params.bbmap_minid} \\
-        pairlen=${params.bbmap_pairlen} \\
-        path=db \\
-        in=${reads[0]} \\
-        in2=${reads[1]} \\
-        out=${ref_id}_@_${pair_id}_bbmap_out.sam
-    """
+        """
+        bbmap.sh \\
+            -Xmx${params.memory}g \\
+            threads=${params.threads} \\
+            ref=${ref} \\
+            path=db
+        bbmap.sh \\
+            -Xmx${params.memory}g \\
+            threads=${params.threads} \\
+            ambiguous=${params.bbmap_ambiguous} \\
+            minid=${params.bbmap_minid} \\
+            pairlen=${params.bbmap_pairlen} \\
+            path=db \\
+            in=${reads[0]} \\
+            in2=${reads[1]} \\
+            out=${ref_id}_@_${pair_id}_bbmap_out.sam
+        """
 }
 
 workflow {

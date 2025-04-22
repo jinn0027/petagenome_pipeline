@@ -14,18 +14,18 @@ process fastp {
     output:
         tuple val(pair_id), path("${pair_id}_fastp_out*", arity: '2')
     script:
-    """
-    fastp \\
-        -w ${params.threads} \\
-        --low_complexity_filter \\
-        -i ${reads[0]} \\
-        -I ${reads[1]} \\
-        -o ${pair_id}_fastp_out1.fastq.gz \\
-        -O ${pair_id}_fastp_out2.fastq.gz \\
-        --cut_front --cut_tail \\
-        --cut_mean_quality ${params.fastp_cut_mean_quality} \\
-        --length_required ${params.fastp_reads_minlength}
-    """
+        """
+        fastp \\
+            -w ${params.threads} \\
+            --low_complexity_filter \\
+            -i ${reads[0]} \\
+            -I ${reads[1]} \\
+            -o ${pair_id}_fastp_out1.fastq.gz \\
+            -O ${pair_id}_fastp_out2.fastq.gz \\
+            --cut_front --cut_tail \\
+            --cut_mean_quality ${params.fastp_cut_mean_quality} \\
+            --length_required ${params.fastp_reads_minlength}
+        """
 }
 
 workflow {

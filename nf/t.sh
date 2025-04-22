@@ -29,7 +29,8 @@ cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 #nextflow run diamond.nf --test_diamond_ref "../modules/test/1.faa.gz" --test_diamond_qry "../modules/test/2.faa" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 #nextflow run virsorter.nf --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db refseq --virsorter_aligner blast --petagenomeDir=$(pwd)/..
-nextflow run virsorter.nf --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db virome --virsorter_aligner diamond --petagenomeDir=$(pwd)/..
+#nextflow run virsorter.nf --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db virome --virsorter_aligner diamond --petagenomeDir=$(pwd)/..
+nextflow run virsorter2.nf --test_virsorter2_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 ################################# NG
 

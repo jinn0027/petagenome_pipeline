@@ -17,18 +17,18 @@ process cdhit_est {
     output:
         tuple val(read_id), path("${read_id}_cdhit_out.fasta")
     script:
-    """
-    cd-hit-est \\
-        -M ${params.memory} \\
-        -T ${params.threads} \\
-        -c ${params.cdhit_identity_threshold} \\
-        -G ${params.cdhit_global_sequence_identity} \\
-        -d ${params.cdhit_description_length} \\
-        -n ${params.cdhit_word_length} \\
-        -mask ${params.cdhit_mask} \\
-        -i ${read} \\
-        -o ${read_id}_cdhit_out.fasta
-    """
+        """
+        cd-hit-est \\
+            -M ${params.memory} \\
+            -T ${params.threads} \\
+            -c ${params.cdhit_identity_threshold} \\
+            -G ${params.cdhit_global_sequence_identity} \\
+            -d ${params.cdhit_description_length} \\
+            -n ${params.cdhit_word_length} \\
+            -mask ${params.cdhit_mask} \\
+            -i ${read} \\
+            -o ${read_id}_cdhit_out.fasta
+        """
 }
 
 workflow {

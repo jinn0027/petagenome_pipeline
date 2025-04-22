@@ -18,22 +18,20 @@ process blast_makedb {
     output:
         tuple val(ref_id), path("db")
     script:
-    """
-    ref_=${ref}
-    echo ${ref} | grep -e ".gz\$" >& /dev/null && :
-    if [ \$? -eq 0 ] ; then
-      ref_=\${ref_%%.gz}
-      #gunzip -c ${ref} > \${ref_}
-      unpigz -c ${ref} > \${ref_}
-      gzipped="TRUE"
-    fi
-    mkdir -p db
-    makeblastdb \\
-        -in \${ref_} \\
-        -out db/${ref_id} \\
-        -dbtype ${params.blast_dbtype} \\
-        -parse_seqids
-    """
+        """
+        ref_=${ref}
+        echo ${ref} | grep -e ".gz\$" >& /dev/null && :
+        if [ \$? -eq 0 ] ; then
+            ref_=\${ref_%%.gz}
+            unpigz -c ${ref} > \${ref_}
+        fi
+        mkdir -p db
+        makeblastdb \\
+            -in \${ref_} \\
+            -out db/${ref_id} \\
+            -dbtype ${params.blast_dbtype} \\
+            -parse_seqids
+        """
 }
 
 process blastn {
@@ -46,18 +44,18 @@ process blastn {
     output:
         tuple val(ref_id), val(qry_id), path("${ref_id}_@_${qry_id}_out.txt")
     script:
-    """
-    blastn \\
-        -task ${params.blast_task} \\
-        -num_threads ${params.threads} \\
-        -query ${qry} \\
-        -db ${db}/${ref_id} \\
-        -perc_identity ${params.blast_perc_identity} \\
-        -evalue ${params.blast_evalue} \\
-        -outfmt ${params.blast_outfmt} \\
-        -num_alignments ${params.blast_num_alignments} \\
-        -out ${ref_id}_@_${qry_id}_out.txt
-    """
+        """
+        blastn \\
+            -task ${params.blast_task} \\
+            -num_threads ${params.threads} \\
+            -query ${qry} \\
+            -db ${db}/${ref_id} \\
+            -perc_identity ${params.blast_perc_identity} \\
+            -evalue ${params.blast_evalue} \\
+            -outfmt ${params.blast_outfmt} \\
+            -num_alignments ${params.blast_num_alignments} \\
+            -out ${ref_id}_@_${qry_id}_out.txt
+        """
 }
 
 workflow {
