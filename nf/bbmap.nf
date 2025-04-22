@@ -81,11 +81,7 @@ process bbmap {
 
 workflow {
     ref = channel.fromPath(params.test_bbmap_ref, checkIfExists: true)
-        .map { ref_path ->
-            def basename = ref_path.baseName
-            def ref_id = basename.substring(0, basename.indexOf('.'))
-            tuple(ref_id, ref_path)
-        }
+        .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
 
     reads = channel.fromFilePairs(params.test_bbmap_reads, checkIfExists: true)
    

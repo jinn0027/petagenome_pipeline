@@ -33,11 +33,7 @@ process cdhit_est {
 
 workflow {
     read = channel.fromPath(params.test_cdhit_read, checkIfExists: true)
-        .map { read_path ->
-            def basename = read_path.baseName
-            def read_id = basename.substring(0, basename.indexOf('.'))
-            tuple(read_id, read_path)
-        }
+        .map { read_path -> tuple(read_path.simpleName, read_path) }
     cdhit_est = cdhit_est(read)
     //cdhit_est.view { i -> "$i" }
 }
