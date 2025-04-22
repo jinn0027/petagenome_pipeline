@@ -29,6 +29,6 @@ process cutadapt {
 
 workflow {
    reads = channel.fromFilePairs(params.test_cutadapt_reads, checkIfExists: true)
-   cutadapt = cutadapt(reads)
-   //cutadapt.view { i -> "$i" }
+   out = cutadapt(reads)
+   //out.view { i -> "$i" }
 }

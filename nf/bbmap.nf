@@ -91,14 +91,14 @@ workflow {
     if (params.test_bbmap_separate) {
         db = bbmap_makedb(ref)
         //db.view { i -> "$i" }
-        align_input = db.combine(reads)
-        //align_input.view { i -> "$i" }
-        bbmap_align = bbmap_align(align_input)
-        //bbmap_align.view { i -> "$i" }
+        in = db.combine(reads)
+        //in.view { i -> "$i" }
+        out = bbmap_align(in)
+        //out.view { i -> "$i" }
     } else {
-        bbmap_input = ref.combine(reads)
-        bbmap = bbmap(bbmap_input)
-        //bbmap.view { i -> "$i" }
+        in = ref.combine(reads)
+        out = bbmap(in)
+        //out.view { i -> "$i" }
     }
 }
 

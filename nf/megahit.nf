@@ -24,6 +24,6 @@ process megahit {
 
 workflow {
     reads = channel.fromFilePairs(params.test_megahit_reads, checkIfExists: true)
-    megahit = megahit(reads)
-    //megahit.view { i -> "$i" }
+    out = megahit(reads)
+    //out.view { i -> "$i" }
 }

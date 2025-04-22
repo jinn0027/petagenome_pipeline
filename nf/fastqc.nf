@@ -22,6 +22,6 @@ process fastqc {
 
 workflow {
     reads = channel.fromFilePairs(params.test_fastqc_reads, checkIfExists: true)
-    fastqc = fastqc(reads)
-    //fastqc.view { i -> "$i" }
+    out = fastqc(reads)
+    //out.view { i -> "$i" }
 }

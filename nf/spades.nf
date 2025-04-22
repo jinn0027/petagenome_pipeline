@@ -78,13 +78,13 @@ process spades {
 workflow {
    reads = channel.fromFilePairs(params.test_spades_reads, checkIfExists: true)
    if (params.test_spades_separate) {
-       error_correction = spades_error_correction(reads)
+       ec = spades_error_correction(reads)
            .map { pair_id, reads, unpaired -> tuple( pair_id, reads ) }
-       //error_correction.view { i -> "$i" }
-       spades_assembler = spades_assembler(error_correction)
-       spades_assembler.view { i -> "$i" }
+       //ec.view { i -> "$i" }
+       out = spades_assembler(ec)
+       //out.view { i -> "$i" }
    } else {
-       spades = spades(reads)
-       //spades.view { i -> "$i" }
+       out = spades(reads)
+       //out.view { i -> "$i" }
    }
 }

@@ -23,7 +23,7 @@ workflow {
     qry = channel.fromPath(params.test_virsorter2_qry, checkIfExists: true)
         .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
     qry.view { i -> "$i" }
-    virsorter2 = virsorter2(qry)
-    //virsorter2.view { i -> "$i" }
+    out = virsorter2(qry)
+    //out.view { i -> "$i" }
 }
 
