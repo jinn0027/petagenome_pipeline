@@ -13,6 +13,14 @@ all : ${SBX} ${SIF} ${SBX_UPDATE_DB}
 
 .PHONY : clean
 clean :
+	if [ -d ${SBX} ] ; then \
+	    ${SINGULARITY} exec --fakeroot --writable ${SBX} sh -c \
+	        "rm -rf /opt/VirSorter"; \
+	fi
+	if [ -d ${SBX_UPDATE_DB} ] ; then \
+	    ${SINGULARITY} exec --fakeroot --writable ${SBX_UPDATE_DB} sh -c \
+	        "rm -rf /opt/VirSorter"; \
+	fi
 	rm -rf ${SBX} ${SIF} ${SBX_UPDATE_DB} build-temp-* *~
 
 ${SBX} : ${DEF}

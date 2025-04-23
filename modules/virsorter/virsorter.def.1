@@ -7,8 +7,8 @@ From: ../common/gcc.sif
     ../../external/diamond.0.9.36.tar.gz /opt
     ../../external/hmmer.tar.gz /opt
     ../../external/VirSorter.tar.gz /opt
-    ../../external/virsorter-data-v2.updated.tar.gz /opt
-    ../../external/mga_x86_64.tar.gz /opt
+    #../../external/virsorter-data-v2.updated.tar.gz /opt
+    #../../external/mga_x86_64.tar.gz /opt
     ../../external/ncbi-blast-2.16.0+-src.tar.gz /opt
     ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
 
@@ -70,9 +70,9 @@ From: ../common/gcc.sif
                 make -j$(nproc)
             popd
             # install database
-            tar -I pigz -xvf /opt/virsorter-data-v2.updated.tar.gz -C . --no-same-owner
+            #tar -I pigz -xvf /opt/virsorter-data-v2.updated.tar.gz -C . --no-same-owner
             # install MetaGeneAnnotator
-            tar -I pigz -xvf /opt/mga_x86_64.tar.gz -C . --no-same-owner
+            #tar -I pigz -xvf /opt/mga_x86_64.tar.gz -C . --no-same-owner
         popd
     popd
 

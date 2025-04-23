@@ -5,8 +5,8 @@ From: ../common/gcc.sif
 
 %files
     ../../external/VirSorter.tar.gz /opt
-    ../../external/virsorter-data-v2.tar.gz /opt
-    ../../external/mga_x86_64.tar.gz /opt
+    #../../external/virsorter-data-v2.tar.gz /opt
+    #../../external/mga_x86_64.tar.gz /opt
 
 %post
     pushd /opt
@@ -32,9 +32,9 @@ From: ../common/gcc.sif
                 make -j$(nproc)
             popd
             # install database
-            tar -I pigz -xvf /opt/virsorter-data-v2.tar.gz -C . --no-same-owner
+            #tar -I pigz -xvf /opt/virsorter-data-v2.tar.gz -C . --no-same-owner
             # install MetaGeneAnnotator
-            tar -I pigz -xvf /opt/mga_x86_64.tar.gz -C . --no-same-owner
+            #tar -I pigz -xvf /opt/mga_x86_64.tar.gz -C . --no-same-owner
         popd
     popd
 
