@@ -44,7 +44,9 @@ random_seed=0
 
 #nextflow run prodigal.nf --test_prodigal_read "../modules/test/ecoli_1K_1.fa.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
-nextflow run metaphlan.nf --test_metaphlan_read "../modules/test/s_6_1.fastq.gz" --test_metaphlan_db "../external/metaphlan4_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+#nextflow run metaphlan.nf --test_metaphlan_read "../modules/test/s_6_1.fastq.gz" --test_metaphlan_db "../external/metaphlan4_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+
+nextflow run metaphlan2.nf --test_metaphlan2_read "../modules/test/s_6_1.fastq.gz" --metaphlan2_db "../external/metaphlan2_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 ################################# NG
 

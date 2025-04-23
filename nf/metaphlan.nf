@@ -2,7 +2,7 @@
 nextflow.enable.dsl=2
 
 params.metaphlan_input_type = "fastq"
-//fastq fasta bowtie2out sam
+//fastq,fasta,bowtie2out,sam
 
 process metaphlan {
     tag "${read_id}"
