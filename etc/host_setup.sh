@@ -14,7 +14,9 @@ sudo dnf -y install \
      cryptsetup \
      squashfuse \
      libsubid-dev \
-     pigz
+     pigz \
+     bzip2 \
+     pbzip2
 
 #sudo dnf --enablerepo=devel install -y \
 #     shadow-utils-subid-devel

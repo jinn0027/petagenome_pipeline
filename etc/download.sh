@@ -180,6 +180,7 @@ fi
 # MetaPhlAn(4) database @ 2025/1/29
 #wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_latest -O mpa_latest
 #metaphlan4_index=$(cat mpa_latest)
+
 metaphlan4_index=mpa_vJun23_CHOCOPhlAnSGB_202403
 echo ${metaphlan4_index} > mpa_latest
 
@@ -207,6 +208,17 @@ fi
 if [ ! -f ${metaphlan4_index}_bt2.tar.gz ] ; then
     wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan4_index}_bt2.tar
     gzip ${metaphlan4_index}_bt2.tar
+fi
+
+if [ ! -d metaphlan4_db ] ; then
+    mkdir -p metaphlan4_db
+    cp mpa_latest metaphlan4_db
+    tar -I pigz -xvf ${metaphlan4_index}.tar.gz -C metaphlan4_db --no-same-owner
+    tar -I pigz -xvf ${metaphlan4_index}_bt2.tar.gz -C metaphlan4_db --no-same-owner
+    pushd metaphlan4_db
+        pbunzip2 *.bz2
+    popd
+    chmod -R 777 metaphlan4_db
 fi
 
 # MetaPhlAn2 database @ 2025/1/22
