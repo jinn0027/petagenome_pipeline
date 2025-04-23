@@ -147,6 +147,12 @@ fi
 for i in $(ls)
 do
     if [ -d $i ] ; then
+	if [ "$i" == "metaphlan2_db" ] ; then
+	    continue
+	fi
+	if [ "$i" == "metaphlan4_db" ] ; then
+	    continue
+	fi
         echo $i
         tar -I pigz -cvf ${i}.tar.gz ${i}
         rm -rf $i
@@ -224,6 +230,12 @@ fi
 # MetaPhlAn2 database @ 2025/1/22
 if [ ! -f mpa_v20_m200.zip ] ; then
     wget https://figshare.com/ndownloader/articles/6200807/versions/1 -O mpa_v20_m200.zip
+fi
+
+if [ ! -d metaphlan2_db ] ; then
+    mkdir -p metaphlan2_db
+    unzip -d metaphlan2_db mpa_v20_m200.zip
+    chmod -R 777 metaphlan2_db
 fi
 
 # VirSorter Metagenome Annotator @ 2012/10/7 (retrieved at 2025/1/22)
