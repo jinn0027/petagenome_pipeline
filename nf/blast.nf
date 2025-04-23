@@ -41,9 +41,10 @@ process blastn {
         tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
 
     output:
-        tuple val(ref_id), val(qry_id), path("${ref_id}_@_${qry_id}_out.txt")
+        tuple val(ref_id), val(qry_id), path("out")
     script:
         """
+        mkdir -p out
         blastn \\
             -task ${params.blast_task} \\
             -num_threads ${params.threads} \\
@@ -53,7 +54,7 @@ process blastn {
             -evalue ${params.blast_evalue} \\
             -outfmt ${params.blast_outfmt} \\
             -num_alignments ${params.blast_num_alignments} \\
-            -out ${ref_id}_@_${qry_id}_out.txt
+            -out out/${ref_id}_@_${qry_id}_out.txt
         """
 }
 
