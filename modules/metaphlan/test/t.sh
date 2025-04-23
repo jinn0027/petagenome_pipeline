@@ -5,11 +5,12 @@
 n_threads=128
 
 fq1=../../test/s_6_1.fastq.gz
-db=/opt/db
+#db=/opt/db
 
 wdir=work
 odir=results
 refdir=ref
+dbdir=../../../external/metaphlan4_db
 
 log=t.log
 
@@ -19,18 +20,18 @@ fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
 
 wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
+dbdir=$(cd $(dirname ${dbdir}) && pwd)/$(basename ${dbdir})
 
 mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${odir} ../metaphlan.sbx sh -c "\
-    zcat ${fq1} | \
+/usr/local/bin/apptainer exec --bind ${fq1},${odir},${dbdir} ../metaphlan.sbx sh -c "\
     metaphlan \
-        --bowtie2db ${db} \
+        --bowtie2db ${dbdir} \
         --input_type fastq \
         --bowtie2out ${wdir}/out.all.sam \
         --nproc ${n_threads} \
-        > ${odir}/out.prof \
+        ${fq1} ${odir}/out.prof \
     && sort ${wdir}/out.all.sam | head -n 100 > ${odir}/out.sam \
     && sort ${wdir}/out.all.sam | tail -n 100 >> ${odir}/out.sam" > ${log} 2>&1
 

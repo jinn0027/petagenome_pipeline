@@ -4,6 +4,7 @@ export TMPDIR=/dev/shm/tmp
 
 threads=$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
+random_seed=0
 
 #nextflow run main.nf --reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
@@ -33,8 +34,15 @@ cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 
 #nextflow run virsorter2.nf --test_virsorter2_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
-nextflow run bwa.nf --test_bwa_ref "../modules/test/ecoli_1K_1.fa.gz" --test_bwa_qry "../modules/test/q1.fasta" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+#nextflow run bwa.nf --test_bwa_ref "../modules/test/ecoli_1K_1.fa.gz" --test_bwa_qry "../modules/test/q1.fasta" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
+#nextflow run bwa_mem2.nf --test_bwa_mem2_ref "../modules/test/ecoli_1K_1.fa.gz" --test_bwa_mem2_qry "../modules/test/q1.fasta" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+
+#nextflow run bowtie.nf --test_bowtie_ref "../modules/test/ecoli_1K_1.fa.gz" --test_bowtie_qry "../modules/test/q1.fasta" --threads ${threads} --cpus ${cpus} --random_seed ${random_seed} --petagenomeDir=$(pwd)/..
+
+#nextflow run bowtie2.nf --test_bowtie2_ref "../modules/test/ecoli_1K_1.fa.gz" --test_bowtie2_qry "../modules/test/q1.fasta" --threads ${threads} --cpus ${cpus} --random_seed ${random_seed} --petagenomeDir=$(pwd)/..
+
+nextflow run prodigal.nf --test_prodigal_read "../modules/test/ecoli_1K_1.fa.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 ################################# NG
 

@@ -22,7 +22,7 @@ shell : ${SBX}
 
 .PHONY : help
 help : ${SIF}
-	${SINGULARITY} exec ${SIF} bwa-mem2 2>&1
+	${SINGULARITY} exec ${SIF} bwa-mem2 mem 2>&1
 
 .PHONY : version
 version : ${SIF}
