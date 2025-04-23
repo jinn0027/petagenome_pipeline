@@ -28,7 +28,7 @@ process bowtie2 {
     input:
         tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("out/out.sam")
+        tuple val(ref_id), val(qry_id), path("out")
     script:
         """
         mkdir -p out
@@ -38,7 +38,7 @@ process bowtie2 {
             -f \\
             -x ${db}/${ref_id} \\
             -U ${qry} \\
-            > out/out.sam
+            > out/${ref_id}_${qry_id}.sam
         """
 }
 
