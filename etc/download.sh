@@ -153,6 +153,9 @@ do
 	if [ "$i" == "metaphlan4_db" ] ; then
 	    continue
 	fi
+	if [ "$i" == "virsorter-data" ] ; then
+	    continue
+	fi
         echo $i
         tar -I pigz -cvf ${i}.tar.gz ${i}
         rm -rf $i
@@ -302,6 +305,14 @@ if [ ! -f virsorter-data-v2.updated.tar.gz ] ; then
     #mv virsorter_update_db.sbx/opt/VirSorter/virsorter-data-v2.updated.tar.gz ../../external
     sudo rm -rf virsorter_update_db.sbx
     popd
+fi
+
+if [ ! -d virsorter-data ] ; then
+    tar -I pigz -xvf virsorter-data-v2.updated.tar.gz
+fi
+
+if [ ! -f mga_linux_ia64 ] ; then
+    tar xvfz mga_x86_64.tar.gz mga_linux_ia64
 fi
 
 popd # external
