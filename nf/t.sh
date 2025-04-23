@@ -46,7 +46,11 @@ random_seed=0
 
 #nextflow run metaphlan.nf --test_metaphlan_read "../modules/test/s_6_1.fastq.gz" --test_metaphlan_db "../external/metaphlan4_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
-nextflow run metaphlan2.nf --test_metaphlan2_read "../modules/test/s_6_1.fastq.gz" --metaphlan2_db "../external/metaphlan2_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+#nextflow run metaphlan2.nf --test_metaphlan2_read "../modules/test/s_6_1.fastq.gz" --metaphlan2_db "../external/metaphlan2_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+
+
+nextflow run minimap2.nf --test_minimap2_ref "../modules/test/8seq.fa" --test_minimap2_qry "../modules/test/1seq.fa" --petagenomeDir=$(pwd)/..
+
 
 ################################# NG
 
