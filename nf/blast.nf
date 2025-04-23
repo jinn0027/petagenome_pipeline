@@ -39,9 +39,8 @@ process blastn {
     publishDir "${params.output}/blast/${ref_id}/${qry_id}", mode: 'copy'
     input:
         tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
-
     output:
-        tuple val(ref_id), val(qry_id), path("out")
+        tuple val(ref_id), val(qry_id), path("out/*.tsv", arity: '1')
     script:
         """
         mkdir -p out
@@ -54,7 +53,7 @@ process blastn {
             -evalue ${params.blast_evalue} \\
             -outfmt ${params.blast_outfmt} \\
             -num_alignments ${params.blast_num_alignments} \\
-            -out out/${ref_id}_@_${qry_id}_out.txt
+            -out out/${ref_id}_@_${qry_id}_out.tsv
         """
 }
 
@@ -73,6 +72,6 @@ workflow {
     in = db.combine(qry)
     //in.view { i -> "$i" }
     out = blastn(in)
-    //out.view { i -> "$i" }
+    out.view { i -> "$i" }
 }
 

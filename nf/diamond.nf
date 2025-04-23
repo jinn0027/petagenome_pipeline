@@ -34,21 +34,21 @@ process diamond_blastp {
     input:
         tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("${ref_id}_@_${qry_id}_out.tsv")
+        tuple val(ref_id), val(qry_id), path("out/*.tsv", arity: '1')
     script:
         """
+        mkdir -p out
         diamond \\
             blastp \\
             -q ${qry} \\
             -d ${db}/${ref_id} \\
-            -o ${ref_id}_@_${qry_id}_out.tsv
+            -o out/${ref_id}_@_${qry_id}.tsv
         """
 }
 
 workflow {
     ref = channel.fromPath(params.test_diamond_ref, checkIfExists: true)
         .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
-
     qry = channel.fromPath(params.test_diamond_qry, checkIfExists: true)
         .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
    
@@ -60,5 +60,5 @@ workflow {
     in = db.combine(qry)
     //in.view { i -> "$i" }
     out = diamond_blastp(in)
-    //out.view { i -> "$i" }
+    out.view { i -> "$i" }
 }

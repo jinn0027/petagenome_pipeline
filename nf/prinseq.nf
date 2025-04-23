@@ -12,8 +12,6 @@ params.prinseq_lc_method = "dust"
 params.prinseq_lc_threshold = 7
 params.prinseq_trim_ns_right = 1
 params.prinseq_ns_max_n = 0
-params.prinseq_out_good = "good"
-params.prinseq_out_bad = "bad"
 
 process prinseq {
     tag "${pair_id}"
@@ -22,9 +20,11 @@ process prinseq {
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
-        tuple val(pair_id), path("good*"), path("bad*")
+        tuple val(pair_id), path("out")
     script:
         """
+        mkdir -p out
+
         read0=${reads[0]}
         read1=${reads[1]}
 
@@ -48,8 +48,8 @@ process prinseq {
             -lc_threshold ${params.prinseq_lc_threshold} \\
             -trim_ns_right ${params.prinseq_trim_ns_right} \\
             -ns_max_n ${params.prinseq_ns_max_n} \\
-            -out_good ${params.prinseq_out_good} \\
-            -out_bad ${params.prinseq_out_bad} \\
+            -out_good out/good \\
+            -out_bad out/bad \\
             -fastq \${read0} \\
             -fastq2 \${read1}
         """
@@ -58,5 +58,5 @@ process prinseq {
 workflow {
     reads = channel.fromFilePairs(params.test_prinseq_reads, checkIfExists: true)
     out = prinseq(reads)
-    //out.view { i -> "${i}" }
+    out.view { i -> "${i}" }
 }

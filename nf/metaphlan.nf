@@ -13,7 +13,9 @@ process metaphlan {
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
-        tuple val(read_id), path("out")
+        tuple val(read_id), \
+              path("out/*.sam", arity: '1'), \
+              path("out/*.prof", arity: '1')
     script:
         """
         mkdir -p out
@@ -31,5 +33,5 @@ workflow {
         .map { read_path -> tuple(read_path.simpleName, read_path) }
     //read.view { i -> "${i}" }
     out = metaphlan(read)
-    //out.view { i -> "${i}" }
+    out.view { i -> "${i}" }
 }

@@ -28,7 +28,7 @@ process bowtie {
     input:
         tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("out")
+        tuple val(ref_id), val(qry_id), path("out/*.sam", arity: '1')
     script:
         """
         mkdir -p out
@@ -58,6 +58,6 @@ workflow {
     in = db.combine(qry)
     //in.view { i -> "$i" }
     out = bowtie(in)
-    //out.view { i -> "$i" }
+    out.view { i -> "$i" }
 }
 

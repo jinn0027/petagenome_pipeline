@@ -7,9 +7,8 @@ process megahit {
     publishDir "${params.output}/megahit/${pair_id}", mode: 'copy'
     input:
         tuple val(pair_id), path(reads, arity: '2')
-
     output:
-        tuple val(pair_id), path("out/${pair_id}.contigs.fa")
+        tuple val(pair_id), path("out/*.fa", arity: '1')
     script:
         """
         megahit \\
@@ -25,5 +24,5 @@ process megahit {
 workflow {
     reads = channel.fromFilePairs(params.test_megahit_reads, checkIfExists: true)
     out = megahit(reads)
-    //out.view { i -> "$i" }
+    out.view { i -> "$i" }
 }

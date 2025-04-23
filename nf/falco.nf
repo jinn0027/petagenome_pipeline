@@ -7,7 +7,6 @@ process falco {
     publishDir "${params.output}/falco/${pair_id}", mode: 'copy'
     input:
         tuple val(pair_id), path(reads, arity: '2')
-
     output:
         tuple val(pair_id), path("out")
     script:
@@ -24,5 +23,5 @@ process falco {
 workflow {
     reads = channel.fromFilePairs(params.test_falco_reads, checkIfExists: true)
     out = falco(reads)
-    //out.view { i -> "$i" }
+    out.view { i -> "$i" }
 }

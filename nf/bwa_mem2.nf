@@ -27,7 +27,7 @@ process bwa_mem2_mem {
     input:
         tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("out/out.sam")
+        tuple val(ref_id), val(qry_id), path("out/*.sam", arity: '1')
     script:
         """
         mkdir -p out
@@ -36,7 +36,7 @@ process bwa_mem2_mem {
             -t ${params.threads} \\
             ${db}/${ref_id} \\
             ${qry} \\
-            > out/out.sam
+            > out/${ref_id}_@_${qry_id}.sam
         """
 }
 
@@ -55,6 +55,6 @@ workflow {
     in = db.combine(qry)
     //in.view { i -> "$i" }
     out = bwa_mem2_mem(in)
-    //out.view { i -> "$i" }
+    out.view { i -> "$i" }
 }
 

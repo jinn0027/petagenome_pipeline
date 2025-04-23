@@ -15,9 +15,10 @@ process cdhit_est {
         tuple val(read_id), path(read, arity: '1')
 
     output:
-        tuple val(read_id), path("${read_id}_cdhit_out.fasta")
+        tuple val(read_id), path("out/*.fasta", arity: '1')
     script:
         """
+        mkdir -p out
         cd-hit-est \\
             -M ${params.memory} \\
             -T ${params.threads} \\
@@ -27,7 +28,7 @@ process cdhit_est {
             -n ${params.cdhit_word_length} \\
             -mask ${params.cdhit_mask} \\
             -i ${read} \\
-            -o ${read_id}_cdhit_out.fasta
+            -o out/${read_id}.fasta
         """
 }
 
@@ -35,5 +36,5 @@ workflow {
     read = channel.fromPath(params.test_cdhit_read, checkIfExists: true)
         .map { read_path -> tuple(read_path.simpleName, read_path) }
     out = cdhit_est(read)
-    //out.view { i -> "$i" }
+    out.view { i -> "$i" }
 }

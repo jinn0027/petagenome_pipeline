@@ -14,10 +14,7 @@ process prodigal {
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
-        tuple val(read_id), \
-              path("out/${read_id}.faa", arity: '0..*'), \
-              path("out/${read_id}.fna", arity: '0..*'), \
-              path("out/${read_id}.${params.prodigal_outfmt}", arity: '0..*')
+        tuple val(read_id), path("out/${read_id}.*", arity: '0..*')
     script:
         """
         read_=${read}
@@ -41,5 +38,5 @@ workflow {
     read = channel.fromPath(params.test_prodigal_read, checkIfExists: true)
         .map { read_path -> tuple(read_path.simpleName, read_path) }
     out = prodigal(read)
-    //out.view { i -> "${i}" }
+    out.view { i -> "${i}" }
 }
