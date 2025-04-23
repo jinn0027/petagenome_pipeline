@@ -2,15 +2,15 @@
 nextflow.enable.dsl=2
 
 process virsorter2 {
-    tag "${qry_id}"
+    tag "${read_id}"
     def local_db = "/opt/VirSorter2/db"
     container = "${params.petagenomeDir}/modules/virsorter2/virsorter2.sif"
     containerOptions "-B ${params.virsorter2_db} --writable"
-    publishDir "${params.output}/virsorter2/${qry_id}", mode: 'copy'
+    publishDir "${params.output}/virsorter2/${read_id}", mode: 'copy'
     input:
-        tuple val(qry_id), path(qry, arity: '1')
+        tuple val(read_id), path(read, arity: '1')
     output:
-        tuple val(qry_id) , path("out/*.tsv")
+        tuple val(read_id), path("out/final-viral-boundary.tsv"), path("out/final-viral-score.tsv")
     script:
         """
         virsorter \\
@@ -21,15 +21,15 @@ process virsorter2 {
             run \\
             -j ${params.threads} \\
             -w out \\
-            -i ${qry}
+            -i ${read}
         """
 }
 
 workflow {
-    qry = channel.fromPath(params.test_virsorter2_qry, checkIfExists: true)
-        .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
-    qry.view { i -> "$i" }
-    out = virsorter2(qry)
-    //out.view { i -> "$i" }
+    read = channel.fromPath(params.test_virsorter2_read, checkIfExists: true)
+        .map { read_path -> tuple(read_path.simpleName, read_path) }
+    read.view { i -> "$i" }
+    out = virsorter2(read)
+    out.view { i -> "$i" }
 }
 

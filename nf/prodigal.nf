@@ -14,7 +14,10 @@ process prodigal {
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
-        tuple val(read_id), path("out/${read_id}.*", arity: '0..*')
+        tuple val(read_id), \
+              path("out/*.faa", arity: '1'), \
+              path("out/*.fna", arity: '1'), \
+              path("out/*.${params.prodigal_outfmt}", arity: '1')
     script:
         """
         read_=${read}

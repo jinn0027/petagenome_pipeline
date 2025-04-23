@@ -7,23 +7,23 @@ params.virsorter_aligner = "blast"
 //params.virsorter_aligner = "diamond"
 
 process virsorter {
-    tag "${qry_id}"
+    tag "${read_id}"
     def local_db = "/opt/VirSorter/virsorter-data"
     def local_mga = "/opt/VirSorter/mga_linux_ia64"
     container = "${params.petagenomeDir}/modules/virsorter/virsorter.sif"
     containerOptions "-B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
-    publishDir "${params.output}/virsorter/${qry_id}", mode: 'copy'
+    publishDir "${params.output}/virsorter/${read_id}", mode: 'copy'
     input:
-        tuple val(qry_id), path(qry, arity: '1')
+        tuple val(read_id), path(read, arity: '1')
     output:
-        tuple val(qry_id) , path("${params.virsorter_aligner}/out/*.csv", arity: '1')
+        tuple val(read_id), path("${params.virsorter_aligner}/out/*.csv", arity: '1')
     script:
         """
-        qry_=${qry}
-        echo ${qry} | grep -e ".gz\$" >& /dev/null && :
+        read_=${read}
+        echo ${read} | grep -e ".gz\$" >& /dev/null && :
         if [ \$? -eq 0 ] ; then
-            qry_=\${qry_%%.gz}
-            unpigz -c ${qry} > \${qry_}
+            read_=\${read_%%.gz}
+            unpigz -c ${read} > \${read_}
         fi
         db_type=${params.virsorter_db_type}
         if [ "\${db_type}" = "refseq" ] ; then
@@ -36,7 +36,7 @@ process virsorter {
             --wdir ${params.virsorter_aligner}/out \\
             --data-dir ${local_db} \\
             --ncpu ${params.cpus} \\
-            --fna \${qry_}"
+            --fna \${read_}"
         if [ "${params.virsorter_aligner}" = "diamond" ] ; then
             args+=" --diamond"
         fi
@@ -45,10 +45,10 @@ process virsorter {
 }
 
 workflow {
-    qry = channel.fromPath(params.test_virsorter_qry, checkIfExists: true)
-        .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
-    //qry.view { i -> "$i" }
-    out = virsorter(qry)
-    //out.view { i -> "$i" }
+    read = channel.fromPath(params.test_virsorter_read, checkIfExists: true)
+        .map { read_path -> tuple(read_path.simpleName, read_path) }
+    //read.view { i -> "$i" }
+    out = virsorter(read)
+    out.view { i -> "$i" }
 }
 
