@@ -3,7 +3,9 @@ nextflow.enable.dsl=2
 
 process virsorter2 {
     tag "${qry_id}"
+    def local_db = "/opt/VirSorter2/db"
     container = "${params.petagenomeDir}/modules/virsorter2/virsorter2.sif"
+    containerOptions "-B ${params.virsorter2_db} --writable"
     publishDir "${params.output}/virsorter2/${qry_id}", mode: 'copy'
     input:
         tuple val(qry_id), path(qry, arity: '1')
@@ -11,6 +13,10 @@ process virsorter2 {
         tuple val(qry_id) , path("out/*.tsv")
     script:
         """
+        virsorter \\
+            config \\
+            --init-source \\
+            --db-dir=${params.virsorter2_db}
         virsorter \\
             run \\
             -j ${params.threads} \\

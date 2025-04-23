@@ -156,6 +156,9 @@ do
 	if [ "$i" == "virsorter-data" ] ; then
 	    continue
 	fi
+	if [ "$i" == "virsorter2-data" ] ; then
+	    continue
+	fi
         echo $i
         tar -I pigz -cvf ${i}.tar.gz ${i}
         rm -rf $i
@@ -254,6 +257,11 @@ fi
 # VirSorter2 database @ 2025/1/22
 if [ ! -f db.tar.gz ] ; then
     wget https://osf.io/v46sc/download -O db.tar.gz
+fi
+
+if [ ! -d virsorter2-data ] ; then
+    tar -I pigz -xvf db.tar.gz
+    mv db virsorter2-data
 fi
 
 # VirSorter2 test @ 2025/1/22

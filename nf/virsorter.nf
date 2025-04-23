@@ -1,7 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.virsorter_data_dir = "/opt/VirSorter/virsorter-data"
 params.virsorter_db_type = "refseq"
 //params.virsorter_db = "virome"
 params.virsorter_aligner = "blast"
@@ -12,12 +11,12 @@ process virsorter {
     def local_db = "/opt/VirSorter/virsorter-data"
     def local_mga = "/opt/VirSorter/mga_linux_ia64"
     container = "${params.petagenomeDir}/modules/virsorter/virsorter.sif"
-    containerOptions "-B ${db}:${local_db} -B ${mga}:${local_mga}"
-    publishDir "${params.output}/virsorter/${params.virsorter_db}/${qry_id}", mode: 'copy'
+    containerOptions "-B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
+    publishDir "${params.output}/virsorter/${qry_id}", mode: 'copy'
     input:
-        tuple path(db, arity: '1'), path(mga, arity: '1'), val(qry_id), path(qry, arity: '1')
+        tuple val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(qry_id) , path("${params.virsorter_aligner}/*.csv", arity: '1')
+        tuple val(qry_id) , path("${params.virsorter_aligner}/out/*.csv", arity: '1')
     script:
         """
         qry_=${qry}
@@ -34,8 +33,8 @@ process virsorter {
         fi
         args="\\
             --db \${db_type} \\
-            --wdir ${params.virsorter_aligner} \\
-            --data-dir ${params.virsorter_data_dir} \\
+            --wdir ${params.virsorter_aligner}/out \\
+            --data-dir ${local_db} \\
             --ncpu ${params.cpus} \\
             --fna \${qry_}"
         if [ "${params.virsorter_aligner}" = "diamond" ] ; then
@@ -46,13 +45,10 @@ process virsorter {
 }
 
 workflow {
-    db = channel.fromPath(params.virsorter_db, checkIfExists: true)
-    mga = channel.fromPath(params.virsorter_mga, checkIfExists: true)
     qry = channel.fromPath(params.test_virsorter_qry, checkIfExists: true)
         .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
-    in = db.combine(mga).combine(qry)
-    //in.view { i -> "$i" }
-    out = virsorter(in)
+    //qry.view { i -> "$i" }
+    out = virsorter(qry)
     //out.view { i -> "$i" }
 }
 

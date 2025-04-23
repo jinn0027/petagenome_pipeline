@@ -3,13 +3,15 @@ nextflow.enable.dsl=2
 
 params.metaphlan_input_type = "fastq"
 //fastq,fasta,bowtie2out,sam
+params.metaphlan_db = "/dev/shm/petagenome_pipeline/external/metaphlan2_db"
 
 process metaphlan {
     tag "${read_id}"
     container = "${params.petagenomeDir}/modules/metaphlan/metaphlan.sif"
+    containerOptions "-B ${params.metaphlan_db}"
     publishDir "${params.output}/metaphlan/${read_id}", mode: 'copy'
     input:
-        tuple path(db, arity: '1'), val(read_id), path(read, arity: '1')
+        tuple val(read_id), path(read, arity: '1')
     output:
         tuple val(read_id), path("out")
     script:
@@ -17,18 +19,17 @@ process metaphlan {
         mkdir -p out
         metaphlan \\
             --nproc ${params.threads} \\
-            --bowtie2db ${db} \\
+            --bowtie2db ${params.metaphlan_db} \\
             --input_type ${params.metaphlan_input_type} \\
-            --bowtie2out out/out.sam \\
-            ${read} out/out.prof
+            --bowtie2out out/${read_id}.sam \\
+            ${read} out/${read_id}.prof
         """
 }
 
 workflow {
-    db = channel.fromPath(params.test_metaphlan_db, checkIfExists: true)
     read = channel.fromPath(params.test_metaphlan_read, checkIfExists: true)
         .map { read_path -> tuple(read_path.simpleName, read_path) }
-    in = db.combine(read)
-    out = metaphlan(in)
+    //read.view { i -> "${i}" }
+    out = metaphlan(read)
     //out.view { i -> "${i}" }
 }

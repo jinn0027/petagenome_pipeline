@@ -8,9 +8,6 @@ random_seed=0
 
 #nextflow run bbmap.nf --test_bbmap_ref "../modules/test/ecoli_1K_1.fa.gz" --test_bbmap_reads "../modules/test/s_6_{1,2}.fastq.gz" --petagenomeDir=$(pwd)/..
 
-
-
-
 #nextflow run main.nf --reads "../modules/test/ecoli_1K_{1,2}.fq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 #nextflow run fastp.nf --test_fastp_reads "../modules/test/s_6_{1,2}.fastq.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
@@ -34,11 +31,11 @@ random_seed=0
 
 #nextflow run diamond.nf --test_diamond_ref "../modules/test/1.faa.gz" --test_diamond_qry "../modules/test/2.faa" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
-#nextflow run virsorter.nf --virsorter_db "../external/virsorter-data" --virsorter_mga "../external/mga_linux_ia64" --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db_type refseq --virsorter_aligner blast --petagenomeDir=$(pwd)/..
+#nextflow run virsorter.nf --virsorter_db "$(pwd)/../external/virsorter-data" --virsorter_mga "$(pwd)/../external/mga_linux_ia64" --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db_type refseq --virsorter_aligner blast --petagenomeDir=$(pwd)/..
 
-nextflow run virsorter.nf --virsorter_db "../external/virsorter-data" --virsorter_mga "../external/mga_linux_ia64" --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db_type virome --virsorter_aligner diamond --petagenomeDir=$(pwd)/..
+#nextflow run virsorter.nf --virsorter_db "$(pwd)/../external/virsorter-data" --virsorter_mga "$(pwd)/../external/mga_linux_ia64" --test_virsorter_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --virsorter_db_type virome --virsorter_aligner diamond --petagenomeDir=$(pwd)/..
 
-#nextflow run virsorter2.nf --test_virsorter2_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+#nextflow run virsorter2.nf --virsorter2_db "$(pwd)/../external/virsorter2-data" --test_virsorter2_qry "../modules/test/1seq.fa" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 #nextflow run bwa.nf --test_bwa_ref "../modules/test/ecoli_1K_1.fa.gz" --test_bwa_qry "../modules/test/q1.fasta" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
@@ -50,9 +47,9 @@ nextflow run virsorter.nf --virsorter_db "../external/virsorter-data" --virsorte
 
 #nextflow run prodigal.nf --test_prodigal_read "../modules/test/ecoli_1K_1.fa.gz" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
-#nextflow run metaphlan.nf --test_metaphlan_read "../modules/test/s_6_1.fastq.gz" --test_metaphlan_db "../external/metaphlan4_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+#nextflow run metaphlan.nf --test_metaphlan_read "../modules/test/s_6_1.fastq.gz" --metaphlan_db "$(pwd)/../external/metaphlan4_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
-#nextflow run metaphlan2.nf --test_metaphlan2_read "../modules/test/s_6_1.fastq.gz" --metaphlan2_db "../external/metaphlan2_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
+nextflow run metaphlan2.nf --test_metaphlan2_read "../modules/test/s_6_1.fastq.gz" --metaphlan2_db "$(pwd)/../external/metaphlan2_db" --threads ${threads} --cpus ${cpus} --petagenomeDir=$(pwd)/..
 
 #nextflow run minimap2.nf --test_minimap2_ref "../modules/test/8seq.fa" --test_minimap2_qry "../modules/test/1seq.fa" --petagenomeDir=$(pwd)/..
 

@@ -5,7 +5,7 @@ From: ../common/gcc.sif
 
 %files
     ../../external/VirSorter2.tar.gz /opt
-    ../../external/db.tar.gz /opt
+    #../../external/db.tar.gz /opt
     ../../external/Prodigal.tar.gz /opt
     ../../external/hmmer.tar.gz /opt
 
@@ -51,10 +51,10 @@ From: ../common/gcc.sif
             /opt/miniconda3/bin/pip install -e .
         popd
         # install database
-        tar -I pigz -xvf /opt/db.tar.gz -C . --no-same-owner 
-        chown -R $(whoami) db
-        chmod -R 777 db
-        /opt/miniconda3/bin/virsorter config --init-source --db-dir=./db
+        #tar -I pigz -xvf /opt/db.tar.gz -C . --no-same-owner 
+        #chown -R $(whoami) db
+        #chmod -R 777 db
+        #/opt/miniconda3/bin/virsorter config --init-source --db-dir=./db
     popd
 
 %environment

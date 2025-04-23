@@ -5,6 +5,8 @@
 n_threads=128
 
 fa1=../../test/1seq.fa
+#locdir=/opt/VirSorter
+dbdir=../../../external/virsorter2-data
 
 odir=results
 refdir=ref
@@ -15,11 +17,14 @@ ret=0
 
 fa1=$(cd $(dirname ${fa1}) && pwd)/$(basename ${fa1})
 odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
+dbdir=$(cd $(dirname ${dbdir}) && pwd)/$(basename ${dbdir})
 
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir} --writable ../virsorter2.sbx virsorter run -w ${odir} -i ${fa1} -j ${n_threads}  all > ${log} 2>&1
+#/usr/local/bin/apptainer exec --bind ${fa1},${odir},${dbdir} --writable ../virsorter2.sif sh -c "virsorter config --init-source --db-dir=${dbdir}; virsorter run -w ${odir} -i ${fa1} -j ${n_threads}  all > ${log} 2>&1"
+
+/usr/local/bin/apptainer exec --bind ${fa1},${odir},${dbdir} --writable ../virsorter2.sbx sh -c "virsorter config --init-source --db-dir=${dbdir}; virsorter run -w ${odir} -i ${fa1} -j ${n_threads}  all > ${log} 2>&1"
 
 failed=""
 for i in $(ls ${refdir}/*.tsv)

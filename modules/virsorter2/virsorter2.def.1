@@ -13,10 +13,10 @@ From: ../common/el9.sif
             virsorter=2.2.4
 
         # install database
-        tar -I pigz -xvf /opt/db.tar.gz -C . --no-same-owner 
-        chown -R $(whoami) db
-        chmod -R 777 db
-        /opt/miniconda3/bin/virsorter config --init-source --db-dir=./db
+        #tar -I pigz -xvf /opt/db.tar.gz -C . --no-same-owner 
+        #chown -R $(whoami) db
+        #chmod -R 777 db
+        #/opt/miniconda3/bin/virsorter config --init-source --db-dir=./db
     popd
 
 %environment
