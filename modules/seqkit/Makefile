@@ -8,6 +8,10 @@ all : ${SBX} ${SIF}
 
 .PHONY : clean
 clean :
+	if [ -d ${SBX} ] ; then \
+	    ${SINGULARITY} exec --fakeroot --writable ${SBX} sh -c \
+	    "rm -rf /root/go"; \
+	fi
 	rm -rf ${SBX} ${SIF} build-temp-* *~
 
 ${SBX} : ${DEF}

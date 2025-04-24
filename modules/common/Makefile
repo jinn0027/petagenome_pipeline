@@ -10,7 +10,7 @@ sbx : el9.sbx gcc.sbx java.sbx golang.sbx
 clean :
 	@for i in $$(ls | grep '.sbx') ; do \
 	    ${SINGULARITY} exec --fakeroot --writable $$i sh -c \
-	        "rm -rf /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
+	    "rm -rf /root/golang /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
 	done
 	rm -rf *.sif *.sbx build-temp-* *~
 
