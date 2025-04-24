@@ -2,7 +2,7 @@
 nextflow.enable.dsl=2
 
 include { fastp } from "${projectDir}/fastp"
-include { spades; spades_error_correction; spades_assembler } from "${projectDir}/spades"
+include { spades_e2e; spades_error_correction; spades_assembler } from "${projectDir}/spades"
 
 workflow {
    raw_short_reads = channel.fromFilePairs(params.reads, checkIfExists: true)
