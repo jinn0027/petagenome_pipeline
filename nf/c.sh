@@ -1,5 +1,3 @@
 #!/bin/bash
 
-rm -rf work output *~ .nextflow.log*
-
-
+rm -rf /dev/shm/petagenome_pipeline/*

@@ -7,8 +7,9 @@ params.metaphlan_db = "/dev/shm/petagenome_pipeline/external/metaphlan2_db"
 
 process metaphlan {
     tag "${read_id}"
+    def local_db = "/opt/db"
     container = "${params.petagenomeDir}/modules/metaphlan/metaphlan.sif"
-    containerOptions "-B ${params.metaphlan_db}"
+    containerOptions "-B ${params.metaphlan_db}:${local_db} -B /dev/shm:/home"
     publishDir "${params.output}/metaphlan/${read_id}", mode: 'copy'
     input:
         tuple val(read_id), path(read, arity: '1')
@@ -21,7 +22,7 @@ process metaphlan {
         mkdir -p out
         metaphlan \\
             --nproc ${params.threads} \\
-            --bowtie2db ${params.metaphlan_db} \\
+            --bowtie2db ${local_db} \\
             --input_type ${params.metaphlan_input_type} \\
             --bowtie2out out/${read_id}.sam \\
             ${read} out/${read_id}.prof
