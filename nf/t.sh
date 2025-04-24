@@ -8,14 +8,25 @@ random_seed=0
 memory=128
 outdir=/dev/shm/petagenome_pipeline/out
 
-data_dir="../modules/test"
+dataDir="../modules/test"
 
-ext_abs_dir="$(pwd)/../external"
-virsorter_db="${ext_abs_dir}/virsorter-data"
-virsorter_mga="${ext_abs_dir}/mga_linux_ia64"
-virsorter2_db="${ext_abs_dir}/virsorter2-data"
-metaphlan2_db="${ext_abs_dir}/metaphlan2_db"
-metaphlan4_db="${ext_abs_dir}/metaphlan4_db"
+extAbsDir="$(pwd)/../external"
+virsorterDb="${extAbsDir}/virsorter-data"
+virsorterMga="${extAbsDir}/mga_linux_ia64"
+virsorter2Db="${extAbsDir}/virsorter2-data"
+metaphlan2Db="${extAbsDir}/metaphlan2_db"
+metaphlan4Db="${extAbsDir}/metaphlan4_db"
+
+longFnqGzPair="${dataDir}/ecoli_1K_{1,2}.fq.gz"
+longFnaGz1="${dataDir}/ecoli_1K_1.fa.gz"
+longFnaGz2="${dataDir}/ecoli_1K_2.fa.gz"
+longFnaX1="${dataDir}/1seq.fa"
+longFnaX8="${dataDir}/8seq.fa"
+shortFnqGzPair="${dataDir}/s_6_{1,2}.fastq.gz"
+shortFnqGz1="${dataDir}/s_6_1.fastq.gz"
+shortFaaGz1="${dataDir}/1.faa.gz"
+shortFaa2="${dataDir}/2.faa"
+shortFna1="${dataDir}/q.fa"
 
 args="\
     --petagenomeDir=$(pwd)/.. \
@@ -31,114 +42,114 @@ test=${1:-"main"}
 case ${test} in
     "main")
         nextflow run main.nf ${args} \
-                 --test_main_reads "${data_dir}/ecoli_1K_{1,2}.fq.gz"
+                 --test_main_reads ${longFnqGzPair}
         ;;
     "bbmap")
         nextflow run bbmap.nf ${args} \
-                 --test_bbmap_ref "${data_dir}/ecoli_1K_1.fa.gz" \
-                 --test_bbmap_reads "${data_dir}/s_6_{1,2}.fastq.gz"
+                 --test_bbmap_ref ${longFnaGz1} \
+                 --test_bbmap_reads ${smallFqGzPair}
         ;;
     "blast")
         nextflow run blast.nf ${args} \
-                 --test_blast_ref "${data_dir}/ecoli_1K_1.fa.gz" \
-                 --test_blast_qry "${data_dir}/q1.fasta"
+                 --test_blast_ref ${longFnaGz1} \
+                 --test_blast_qry ${shortFna1}
         ;;
     "bowtie")
         nextflow run bowtie.nf ${args} \
-                 --test_bowtie_ref "${data_dir}/ecoli_1K_1.fa.gz" \
-                 --test_bowtie_qry "${data_dir}/q1.fasta"
+                 --test_bowtie_ref ${longFnaGz1} \
+                 --test_bowtie_qry ${shortFna1}
         ;;
     "bowtie2")
         nextflow run bowtie2.nf ${args} \
-                 --test_bowtie2_ref "${data_dir}/ecoli_1K_1.fa.gz" \
-                 --test_bowtie2_qry "${data_dir}/q1.fasta"
+                 --test_bowtie2_ref ${longFnaGz1} \
+                 --test_bowtie2_qry ${shortFna1}
         ;;
     "bwa")
         nextflow run bwa.nf ${args} \
-                 --test_bwa_ref "${data_dir}/ecoli_1K_1.fa.gz" \
-                 --test_bwa_qry "${data_dir}/q1.fasta"
+                 --test_bwa_ref ${longFnaGz1} \
+                 --test_bwa_qry ${shortFna1}
         ;;
     "bwa_mem2")
         nextflow run bwa_mem2.nf ${args} \
-                 --test_bwa_mem2_ref "${data_dir}/ecoli_1K_1.fa.gz" \
-                 --test_bwa_mem2_qry "${data_dir}/q1.fasta"
+                 --test_bwa_mem2_ref ${longFnaGz1} \
+                 --test_bwa_mem2_qry ${shortFna1}
         ;;
     "cdhit")
         nextflow run cdhit.nf ${args} \
-                 --test_cdhit_read "${data_dir}/ecoli_1K_1.fa.gz"
+                 --test_cdhit_read ${longFnaGz1}
         ;;
     "cutadapt")
         nextflow run cutadapt.nf ${args} \
-                 --test_cutadapt_reads "${data_dir}/ecoli_1K_{1,2}.fq.gz"
+                 --test_cutadapt_reads ${longFnqGzPair}
         ;;
     "diamond")
         nextflow run diamond.nf ${args} \
-                 --test_diamond_ref "${data_dir}/1.faa.gz" \
-                 --test_diamond_qry "${data_dir}/2.faa"
+                 --test_diamond_ref ${shortFaaGz1} \
+                 --test_diamond_qry ${shortFaa2}
         ;;
     "falco")
         nextflow run falco.nf ${args} \
-                 --test_falco_reads "${data_dir}/s_6_{1,2}.fastq.gz"
+                 --test_falco_reads ${shortFnqGzPair}
         ;;
     "fastp")
         nextflow run fastp.nf ${args} \
-                 --test_fastp_reads "${data_dir}/s_6_{1,2}.fastq.gz"
+                 --test_fastp_reads ${shortFnqGzPair}
         ;;
     "fastqc")
         nextflow run fastqc.nf ${args} \
-                 --test_fastqc_reads "${data_dir}/s_6_{1,2}.fastq.gz"
+                 --test_fastqc_reads ${shortFnqGzPair}
         ;;
     "megahit")
         nextflow run megahit.nf ${args} \
-                 --test_megahit_reads "${data_dir}/ecoli_1K_{1,2}.fq.gz"
+                 --test_megahit_reads ${longFnqGzPair}
         ;;
     "metaphlan")
         nextflow run metaphlan.nf ${args} \
-                 --test_metaphlan_read "${data_dir}/s_6_1.fastq.gz" \
-                 --metaphlan_db ${metaphlan4_db}
+                 --test_metaphlan_read ${shortFnqGz1} \
+                 --metaphlan_db ${metaphlan4Db}
         ;;
     "metaphlan2")
         nextflow run metaphlan2.nf ${args} \
-                 --test_metaphlan2_read "${data_dir}/s_6_1.fastq.gz" \
-                 --metaphlan2_db ${metaphlan2_db}
+                 --test_metaphlan2_read ${shortFnqGz1} \
+                 --metaphlan2_db ${metaphlan2Db}
         ;;
     "minimap2")
         nextflow run minimap2.nf ${args} \
-                 --test_minimap2_ref "${data_dir}/8seq.fa" \
-                 --test_minimap2_qry "${data_dir}/1seq.fa"
+                 --test_minimap2_ref ${longFnaX8} \
+                 --test_minimap2_qry ${longFnaX1}
         ;;
     "prinseq")
         nextflow run prinseq.nf ${args} \
-                 --test_prinseq_reads "${data_dir}/s_6_{1,2}.fastq.gz"
+                 --test_prinseq_reads ${shortFnqGzPair}
         ;;
     "prodigal")
         nextflow run prodigal.nf ${args} \
-                 --test_prodigal_read "${data_dir}/ecoli_1K_1.fa.gz"
+                 --test_prodigal_read ${longFnaGz1}
         ;;
     "spades")
         nextflow run spades.nf ${args} \
-                 --test_spades_reads "${data_dir}/ecoli_1K_{1,2}.fq.gz"
+                 --test_spades_reads ${longFnqGzPair}
         nextflow run spades.nf \
-                 --test_spades_reads "${data_dir}/s_6_{1,2}.fastq.gz"
+                 --test_spades_reads ${shortFnqGzPair}
         ;;
     "virsorter")
         nextflow run virsorter.nf ${args} \
-                 --virsorter_db ${virsorter_db} \
-                 --virsorter_mga ${virsorter_mga} \
+                 --virsorter_db ${virsorterDb} \
+                 --virsorter_mga ${virsorterMga} \
                  --virsorter_db_type refseq \
                  --virsorter_aligner blast
-                 --test_virsorter_read "${data_dir}/1seq.fa" \
+                 --test_virsorter_read ${longFnaX1} \
         nextflow run virsorter.nf ${args} \
-                 --virsorter_db ${virsorter_db} \
-                 --virsorter_mga ${virsorter_mga} \
+                 --virsorter_db ${virsorterDb} \
+                 --virsorter_mga ${virsorterMga} \
                  --virsorter_db_type virome \
                  --virsorter_aligner diamond
-                 --test_virsorter_read "${data_dir}/1seq.fa" \
+                 --test_virsorter_read ${longFnaX1} \
         ;;
     "virsorter2")
         nextflow run virsorter2.nf ${args} \
-                 --virsorter2_db ${virsorter2_db} \
-                 --test_virsorter2_read "${data_dir}/1seq.fa"
+                 --virsorter2_db ${virsorter2Db} \
+                 --test_virsorter2_read ${longFnaX1}
         ;;
     "*")
 esac
