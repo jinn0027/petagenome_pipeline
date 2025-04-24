@@ -5,7 +5,7 @@ process virsorter2 {
     tag "${read_id}"
     def local_db = "/opt/VirSorter2/db"
     container = "${params.petagenomeDir}/modules/virsorter2/virsorter2.sif"
-    containerOptions "-B ${params.virsorter2_db}:${local_db} -B /dev/shm:/home"
+    containerOptions "-B ${params.virsorter2_db}:${local_db} -B /tmp:/home"
     publishDir "${params.output}/virsorter2/${read_id}", mode: 'copy'
     input:
         tuple val(read_id), path(read, arity: '1')
