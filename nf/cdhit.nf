@@ -20,7 +20,7 @@ process cdhit_est {
         """
         mkdir -p out
         cd-hit-est \\
-            -M ${params.memory} \\
+            -M "${params.memory}000" \\
             -T ${params.threads} \\
             -c ${params.cdhit_identity_threshold} \\
             -G ${params.cdhit_global_sequence_identity} \\

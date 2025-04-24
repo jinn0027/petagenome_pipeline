@@ -23,6 +23,7 @@ longFnaGz2="${dataDir}/ecoli_1K_2.fa.gz"
 longFnaX1="${dataDir}/1seq.fa"
 longFnaX8="${dataDir}/8seq.fa"
 shortFnqGzPair="${dataDir}/s_6_{1,2}.fastq.gz"
+shortFnaGz1="${dataDir}/s_6_1.fasta.gz"
 shortFnqGz1="${dataDir}/s_6_1.fastq.gz"
 shortFaaGz1="${dataDir}/1.faa.gz"
 shortFaa2="${dataDir}/2.faa"
@@ -47,7 +48,7 @@ case ${test} in
     "bbmap")
         nextflow run bbmap.nf ${args} \
                  --test_bbmap_ref ${longFnaGz1} \
-                 --test_bbmap_reads ${smallFqGzPair}
+                 --test_bbmap_reads ${shortFnqGzPair}
         ;;
     "blast")
         nextflow run blast.nf ${args} \
@@ -76,7 +77,7 @@ case ${test} in
         ;;
     "cdhit")
         nextflow run cdhit.nf ${args} \
-                 --test_cdhit_read ${longFnaGz1}
+                 --test_cdhit_read ${shortFnaGz1}
         ;;
     "cutadapt")
         nextflow run cutadapt.nf ${args} \
@@ -137,13 +138,13 @@ case ${test} in
                  --virsorter_db ${virsorterDb} \
                  --virsorter_mga ${virsorterMga} \
                  --virsorter_db_type refseq \
-                 --virsorter_aligner blast
+                 --virsorter_aligner blast \
                  --test_virsorter_read ${longFnaX1} \
         nextflow run virsorter.nf ${args} \
                  --virsorter_db ${virsorterDb} \
                  --virsorter_mga ${virsorterMga} \
                  --virsorter_db_type virome \
-                 --virsorter_aligner diamond
+                 --virsorter_aligner diamond \
                  --test_virsorter_read ${longFnaX1} \
         ;;
     "virsorter2")
