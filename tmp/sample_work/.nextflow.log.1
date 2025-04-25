@@ -1,0 +1,143 @@
+Apr-25 08:47:11.837 [main] DEBUG nextflow.cli.Launcher - $> nextflow run main.nf --petagenomeDir=/scratch/local/petagenome_pipeline --output /dev/shm/nsato/petagenome_pipeline/out --memory 128 --threads 128 --cpus 1 --random_seed 0 --test_main_reads 'ecoli_1K_{1,2}.fq.gz'
+Apr-25 08:47:11.910 [main] DEBUG nextflow.cli.CmdRun - N E X T F L O W  ~  version 24.10.3
+Apr-25 08:47:11.927 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/nsato/.nextflow/plugins; core-plugins: nf-amazon@2.9.2,nf-azure@1.10.2,nf-cloudcache@0.4.2,nf-codecommit@0.2.2,nf-console@1.1.4,nf-google@1.15.3,nf-tower@1.9.3,nf-wave@1.7.4
+Apr-25 08:47:11.938 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Apr-25 08:47:11.939 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Apr-25 08:47:11.942 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.12.0 in 'deployment' mode
+Apr-25 08:47:11.952 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Apr-25 08:47:11.971 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/nsato/work/nextflow.config
+Apr-25 08:47:11.973 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/nsato/work/nextflow.config
+Apr-25 08:47:11.993 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /home/nsato/.nextflow/secrets/store.json
+Apr-25 08:47:11.997 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@39ce27f2] - activable => nextflow.secret.LocalSecretsProvider@39ce27f2
+Apr-25 08:47:12.008 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Apr-25 08:47:12.448 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 from script declaration
+Apr-25 08:47:12.461 [main] DEBUG nextflow.cli.CmdRun - Launching `main.nf` [stoic_elion] DSL2 - revision: f1c2046559
+Apr-25 08:47:12.463 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Apr-25 08:47:12.463 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+Apr-25 08:47:12.507 [main] DEBUG nextflow.Session - Session UUID: 4a6b2d51-56e8-4a2f-8146-a01710918fd9
+Apr-25 08:47:12.508 [main] DEBUG nextflow.Session - Run name: stoic_elion
+Apr-25 08:47:12.508 [main] DEBUG nextflow.Session - Executor pool size: 128
+Apr-25 08:47:12.515 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
+Apr-25 08:47:12.520 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=384; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Apr-25 08:47:12.540 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 24.10.3 build 5933
+  Created: 16-12-2024 15:34 UTC (17-12-2024 00:34 JDT)
+  System: Linux 5.14.0-162.6.1.el9_1.x86_64
+  Runtime: Groovy 4.0.23 on OpenJDK 64-Bit Server VM 11.0.17+8-LTS
+  Encoding: UTF-8 (UTF-8)
+  Process: 1310897@11gouki [192.168.100.11]
+  CPUs: 128 - Mem: 2 TB (1.7 TB) - Swap: 4 GB (4 GB)
+Apr-25 08:47:12.558 [main] DEBUG nextflow.Session - Work-dir: /dev/shm/nsato/petagenome_pipeline/work [tmpfs]
+Apr-25 08:47:12.559 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/nsato/work/bin
+Apr-25 08:47:12.568 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Apr-25 08:47:12.576 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Apr-25 08:47:12.597 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Apr-25 08:47:12.606 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 129; maxThreads: 1000
+Apr-25 08:47:12.660 [main] DEBUG nextflow.Session - Session start
+Apr-25 08:47:12.842 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Apr-25 08:47:13.009 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
+  Script_2d6191734d717077: /home/nsato/work/main.nf
+  Script_88d3a26e283a7a93: /scratch/local/petagenome_pipeline/nf/fastp.nf
+Apr-25 08:47:13.010 [main] DEBUG nextflow.Session - Session aborted -- Cause: Module path must start with / or ./ prefix -- Offending module: spades
+Apr-25 08:47:13.013 [main] DEBUG nextflow.Session - 
+Thread[Finalizer,8,system]
+  java.base@11.0.17/java.lang.Object.wait(Native Method)
+  java.base@11.0.17/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:155)
+  java.base@11.0.17/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:176)
+  java.base@11.0.17/java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:170)
+
+Thread[Common-Cleaner,8,InnocuousThreadGroup]
+  java.base@11.0.17/java.lang.Object.wait(Native Method)
+  java.base@11.0.17/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:155)
+  java.base@11.0.17/jdk.internal.ref.CleanerImpl.run(CleanerImpl.java:148)
+  java.base@11.0.17/java.lang.Thread.run(Thread.java:829)
+  java.base@11.0.17/jdk.internal.misc.InnocuousThread.run(InnocuousThread.java:161)
+
+Thread[main,5,main]
+  java.base@11.0.17/java.lang.Thread.dumpThreads(Native Method)
+  java.base@11.0.17/java.lang.Thread.getAllStackTraces(Thread.java:1653)
+  app//nextflow.util.SysHelper.dumpThreads(SysHelper.groovy:188)
+  app//nextflow.Session.abort(Session.groovy:800)
+  app//nextflow.script.ScriptRunner.execute(ScriptRunner.groovy:149)
+  app//nextflow.cli.CmdRun.run(CmdRun.groovy:376)
+  app//nextflow.cli.Launcher.run(Launcher.groovy:503)
+  app//nextflow.cli.Launcher.main(Launcher.groovy:658)
+
+Thread[process reaper,10,system]
+  java.base@11.0.17/jdk.internal.misc.Unsafe.park(Native Method)
+  java.base@11.0.17/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:234)
+  java.base@11.0.17/java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(SynchronousQueue.java:462)
+  java.base@11.0.17/java.util.concurrent.SynchronousQueue$TransferStack.transfer(SynchronousQueue.java:361)
+  java.base@11.0.17/java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:937)
+  java.base@11.0.17/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1053)
+  java.base@11.0.17/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1114)
+  java.base@11.0.17/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+  java.base@11.0.17/java.lang.Thread.run(Thread.java:829)
+
+Thread[AnsiLogObserver,5,main]
+  java.base@11.0.17/java.lang.Object.wait(Native Method)
+  app//nextflow.trace.AnsiLogObserver.render0(AnsiLogObserver.groovy:185)
+  java.base@11.0.17/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+  java.base@11.0.17/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+  java.base@11.0.17/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+  java.base@11.0.17/java.lang.reflect.Method.invoke(Method.java:566)
+  app//org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:343)
+  app//groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:328)
+  app//groovy.lang.MetaClassImpl.doInvokeMethod(MetaClassImpl.java:1333)
+  app//groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1088)
+  app//groovy.lang.MetaClassImpl.invokeMethodClosure(MetaClassImpl.java:1017)
+  app//groovy.lang.MetaClassImpl.doInvokeMethod(MetaClassImpl.java:1207)
+  app//groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1088)
+  app//groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1007)
+  app//groovy.lang.Closure.call(Closure.java:433)
+  app//groovy.lang.Closure.call(Closure.java:412)
+  app//groovy.lang.Closure.run(Closure.java:505)
+  java.base@11.0.17/java.lang.Thread.run(Thread.java:829)
+
+Thread[Thread-1,5,main]
+  java.base@11.0.17/jdk.internal.misc.Unsafe.park(Native Method)
+  java.base@11.0.17/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:234)
+  java.base@11.0.17/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:2123)
+  java.base@11.0.17/java.util.concurrent.LinkedBlockingDeque.pollFirst(LinkedBlockingDeque.java:513)
+  java.base@11.0.17/java.util.concurrent.LinkedBlockingDeque.poll(LinkedBlockingDeque.java:675)
+  app//nextflow.util.SimpleAgent.run(SimpleAgent.groovy:89)
+  java.base@11.0.17/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+  java.base@11.0.17/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+  java.base@11.0.17/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+  java.base@11.0.17/java.lang.reflect.Method.invoke(Method.java:566)
+  app//org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:343)
+  app//groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:328)
+  app//groovy.lang.MetaClassImpl.doInvokeMethod(MetaClassImpl.java:1333)
+  app//groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1088)
+  app//groovy.lang.MetaClassImpl.invokeMethodClosure(MetaClassImpl.java:1017)
+  app//groovy.lang.MetaClassImpl.doInvokeMethod(MetaClassImpl.java:1207)
+  app//groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1088)
+  app//groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1007)
+  app//groovy.lang.Closure.call(Closure.java:433)
+  app//groovy.lang.Closure.call(Closure.java:412)
+  app//groovy.lang.Closure.run(Closure.java:505)
+  java.base@11.0.17/java.lang.Thread.run(Thread.java:829)
+
+Thread[Reference Handler,10,system]
+  java.base@11.0.17/java.lang.ref.Reference.waitForReferencePendingList(Native Method)
+  java.base@11.0.17/java.lang.ref.Reference.processPendingReferences(Reference.java:241)
+  java.base@11.0.17/java.lang.ref.Reference$ReferenceHandler.run(Reference.java:213)
+
+Thread[Signal Dispatcher,9,system]
+
+Apr-25 08:47:13.018 [main] ERROR nextflow.cli.Launcher - @unknown
+nextflow.exception.IllegalModulePath: Module path must start with / or ./ prefix -- Offending module: spades
+	at nextflow.script.IncludeDef.checkValidPath(IncludeDef.groovy:197)
+	at nextflow.script.IncludeDef.load0(IncludeDef.groovy:106)
+	at org.codehaus.groovy.vmplugin.v8.IndyInterface.fromCache(IndyInterface.java:321)
+	at Script_2d6191734d717077.runScript(Script_2d6191734d717077:5)
+	at org.codehaus.groovy.vmplugin.v8.IndyInterface.fromCache(IndyInterface.java:321)
+	at nextflow.script.BaseScript.run0(BaseScript.groovy:159)
+	at org.codehaus.groovy.vmplugin.v8.IndyInterface.fromCache(IndyInterface.java:321)
+	at nextflow.script.BaseScript.run(BaseScript.groovy:209)
+	at nextflow.script.ScriptParser.runScript(ScriptParser.groovy:236)
+	at nextflow.script.ScriptRunner.run(ScriptRunner.groovy:243)
+	at nextflow.script.ScriptRunner.execute(ScriptRunner.groovy:138)
+	at nextflow.cli.CmdRun.run(CmdRun.groovy:376)
+	at nextflow.cli.Launcher.run(Launcher.groovy:503)
+	at nextflow.cli.Launcher.main(Launcher.groovy:658)

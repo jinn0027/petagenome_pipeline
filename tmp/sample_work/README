@@ -1,0 +1,24 @@
+簡単な説明  ishikawa@pezy.co.jp 2025/04/25
+
+---
+
+$ ./t.sh でローカルのmain.nfが実行されます。
+
+main.nfは/scratch/local/petagenome/nf 以下のfastp.nfと、ローカルのspades.nfを使用しています。
+
+これは/scratch/local/petagenome/nfあらかじめ作成されたスクリプトと、ローカルで編集したスクリプトの
+どちらも利用する例としています。
+
+例えばもしも個別にカスタマイズしたfastp.nfを用いたい場合には、fastp.nfファイルを
+/scratch/local/petagenome/nfからローカルにコピーして編集し、main.nfから呼び出している箇所を
+
+  include { fastp } from "${params.petagenomeDir}/nf/fastp"
+                    ↓
+  include { fastp } from "./fastp"
+
+のように変更すればできます。
+
+/scratch/local/petagenome/nf 以下のnfファイルはいずれも利用できるはずです。
+
+
+

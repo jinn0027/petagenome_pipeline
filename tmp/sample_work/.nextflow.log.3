@@ -1,0 +1,75 @@
+Apr-25 08:39:03.200 [main] DEBUG nextflow.cli.Launcher - $> nextflow run /scratch/local/petagenome_pipeline/nf/main.nf --petagenomeDir=/scratch/local/petagenome_pipeline --output /dev/shm/nsato/petagenome_pipeline/out --memory 128 --threads 128 --cpus 1 --random_seed 0 --test_main_reads 'ecoli_1K_{1,2}.fq.gz'
+Apr-25 08:39:03.272 [main] DEBUG nextflow.cli.CmdRun - N E X T F L O W  ~  version 24.10.3
+Apr-25 08:39:03.289 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/nsato/.nextflow/plugins; core-plugins: nf-amazon@2.9.2,nf-azure@1.10.2,nf-cloudcache@0.4.2,nf-codecommit@0.2.2,nf-console@1.1.4,nf-google@1.15.3,nf-tower@1.9.3,nf-wave@1.7.4
+Apr-25 08:39:03.301 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Apr-25 08:39:03.302 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Apr-25 08:39:03.304 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.12.0 in 'deployment' mode
+Apr-25 08:39:03.315 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Apr-25 08:39:03.333 [main] DEBUG nextflow.config.ConfigBuilder - Found config base: /scratch/local/petagenome_pipeline/nf/nextflow.config
+Apr-25 08:39:03.335 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/nsato/work/nextflow.config
+Apr-25 08:39:03.337 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /scratch/local/petagenome_pipeline/nf/nextflow.config
+Apr-25 08:39:03.337 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/nsato/work/nextflow.config
+Apr-25 08:39:03.357 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /home/nsato/.nextflow/secrets/store.json
+Apr-25 08:39:03.360 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@39ce27f2] - activable => nextflow.secret.LocalSecretsProvider@39ce27f2
+Apr-25 08:39:03.371 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Apr-25 08:39:03.785 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Apr-25 08:39:03.822 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 from script declaration
+Apr-25 08:39:03.835 [main] DEBUG nextflow.cli.CmdRun - Launching `/scratch/local/petagenome_pipeline/nf/main.nf` [gloomy_mahavira] DSL2 - revision: 282c8fefaf
+Apr-25 08:39:03.836 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Apr-25 08:39:03.836 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+Apr-25 08:39:03.880 [main] DEBUG nextflow.Session - Session UUID: 15b9516a-d3f4-4850-8f9d-11d00e018074
+Apr-25 08:39:03.880 [main] DEBUG nextflow.Session - Run name: gloomy_mahavira
+Apr-25 08:39:03.880 [main] DEBUG nextflow.Session - Executor pool size: 128
+Apr-25 08:39:03.888 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
+Apr-25 08:39:03.892 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=384; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Apr-25 08:39:03.912 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 24.10.3 build 5933
+  Created: 16-12-2024 15:34 UTC (17-12-2024 00:34 JDT)
+  System: Linux 5.14.0-162.6.1.el9_1.x86_64
+  Runtime: Groovy 4.0.23 on OpenJDK 64-Bit Server VM 11.0.17+8-LTS
+  Encoding: UTF-8 (UTF-8)
+  Process: 1308095@11gouki [192.168.100.11]
+  CPUs: 128 - Mem: 2 TB (1.7 TB) - Swap: 4 GB (4 GB)
+Apr-25 08:39:03.928 [main] DEBUG nextflow.Session - Work-dir: /dev/shm/nsato/petagenome_pipeline/work [tmpfs]
+Apr-25 08:39:03.929 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /scratch/local/petagenome_pipeline/nf/bin
+Apr-25 08:39:03.937 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Apr-25 08:39:03.946 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Apr-25 08:39:03.967 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Apr-25 08:39:03.975 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 129; maxThreads: 1000
+Apr-25 08:39:04.031 [main] DEBUG nextflow.Session - Session start
+Apr-25 08:39:04.198 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Apr-25 08:39:04.673 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Apr-25 08:39:04.674 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Apr-25 08:39:04.678 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Apr-25 08:39:04.684 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=128; memory=2 TB; capacity=128; pollInterval=100ms; dumpInterval=5m
+Apr-25 08:39:04.686 [main] DEBUG n.processor.TaskPollingMonitor - >>> barrier register (monitor: local)
+Apr-25 08:39:04.742 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Apr-25 08:39:04.742 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Apr-25 08:39:04.746 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: spades_error_correction, spades_assembler, spades_e2e, fastp
+Apr-25 08:39:04.747 [main] DEBUG nextflow.Session - Igniting dataflow network (3)
+Apr-25 08:39:04.752 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: ./; pattern: ecoli_1K_{1,2}.fq.gz; options: [checkIfExists:true]
+Apr-25 08:39:04.753 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > fastp
+Apr-25 08:39:04.754 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > spades_assembler
+Apr-25 08:39:04.756 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
+  Script_a643450658372d75: /scratch/local/petagenome_pipeline/nf/spades.nf
+  Script_88d3a26e283a7a93: /scratch/local/petagenome_pipeline/nf/fastp.nf
+  Script_0db5903dda403c33: /scratch/local/petagenome_pipeline/nf/main.nf
+Apr-25 08:39:04.757 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Apr-25 08:39:04.757 [main] DEBUG nextflow.Session - Session await
+Apr-25 08:39:04.941 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Apr-25 08:39:04.943 [Task submitter] INFO  nextflow.Session - [00/574a39] Submitted process > fastp (ecoli_1K)
+Apr-25 08:39:05.315 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: fastp (ecoli_1K); status: COMPLETED; exit: 0; error: -; workDir: /dev/shm/nsato/petagenome_pipeline/work/00/574a393c774e762cfd8cb972e0b1db]
+Apr-25 08:39:05.316 [Task monitor] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'TaskFinalizer' minSize=10; maxSize=384; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Apr-25 08:39:05.341 [TaskFinalizer-1] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'PublishDir' minSize=10; maxSize=384; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Apr-25 08:39:05.363 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Apr-25 08:39:05.364 [Task submitter] INFO  nextflow.Session - [b4/14bf32] Submitted process > spades_assembler (ecoli_1K)
+Apr-25 08:39:36.053 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 2; name: spades_assembler (ecoli_1K); status: COMPLETED; exit: 0; error: -; workDir: /dev/shm/nsato/petagenome_pipeline/work/b4/14bf3290d2eb2ac0151e29ab42dc89]
+Apr-25 08:39:36.062 [main] DEBUG nextflow.Session - Session await > all processes finished
+Apr-25 08:39:36.154 [Task monitor] DEBUG n.processor.TaskPollingMonitor - <<< barrier arrives (monitor: local) - terminating tasks monitor poll loop
+Apr-25 08:39:36.154 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Apr-25 08:39:36.157 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'TaskFinalizer' shutdown completed (hard=false)
+Apr-25 08:39:36.158 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'PublishDir' shutdown completed (hard=false)
+Apr-25 08:39:36.163 [main] DEBUG n.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=2; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=31s; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=1; peakCpus=1; peakMemory=0; ]
+Apr-25 08:39:36.276 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Apr-25 08:39:36.283 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
+Apr-25 08:39:36.283 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye
