@@ -2,20 +2,23 @@
 
 export TMPDIR=/dev/shm/tmp
 
+MY_FILE="${BASH_SOURCE[0]}"
+MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
+
 threads=$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
 memory=128
-outdir=/dev/shm/petagenome_pipeline/out
+outdir=/dev/shm/${USER}/petagenome_pipeline/out
 
-dataDir="../modules/test"
+dataDir="${MY_DIR}/../modules/test"
 
-extAbsDir="$(pwd)/../external"
-virsorterDb="${extAbsDir}/virsorter-data"
-virsorterMga="${extAbsDir}/mga_linux_ia64"
-virsorter2Db="${extAbsDir}/virsorter2-data"
-metaphlan2Db="${extAbsDir}/metaphlan2_db"
-metaphlan4Db="${extAbsDir}/metaphlan4_db"
+extDir="${MY_DIR}/../external"
+virsorterDb="${extDir}/virsorter-data"
+virsorterMga="${extDir}/mga_linux_ia64"
+virsorter2Db="${extDir}/virsorter2-data"
+metaphlan2Db="${extDir}/metaphlan2_db"
+metaphlan4Db="${extDir}/metaphlan4_db"
 
 longFnqGzPair="${dataDir}/ecoli_1K_{1,2}.fq.gz"
 longFnaGz1="${dataDir}/ecoli_1K_1.fa.gz"
@@ -30,7 +33,7 @@ shortFaa2="${dataDir}/2.faa"
 shortFna1="${dataDir}/q.fa"
 
 args="\
-    --petagenomeDir=$(pwd)/.. \
+    --petagenomeDir=${MY_DIR}/.. \
     --output ${outdir} \
     --memory ${memory} \
     --threads ${threads} \
