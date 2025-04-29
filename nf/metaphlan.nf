@@ -9,7 +9,7 @@ process metaphlan {
     tag "${read_id}"
     def local_db = "/opt/db"
     container = "${params.petagenomeDir}/modules/metaphlan/metaphlan.sif"
-    containerOptions "-B ${params.metaphlan_db}:${local_db} -B /dev/shm:/home"
+    containerOptions "-B ${params.metaphlan_db}:${local_db} -B /tmp:/home"
     publishDir "${params.output}/metaphlan/${read_id}", mode: 'copy'
     input:
         tuple val(read_id), path(read, arity: '1')
