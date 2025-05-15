@@ -193,36 +193,36 @@ fi
 #wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_latest -O mpa_latest
 #metaphlan4_index=$(cat mpa_latest)
 
-metaphlan4_index=mpa_vJun23_CHOCOPhlAnSGB_202403
-echo ${metaphlan4_index} > mpa_latest
-
-if [ ! -f ${metaphlan4_index}.md5 ] ; then
-    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}.md5
-fi
-
-if [ ! -f ${metaphlan4_index}.tar.gz ] ; then
-    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}.tar
-    gzip ${metaphlan4_index}.tar
-fi
-
-#if [ ! -f ${metaphlan4_index}_marker_info.txt.bz2 ] ; then
-#    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}_marker_info.txt.bz2
-#fi
-
-#if [ ! -f ${metaphlan4_index}_species.txt.bz2 ] ; then
-#    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}_species.txt.bz2
-#fi
-
-if [ ! -f ${metaphlan4_index}_bt2.md5 ] ; then
-    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan4_index}_bt2.md5
-fi
-
-if [ ! -f ${metaphlan4_index}_bt2.tar.gz ] ; then
-    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan4_index}_bt2.tar
-    gzip ${metaphlan4_index}_bt2.tar
-fi
-
 if [ ! -d metaphlan4_db ] ; then
+    metaphlan4_index=mpa_vJun23_CHOCOPhlAnSGB_202403
+    echo ${metaphlan4_index} > mpa_latest
+
+    if [ ! -f ${metaphlan4_index}.md5 ] ; then
+        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}.md5
+    fi
+
+    if [ ! -f ${metaphlan4_index}.tar.gz ] ; then
+        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}.tar
+        gzip ${metaphlan4_index}.tar
+    fi
+
+    #if [ ! -f ${metaphlan4_index}_marker_info.txt.bz2 ] ; then
+    #    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}_marker_info.txt.bz2
+    #fi
+
+    #if [ ! -f ${metaphlan4_index}_species.txt.bz2 ] ; then
+    #    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}_species.txt.bz2
+    #fi
+
+    if [ ! -f ${metaphlan4_index}_bt2.md5 ] ; then
+        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan4_index}_bt2.md5
+    fi
+
+    if [ ! -f ${metaphlan4_index}_bt2.tar.gz ] ; then
+        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan4_index}_bt2.tar
+        gzip ${metaphlan4_index}_bt2.tar
+    fi
+
     mkdir -p metaphlan4_db
     cp mpa_latest metaphlan4_db
     tar -I pigz -xvf ${metaphlan4_index}.tar.gz -C metaphlan4_db --no-same-owner
@@ -255,13 +255,15 @@ if [ ! -f virsorter-data-v2.tar.gz ] ; then
 fi
 
 # VirSorter2 database @ 2025/1/22
-if [ ! -f db.tar.gz ] ; then
-    wget https://osf.io/v46sc/download -O db.tar.gz
-fi
-
 if [ ! -d virsorter2-data ] ; then
-    tar -I pigz -xvf db.tar.gz
-    mv db virsorter2-data
+    if [ ! -f db.tar.gz ] ; then
+        wget https://osf.io/v46sc/download -O db.tar.gz
+    fi
+
+    if [ ! -d virsorter2-data ] ; then
+        tar -I pigz -xvf db.tar.gz
+        mv db virsorter2-data
+    fi
 fi
 
 # VirSorter2 test @ 2025/1/22
