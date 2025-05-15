@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=blast.def
 SBX=blast.sbx
 SIF=blast.sif

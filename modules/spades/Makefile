@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=spades.def
 SBX=spades.sbx
 SIF=spades.sif

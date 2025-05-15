@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=bwa.def
 SBX=bwa.sbx
 SIF=bwa.sif

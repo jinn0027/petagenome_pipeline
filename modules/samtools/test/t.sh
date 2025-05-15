@@ -25,25 +25,25 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
-/usr/local/bin/apptainer exec --bind ${sam1},${wdir} ../samtools.sbx sh -c "\
+apptainer exec --bind ${sam1},${wdir} ../samtools.sbx sh -c "\
     samtools sort -@ ${n_threads} -O bam -o ${wdir}/out.sorted.bam ${sam1}" \
 > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${sam1},${wdir},${odir} ../samtools.sbx sh -c "\
+apptainer exec --bind ${sam1},${wdir},${odir} ../samtools.sbx sh -c "\
     samtools view -@ ${n_threads} -h ${wdir}/out.sorted.bam -o ${odir}/out.sorted.sam" \
 > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${bam1},${wdir},${odir} ../samtools.sbx sh -c "\
+apptainer exec --bind ${bam1},${wdir},${odir} ../samtools.sbx sh -c "\
     samtools depth -m 10000000 -a ${bam1} -o ${wdir}/out.depth.txt \
     && head -n 100 ${wdir}/out.depth.txt \
     > ${odir}/out.depth.head100.txt" \
 >> ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${bam1},${odir} ../samtools.sbx sh -c "\
+apptainer exec --bind ${bam1},${odir} ../samtools.sbx sh -c "\
     samtools index ${bam1} -o ${odir}/out.index.bai" \
 >> ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${bam1},${odir} ../samtools.sbx sh -c "\
+apptainer exec --bind ${bam1},${odir} ../samtools.sbx sh -c "\
     samtools index ${bam1} -o ${wdir}/tmp.bai \
     && samtools bedcov ${bed1} ${bam1} -X ${wdir}/tmp.bai > ${odir}/out.bedcov.txt" \
 >> ${log} 2>&1

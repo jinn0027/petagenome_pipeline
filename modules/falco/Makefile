@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=falco.def
 SBX=falco.sbx
 SIF=falco.sif

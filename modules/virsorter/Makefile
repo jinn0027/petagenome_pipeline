@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=virsorter.def
 SBX=virsorter.sbx
 SIF=virsorter.sif

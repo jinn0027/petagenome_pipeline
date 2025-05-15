@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=bcftools.def
 SBX=bcftools.sbx
 SIF=bcftools.sif

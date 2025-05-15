@@ -2,7 +2,7 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/apptainer exec blast.sif blastn -h
+apptainer exec blast.sif blastn -h
 
 
 

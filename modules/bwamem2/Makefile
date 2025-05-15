@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=bwamem2.def
 SBX=bwamem2.sbx
 SIF=bwamem2.sif

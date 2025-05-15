@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=/usr/bin/env apptainer
 
 .PHONY : all
 all : el9.sif gcc.sif java.sif golang.sif

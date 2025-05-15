@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=minimap2.def
 SBX=minimap2.sbx
 SIF=minimap2.sif

@@ -2,7 +2,7 @@
 
 MY_DIR=$(cd $(dirname $BASH_SOURCE); pwd)
 
-/usr/local/bin/apptainer exec samtools.sif samtools -h
+apptainer exec samtools.sif samtools -h
 
 
 

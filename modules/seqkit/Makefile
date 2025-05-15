@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=seqkit.def
 SBX=seqkit.sbx
 SIF=seqkit.sif

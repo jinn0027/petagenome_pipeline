@@ -23,9 +23,9 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sbx spades.py --only-error-correction --pe1-1 ${fq1} --pe1-2 ${fq2} --memory ${mem} --threads ${n_threads} -o ${odir} > ${log} 2>&1
+apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sbx spades.py --only-error-correction --pe1-1 ${fq1} --pe1-2 ${fq2} --memory ${mem} --threads ${n_threads} -o ${odir} > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sbx spades.py --only-assembler --pe1-1 ${fq1} --pe1-2 ${fq2} --meta --memory ${mem} --threads ${n_threads} -o ${odir} >> ${log} 2>&1
+apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sbx spades.py --only-assembler --pe1-1 ${fq1} --pe1-2 ${fq2} --meta --memory ${mem} --threads ${n_threads} -o ${odir} >> ${log} 2>&1
 
 for i in $(ls ${odir}/corrected/*.fastq.gz)
 do

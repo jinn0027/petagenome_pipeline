@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=bowtie.def
 SBX=bowtie.sbx
 SIF=bowtie.sif

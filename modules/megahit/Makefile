@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=megahit.def
 SBX=megahit.sbx
 SIF=megahit.sif

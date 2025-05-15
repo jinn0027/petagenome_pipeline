@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=bbmap.def
 SBX=bbmap.sbx
 SIF=bbmap.sif

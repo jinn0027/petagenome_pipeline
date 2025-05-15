@@ -4,7 +4,7 @@ rm -f makeall.log
 
 # SElinuxをpermissiveに設定。
 # これをやらないとapptainerでfakerootでdnfをやろうとするとエラーが発生する。
-if [ "$(getenforce)" != "Permissive" ] ; then
+if [ "$(getenforce)" != "Permissive" ] && [ "$(getenforce)" != "Disabled" ] ; then
     sudo setenforce 0
 fi
 

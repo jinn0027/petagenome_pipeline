@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=sra-tools.def
 SBX=sra-tools.sbx
 SIF=sra-tools.sif

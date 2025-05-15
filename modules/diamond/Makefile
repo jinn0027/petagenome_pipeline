@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=diamond.def
 SBX=diamond.sbx
 SIF=diamond.sif

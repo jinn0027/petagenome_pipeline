@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=fastqc.def
 SBX=fastqc.sbx
 SIF=fastqc.sif

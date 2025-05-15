@@ -1,4 +1,4 @@
-SINGULARITY?=/usr/local/bin/apptainer
+SINGULARITY?=apptainer
 DEF=cdhit.def
 SBX=cdhit.sbx
 SIF=cdhit.sif
