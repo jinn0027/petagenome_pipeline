@@ -5,10 +5,12 @@ export TMPDIR=/dev/shm/${USER}/tmp
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
-threads=$(nproc)
+threads=16
+#threads=$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
-memory=128
+memory=32
+#memory=128
 #outdir=/dev/shm/${USER}/petagenome_pipeline/out
 outdir=out
 
