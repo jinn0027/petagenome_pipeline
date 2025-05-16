@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export TMPDIR=/dev/shm/${USER}/tmp
+#export TMPDIR=/dev/shm/${USER}/tmp
+export TMPDIR=$(pwd)/tmp
 
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
