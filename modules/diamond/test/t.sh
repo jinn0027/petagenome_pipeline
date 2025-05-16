@@ -23,10 +23,10 @@ db=${wdir}/db
 mkdir -p ${wdir} ${odir}
 rm -rf ${wdir}/* ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fa1},${fa2},${wdir} ../diamond.sbx sh -c "\
+apptainer exec --bind ${fa1},${fa2},${wdir} ../diamond.sbx sh -c "\
   diamond makedb --threads ${n_threads} --in ${fa1} -d ${db}" > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${fa1},${fa2},${wdir} ../diamond.sbx sh -c "\
+apptainer exec --bind ${fa1},${fa2},${wdir} ../diamond.sbx sh -c "\
   diamond blastp -d ${db} -q ${fa2} -o ${odir}/out.tsv" >> ${log} 2>&1
 
 failed=""

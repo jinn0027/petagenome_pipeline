@@ -22,7 +22,7 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../megahit.sbx \
+apptainer exec --bind ${fq1},${fq2},${odir} ../megahit.sbx \
     megahit -1 ${fq1} -2 ${fq2} -o ${odir}/out -m ${mem} -t ${n_threads} > ${log} 2>&1
 
 failed=""

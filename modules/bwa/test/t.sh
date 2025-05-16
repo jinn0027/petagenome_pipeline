@@ -24,11 +24,11 @@ rm -rf ${wdir}/* ${odir}/*
 
 wfa1=${wdir}/$(basename ${fa1})
 
-/usr/local/bin/apptainer exec --bind ${fa1},${wdir} ../bwa.sbx sh -c "\
+apptainer exec --bind ${fa1},${wdir} ../bwa.sbx sh -c "\
     cp ${fa1} ${wdir} &&
     bwa index ${wfa1}" > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${fa2},${wdir},${odir} ../bwa.sbx sh -c "\
+apptainer exec --bind ${fa2},${wdir},${odir} ../bwa.sbx sh -c "\
     bwa mem -t ${n_threads} ${wfa1} ${fa2} > ${odir}/out.sam" > ${log} 2>&1
 
 failed=""

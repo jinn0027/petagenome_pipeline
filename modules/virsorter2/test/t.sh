@@ -22,9 +22,9 @@ dbdir=$(cd $(dirname ${dbdir}) && pwd)/$(basename ${dbdir})
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-#/usr/local/bin/apptainer exec --bind ${fa1},${odir},${dbdir} --writable ../virsorter2.sif sh -c "virsorter config --init-source --db-dir=${dbdir}; virsorter run -w ${odir} -i ${fa1} -j ${n_threads}  all > ${log} 2>&1"
+#apptainer exec --bind ${fa1},${odir},${dbdir} --writable ../virsorter2.sif sh -c "virsorter config --init-source --db-dir=${dbdir}; virsorter run -w ${odir} -i ${fa1} -j ${n_threads}  all > ${log} 2>&1"
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir},${dbdir} --writable ../virsorter2.sbx sh -c "virsorter config --init-source --db-dir=${dbdir}; virsorter run -w ${odir} -i ${fa1} -j ${n_threads}  all > ${log} 2>&1"
+apptainer exec --bind ${fa1},${odir},${dbdir} --writable ../virsorter2.sbx sh -c "virsorter config --init-source --db-dir=${dbdir} > ${log} 2>& 1; virsorter run -w ${odir} -i ${fa1} -j ${n_threads}  all > ${log} 2>&1"
 
 failed=""
 for i in $(ls ${refdir}/*.tsv)

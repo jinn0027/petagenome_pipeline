@@ -25,7 +25,7 @@ dbdir=$(cd $(dirname ${dbdir}) && pwd)/$(basename ${dbdir})
 mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${odir},${dbdir} ../metaphlan.sif sh -c "\
+apptainer exec --bind ${fq1},${odir},${dbdir} ../metaphlan.sif sh -c "\
     metaphlan \
         --bowtie2db ${dbdir} \
         --input_type fastq \

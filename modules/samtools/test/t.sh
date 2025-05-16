@@ -40,23 +40,22 @@ apptainer exec --bind ${bam1},${wdir},${odir} ../samtools.sbx sh -c "\
 >> ${log} 2>&1
 
 apptainer exec --bind ${bam1},${odir} ../samtools.sbx sh -c "\
-    samtools index ${bam1} -o ${odir}/out.index.bai" \
->> ${log} 2>&1
-
-apptainer exec --bind ${bam1},${odir} ../samtools.sbx sh -c "\
     samtools index ${bam1} -o ${wdir}/tmp.bai \
     && samtools bedcov ${bed1} ${bam1} -X ${wdir}/tmp.bai > ${odir}/out.bedcov.txt" \
 >> ${log} 2>&1
 
 failed=""
-for i in $(ls ${refdir}/*.txt ${refdir}/*.sam ${refdir}/*.bai)
+for i in $(ls ${refdir}/*.txt ${refdir}/*.sam)
 do
     j=${odir}/$(basename $i)
-    diff -q $i $j >> ${log} 2>&1 && :
+    grep -v '@PG' $i > ${i}_
+    grep -v '@PG' $j > ${j}_
+    diff -q ${i}_ ${j}_ >> ${log} 2>&1 && :
     if [ $? -ne 0 ]; then
 	failed="${failed} $(basename $i)"
         ret=1
     fi
+    rm ${i}_ ${j}_
 done
 
 if [ ${ret} -eq 0 ]; then

@@ -12,7 +12,7 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${odir} ../sra-tools.sbx sh -c "\
+apptainer exec --bind ${odir} ../sra-tools.sbx sh -c "\
     fastq-dump --stdout -X 2 SRR390728 > ${odir}/SRR390728.txt" > ${log} 2>&1
 
 failed=""

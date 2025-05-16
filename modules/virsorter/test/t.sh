@@ -26,9 +26,9 @@ odir_dmnd=${odir}/diamond
 mkdir -p ${odir_blst} ${odir_dmnd}
 rm -rf ${odir_blst}/* ${odir_dmnd}/*
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir_blst},${extdir}/virsorter-data:${locdir}/virsorter-data,${extdir}/mga_linux_ia64:${locdir}/mga_linux_ia64 ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --db 1 --data-dir ${db} --ncpu ${n_cpus} --wdir ${odir_blst} --fna ${fa1} > ${log} 2>&1
+apptainer exec --bind ${fa1},${odir_blst},${extdir}/virsorter-data:${locdir}/virsorter-data,${extdir}/mga_linux_ia64:${locdir}/mga_linux_ia64 ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --db 1 --data-dir ${db} --ncpu ${n_cpus} --wdir ${odir_blst} --fna ${fa1} > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir_dmnd},${extdir}/virsorter-data:${locdir}/virsorter-data,${extdir}/mga_linux_ia64:${locdir}/mga_linux_ia64 ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --diamond --db 2 -data-dir ${db} -ncpu ${n_cpus} -wdir ${odir_dmnd} --fna ${fa1} >> ${log} 2>&1
+apptainer exec --bind ${fa1},${odir_dmnd},${extdir}/virsorter-data:${locdir}/virsorter-data,${extdir}/mga_linux_ia64:${locdir}/mga_linux_ia64 ../virsorter.sbx wrapper_phage_contigs_sorter_iPlant.pl --diamond --db 2 -data-dir ${db} -ncpu ${n_cpus} -wdir ${odir_dmnd} --fna ${fa1} >> ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/blast/*.csv)

@@ -28,11 +28,11 @@ mkdir -p ${wdir} ${odir}
 rm -rf ${wdir}/* ${odir}/*
 
 # create index
-/usr/local/bin/apptainer exec --bind ${fa1},${wdir} ../bowtie2.sbx \
+apptainer exec --bind ${fa1},${wdir} ../bowtie2.sbx \
     bowtie2-build ${fa1} ${idx} > ${log} 2>&1
 
 # align
-/usr/local/bin/apptainer exec --bind ${fa2},${wdir},${odir} ../bowtie2.sbx sh -c "\
+apptainer exec --bind ${fa2},${wdir},${odir} ../bowtie2.sbx sh -c "\
     bowtie2 -f -x ${idx} -U ${fa2} -p ${n_threads} --seed ${random_seed} > ${odir}/out.sam" > ${log} 2>&1
 
 failed=""

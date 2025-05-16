@@ -22,7 +22,7 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../fastp.sbx fastp -w ${n_threads} -i ${fq1} -I ${fq2} -o ${odir}/out1.fq -O ${odir}/out2.fq -h ${odir}/out.html -j ${odir}/out.json > ${log} 2>&1
+apptainer exec --bind ${fq1},${fq2},${odir} ../fastp.sbx fastp -w ${n_threads} -i ${fq1} -I ${fq2} -o ${odir}/out1.fq -O ${odir}/out2.fq -h ${odir}/out.html -j ${odir}/out.json > ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.fq)

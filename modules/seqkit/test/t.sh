@@ -17,11 +17,11 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fa1},${kv1},${odir} ../seqkit.sbx sh -c "\
+apptainer exec --bind ${fa1},${kv1},${odir} ../seqkit.sbx sh -c "\
     seqkit replace -p '^(\S+)' -r '{kv}' -k ${kv1} ${fa1} > ${odir}/out.replace.fasta" \
 > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir} ../seqkit.sbx sh -c "\
+apptainer exec --bind ${fa1},${odir} ../seqkit.sbx sh -c "\
     seqkit grep -n -r -p '\S+01' -o ${odir}/out.grep.fasta ${fa1}" \
 >> ${log} 2>&1
 

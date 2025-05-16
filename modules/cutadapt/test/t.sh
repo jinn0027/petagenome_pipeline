@@ -23,7 +23,7 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../cutadapt.sbx cutadapt --minimum-length 50 -a ${ADPT_FWD} -g ${ADPT_REV} -o ${ofq1} -p ${ofq2} ${fq1} ${fq2}> ${log} 2>&1
+apptainer exec --bind ${fq1},${fq2},${odir} ../cutadapt.sbx cutadapt --minimum-length 50 -a ${ADPT_FWD} -g ${ADPT_REV} -o ${ofq1} -p ${ofq2} ${fq1} ${fq2}> ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.fastq)

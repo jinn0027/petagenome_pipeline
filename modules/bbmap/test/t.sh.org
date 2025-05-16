@@ -1,7 +1,7 @@
 #!/bin/bash
 
 n_threads=$(nproc)
-mem=128 #M
+mem=128
 
 ref=../../test/ecoli_1K_1.fa.gz
 fq1=../../test/s_6_1.fastq.gz
@@ -27,17 +27,12 @@ mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
 # create index
-#apptainer exec --bind ${ref},${wdir} ../bbmap.sbx sh -c "\
-#    bbmap.sh -Xmx${mem}g threads=${n_threads} ref=${ref} path=${wdir}" > ${log} 2>&1
 apptainer exec --bind ${ref},${wdir} ../bbmap.sbx sh -c "\
-    bbmap.sh ref=${ref} path=${wdir}" > ${log} 2>&1
+    bbmap.sh -Xmx${mem}g threads=${n_threads} ref=${ref} path=${wdir}" > ${log} 2>&1
 
 # align
-#apptainer exec --bind ${fq1},${fq2},${odir},${wdir} ../bbmap.sbx sh -c "\
-#    bbmap.sh -Xmx${mem}g threads=${n_threads} path=${wdir} in=${fq1} in2=${fq2} \
-#        ambiguous=random minid=0.95 pairlen=1500 out=${odir}/out.sam" >> ${log} 2>&1
 apptainer exec --bind ${fq1},${fq2},${odir},${wdir} ../bbmap.sbx sh -c "\
-    bbmap.sh path=${wdir} in=${fq1} in2=${fq2} \
+    bbmap.sh -Xmx${mem}g threads=${n_threads} path=${wdir} in=${fq1} in2=${fq2} \
         ambiguous=random minid=0.95 pairlen=1500 out=${odir}/out.sam" >> ${log} 2>&1
 
 failed=""

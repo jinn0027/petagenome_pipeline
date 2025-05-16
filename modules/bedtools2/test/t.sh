@@ -26,11 +26,11 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
-/usr/local/bin/apptainer exec --bind ${fa1},${bed1},${wdir},${odir} ../bedtools2.sbx sh -c "bedtools getfasta -fi ${fa1} -bed ${bed1} -fo ${odir}/picked.fa" > ${log} 2>&1
+apptainer exec --bind ${fa1},${bed1},${wdir},${odir} ../bedtools2.sbx sh -c "bedtools getfasta -fi ${fa1} -bed ${bed1} -fo ${odir}/picked.fa" > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${bed2},${wdir},${odir} ../bedtools2.sbx sh -c "bedtools sort -i ${bed2} > ${wdir}/sorted.bed && bedtools merge -i ${wdir}/sorted.bed -d 200000 -s -c 4,5,6,7,8 -o distinct,distinct,distinct,distinct,min > ${odir}/merged.bed" >> ${log} 2>&1
+apptainer exec --bind ${bed2},${wdir},${odir} ../bedtools2.sbx sh -c "bedtools sort -i ${bed2} > ${wdir}/sorted.bed && bedtools merge -i ${wdir}/sorted.bed -d 200000 -s -c 4,5,6,7,8 -o distinct,distinct,distinct,distinct,min > ${odir}/merged.bed" >> ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${bed3},${bed4},${wdir},${odir} ../bedtools2.sbx sh -c "bedtools intersect -a ${bed3} -b ${bed4} > ${odir}/intersected.bed" >> ${log} 2>&1
+apptainer exec --bind ${bed3},${bed4},${wdir},${odir} ../bedtools2.sbx sh -c "bedtools intersect -a ${bed3} -b ${bed4} > ${odir}/intersected.bed" >> ${log} 2>&1
 
 for i in $(ls ${refdir}/*.fa ${refdir}/*.bed)
 do

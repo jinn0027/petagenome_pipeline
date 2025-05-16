@@ -24,10 +24,10 @@ rm -rf ${odir}/* ${wdir}/*
 
 pfam_hmm=/opt/Pfam-A.hmm
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir} ../hmmer.sbx sh -c "\
+apptainer exec --bind ${fa1},${odir} ../hmmer.sbx sh -c "\
     hmmstat ${pfam_hmm} > ${odir}/pfam_stat.txt" > ${log} 2>&1
 
-/usr/local/bin/apptainer exec --bind ${fa1},${odir} ../hmmer.sbx sh -c "\
+apptainer exec --bind ${fa1},${odir} ../hmmer.sbx sh -c "\
     hmmscan --seed ${random_seed} --cpu ${n_threads} --domtblout ${odir}/sample_hmmscan.txt ${pfam_hmm} ${fa1}" > ${log} 2>&1
 
 failed=""

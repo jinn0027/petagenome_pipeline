@@ -23,7 +23,7 @@ ret=0
 mkdir -p ${wdir} ${odir}
 rm -rf ${wdir}/* ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fa1},${fa2},${odir} ../minimap2.sbx sh -c "\
+apptainer exec --bind ${fa1},${fa2},${odir} ../minimap2.sbx sh -c "\
     minimap2 -t ${n_threads} -a ${fa1} ${fa2} > ${odir}/out.sam" > ${log} 2>&1
 
 failed=""

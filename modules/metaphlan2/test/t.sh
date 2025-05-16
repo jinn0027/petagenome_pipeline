@@ -26,7 +26,7 @@ dbdir=$(cd $(dirname ${dbdir}) && pwd)/$(basename ${dbdir})
 mkdir -p ${odir} ${wdir}
 rm -rf ${odir}/* ${wdir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${odir},${dbdir}:${dblocal} ../metaphlan2.sbx sh -c "\
+apptainer exec --bind ${fq1},${odir},${dbdir}:${dblocal} ../metaphlan2.sbx sh -c "\
     metaphlan2.py \
         --bowtie2db ${dblocal}/mpa_v20_m200 \
         --input_type fastq \

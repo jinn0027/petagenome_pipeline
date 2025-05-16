@@ -18,7 +18,7 @@ odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 mkdir -p ${odir}
 rm -rf ${odir}/*
 
-/usr/local/bin/apptainer exec --bind ${fq1},${fq2},${odir} ../fastqc.sbx fastqc -o ${odir} ${fq1} ${fq2} > ${log} 2>&1
+apptainer exec --bind ${fq1},${fq2},${odir} ../fastqc.sbx fastqc -o ${odir} ${fq1} ${fq2} > ${log} 2>&1
 
 failed=""
 for i in $(ls ${refdir}/*.html)
