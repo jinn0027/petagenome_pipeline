@@ -1,0 +1,34 @@
+簡単な説明  ishikawa@pezy.co.jp 2025/05/23
+
+---
+
+まずはこのディレクトリの内容を、実際に作業したいディレクトリにコピーします。
+$ cp -f * <targetWorkDir>
+$ cd <targetWorkDir>
+
+$ ./t.sh でローカルのmain.nfが実行されます。
+
+なお、用いる実行環境petagenome_pipelineは次の順番で探します。
+
+もしもPETAGENOME_PIPELINE_DIRが定義されていたら${PETAGENOME_PIPELINE_DIR}を、
+次に${HOME}/petagenome_pipeline、最後に/scratch/local/petagenome_pipelineを探しに行きます。
+もしもpetagenome_pipelineが上記以外のディレクトリにある場合には./t.shのpetagenomeDirを編集する必要があります。
+
+main.nfはpetagenome_pipeline/nf 以下のfastp.nfと、ローカルのspades.nfを使用しています。
+
+これはpetagenome_pipeline/nfあらかじめ作成されたスクリプトと、ローカルで編集したスクリプトの
+どちらも利用する例としています。
+
+例えばもしも個別にカスタマイズしたfastp.nfを用いたい場合には、fastp.nfファイルを
+petagenome_pipeline/nfからローカルにコピーして編集し、main.nfから呼び出している箇所を
+
+  include { fastp } from "${params.petagenomeDir}/nf/fastp"
+                    ↓
+  include { fastp } from "./fastp"
+
+のように変更すればできます。
+
+petagenome/nf 以下のnfファイルはいずれも利用できるはずです。
+
+
+

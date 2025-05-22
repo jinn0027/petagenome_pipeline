@@ -89,3 +89,4 @@ sudo setenforce 0
 mkdir -p /dev/shm/.apptainer
 export APPTAINER_CACHEDIR=/dev/shm/.apptainer
 
+export PETAGENOME_PIPELINE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

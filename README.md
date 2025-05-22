@@ -12,7 +12,7 @@ $ git clone https://github.com/jinn0027/petagenome_pipeline.git
 
 ```
 $ cd petagenome_pipeline/etc
-$ ./host_setup.sh
+$ source ./host_setup.sh
 ```
 
 ここでは以下を行っている。
