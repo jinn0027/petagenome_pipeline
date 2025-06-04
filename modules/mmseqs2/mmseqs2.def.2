@@ -1,0 +1,17 @@
+Bootstrap: localimage
+From: ../common/el9.sif
+
+%setup
+
+%files
+
+%post
+    pushd /opt
+        # install minimap2
+        /opt/miniconda3/bin/conda install -y -q \
+            mmseqs2=17.b804f
+    popd
+
+%environment
+
+%runscript

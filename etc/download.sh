@@ -124,6 +124,10 @@ if [ ! -f minimap2.tar.gz ] ; then
     git clone https://github.com/lh3/minimap2 -b v2.28 --recursive
 fi
 
+if [ ! -f MMseqs2.tar.gz ] ; then
+    git clone https://github.com/soedinglab/MMseqs2.git -b 17-b804f --recursive
+fi
+
 #if [ ! -f yasm.tar.gz ] ; then
 #    git clone https://github.com/yasm/yasm -b v1.3.0 --recursive
 #fi

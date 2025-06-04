@@ -1,0 +1,26 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/MMseqs2.tar.gz /opt
+
+%post
+    pushd /opt
+        # install minimap2
+        echo "############ minimap2 ###############"
+        tar -I pigz -xvf MMseqs2.tar.gz
+        chown -R $(whoami) MMseqs2
+        mkdir -p MMseqs2/build
+        pushd MMseqs2/build
+            cmake -DCMAKE_BUILD_TYPE=RELEASE ..
+            make -j$(nproc)
+            make install
+        popd
+    popd
+
+%environment
+
+%runscript
+
