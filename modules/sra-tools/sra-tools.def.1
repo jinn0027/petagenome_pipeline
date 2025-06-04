@@ -9,11 +9,11 @@ From: ../common/gcc.sif
 
 %post
     dnf install -y \
-        flex-2.6.4-9.el9 \
-        bison-3.7.4-5.el9 \
-        java-21-openjdk-devel-1:21.0.5.0.11-2.el9.alma.1 \
-        which-2.21-29.el9 \
-        perl-4:5.32.1-481.el9
+        flex-2.* \
+        bison-3.* \
+        java-21-openjdk-devel-1:21.* \
+        which-2.* \
+        perl-4:5.*
 
     pushd /opt
         # install ncbi-vdb

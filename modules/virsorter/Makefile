@@ -15,11 +15,11 @@ all : ${SBX} ${SIF} ${SBX_UPDATE_DB}
 clean :
 	if [ -d ${SBX} ] ; then \
 	    ${SINGULARITY} exec --fakeroot --writable ${SBX} sh -c \
-	        "rm -rf /opt/VirSorter"; \
+	        "rm -rf /opt/VirSorter /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
 	fi
 	if [ -d ${SBX_UPDATE_DB} ] ; then \
 	    ${SINGULARITY} exec --fakeroot --writable ${SBX_UPDATE_DB} sh -c \
-	        "rm -rf /opt/VirSorter"; \
+	        "rm -rf /opt/VirSorter /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
 	fi
 	rm -rf ${SBX} ${SIF} ${SBX_UPDATE_DB} build-temp-* *~
 

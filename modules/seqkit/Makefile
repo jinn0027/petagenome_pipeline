@@ -10,7 +10,7 @@ all : ${SBX} ${SIF}
 clean :
 	if [ -d ${SBX} ] ; then \
 	    ${SINGULARITY} exec --fakeroot --writable ${SBX} sh -c \
-	    "rm -rf /root/go"; \
+	        "rm -rf /root/go /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
 	fi
 	rm -rf ${SBX} ${SIF} build-temp-* *~
 
