@@ -164,6 +164,10 @@ case ${test} in
                  --virsorter2_db ${virsorter2Db} \
                  --test_virsorter2_read ${longFnaX1}
         ;;
+    "toys/helloruby")
+        nextflow run toys/helloruby.nf ${args} \
+                 --test_helloruby_reads ${shortFnqGzPair}
+        ;;
     "*")
 esac
 
