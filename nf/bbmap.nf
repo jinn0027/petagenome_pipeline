@@ -5,21 +5,22 @@ params.bbmap_ambiguous = "random"
 params.bbmap_minid = 0.95
 params.bbmap_pairlen = 1500
 
-process bbmap_makedb {
+process bbmap_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
-    publishDir "${params.output}/bbmap/${ref_id}", mode: 'copy'
+    publishDir "${params.output}/bbmap", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
-        tuple val(ref_id), path("db")
+        tuple val(ref_id), path("ref_db/${ref_id}")
     script:
         """
+        mkdir -p ref_db
         bbmap.sh \\
             -Xmx${params.memory}g \\
             threads=${params.threads} \\
             ref=${ref} \\
-            path=db
+            path=ref_db/${ref_id}
         """
 }
 
@@ -28,7 +29,7 @@ process bbmap {
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/bbmap/${ref_id}/${pair_id}", mode: 'copy'
     input:
-        tuple val(ref_id), path(db, arity: '1'), val(pair_id), path(reads, arity: '2')
+        tuple val(ref_id), path(ref_db, arity: '1'), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(ref_id), val(pair_id), path("out/*.sam", arity: '1')
     script:
@@ -40,7 +41,7 @@ process bbmap {
             ambiguous=${params.bbmap_ambiguous} \\
             minid=${params.bbmap_minid} \\
             pairlen=${params.bbmap_pairlen} \\
-            path=${db} \\
+            path=${ref_db} \\
             in=${reads[0]} \\
             in2=${reads[1]} \\
             out=out/${ref_id}_@_${pair_id}_bbmap_out.sam
@@ -55,9 +56,9 @@ workflow {
     //ref.view { i -> "$i" }
     //reads.view { i -> "$i" }
 
-    db = bbmap_makedb(ref)
-    //db.view { i -> "$i" }
-    in = db.combine(reads)
+    ref_db = bbmap_makerefdb(ref)
+    //ref_db.view { i -> "$i" }
+    in = ref_db.combine(reads)
     //in.view { i -> "$i" }
     out = bbmap(in)
     out.view { i -> "$i" }

@@ -7,22 +7,22 @@ params.minimap2_pairlen = 1500
 
 params.test_minimap2_e2e = false
 
-process minimap2_makedb {
+process minimap2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
-    publishDir "${params.output}/minimap2/${ref_id}", mode: 'copy'
+    publishDir "${params.output}/minimap2", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1')
 
     output:
-        tuple val(ref_id), path("db")
+        tuple val(ref_id), path("ref_db/${ref_id}")
     script:
         """
-        mkdir -p db
+        mkdir -p ref_db/${ref_id}
         minimap2 \\
             -t ${params.threads} \\
             -a ${ref} \\
-            -d db/${ref_id}.idx
+            -d ref_db/${ref_id}/${ref_id}.idx
         """
 }
 
@@ -31,7 +31,7 @@ process minimap2 {
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
     publishDir "${params.output}/minimap2/${ref_id}/${qry_id}", mode: 'copy'
     input:
-        tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
+        tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
 
     output:
         tuple val(ref_id), val(qry_id), path("out/*.sam", arity: '1')
@@ -40,7 +40,7 @@ process minimap2 {
         mkdir -p out
         minimap2 \\
             -t ${params.threads} \\
-            -a ${db}/${ref_id}.idx \\
+            -a ${ref_db}/${ref_id}.idx \\
             ${qry} \\
             > out/${ref_id}_@_${qry_id}.sam
         """
@@ -80,9 +80,9 @@ workflow {
         out = minimap2_e2e(in)
         out.view { i -> "$i" }
     } else {
-        db = minimap2_makedb(ref)
-        //db.view { i -> "$i" }
-        in = db.combine(qry)
+        ref_db = minimap2_makerefdb(ref)
+        //ref_db.view { i -> "$i" }
+        in = ref_db.combine(qry)
         //in.view { i -> "$i" }
         out = minimap2(in)
         out.view { i -> "$i" }

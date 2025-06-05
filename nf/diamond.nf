@@ -7,23 +7,23 @@ params.diamond_perc_identity = "95"
 params.diamond_evalue = "1e-20"
 params.diamond_outfmt = 6
 
-process diamond_makedb {
+process diamond_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
-    publishDir "${params.output}/diamond/${ref_id}", mode: 'copy'
+    publishDir "${params.output}/diamond", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1')
 
     output:
-        tuple val(ref_id), path("db")
+        tuple val(ref_id), path("ref_db/${ref_id}")
     script:
         """
-        mkdir -p db
+        mkdir -p ref_db/${ref_id}
         diamond \\
             makedb \\
             --threads ${params.threads} \\
             --in ${ref} \\
-            -d db/${ref_id}
+            -d ref_db//${ref_id}/${ref_id}
         """
 }
 
@@ -32,7 +32,7 @@ process diamond_blastp {
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
     publishDir "${params.output}/diamond/${ref_id}/${qry_id}", mode: 'copy'
     input:
-        tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
+        tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
         tuple val(ref_id), val(qry_id), path("out/*.tsv", arity: '1')
     script:
@@ -41,7 +41,7 @@ process diamond_blastp {
         diamond \\
             blastp \\
             -q ${qry} \\
-            -d ${db}/${ref_id} \\
+            -d ${ref_db}/${ref_id} \\
             -o out/${ref_id}_@_${qry_id}.tsv
         """
 }
@@ -55,9 +55,9 @@ workflow {
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 
-    db = diamond_makedb(ref)
-    //db.view { i -> "$i" }
-    in = db.combine(qry)
+    ref_db = diamond_makerefdb(ref)
+    //ref_db.view { i -> "$i" }
+    in = ref_db.combine(qry)
     //in.view { i -> "$i" }
     out = diamond_blastp(in)
     out.view { i -> "$i" }

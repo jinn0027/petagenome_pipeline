@@ -126,6 +126,11 @@ case ${test} in
                  --test_minimap2_ref ${longFnaX8} \
                  --test_minimap2_qry ${longFnaX1}
         ;;
+    "mmseqs2")
+        nextflow run mmseqs2.nf ${args} \
+                 --test_mmseqs2_ref ${longFnaX8} \
+                 --test_mmseqs2_qry ${longFnaX1}
+        ;;
     "prinseq")
         nextflow run prinseq.nf ${args} \
                  --test_prinseq_reads ${shortFnqGzPair}

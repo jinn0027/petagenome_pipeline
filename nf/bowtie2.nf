@@ -1,23 +1,23 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-process bowtie2_makedb {
+process bowtie2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
-    publishDir "${params.output}/bowtie2/${ref_id}", mode: 'copy'
+    publishDir "${params.output}/bowtie2", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1')
 
     output:
-        tuple val(ref_id), path("db")
+        tuple val(ref_id), path("ref_db/${ref_id}")
     script:
         """
-        mkdir -p db
+        mkdir -p ref_db/${ref_id}
         bowtie2-build \\
             --threads ${params.threads} \\
             --seed ${params.random_seed} \\
             ${ref} \\
-            db/${ref_id}
+            ref_db/${ref_id}/${ref_id}
         """
 }
 
@@ -26,7 +26,7 @@ process bowtie2 {
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
     publishDir "${params.output}/bowtie2/${ref_id}/${qry_id}", mode: 'copy'
     input:
-        tuple val(ref_id), path(db, arity: '1'), val(qry_id), path(qry, arity: '1')
+        tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
         tuple val(ref_id), val(qry_id), path("out/*.sam", arity: '1')
     script:
@@ -36,7 +36,7 @@ process bowtie2 {
             -p ${params.threads} \\
             --seed ${params.random_seed} \\
             -f \\
-            -x ${db}/${ref_id} \\
+            -x ${ref_db}/${ref_id} \\
             -U ${qry} \\
             > out/${ref_id}_${qry_id}.sam
         """
@@ -52,9 +52,9 @@ workflow {
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 
-    db = bowtie2_makedb(ref)
-    //db.view { i -> "$i" }
-    in = db.combine(qry)
+    ref_db = bowtie2_makerefdb(ref)
+    //ref_db.view { i -> "$i" }
+    in = ref_db.combine(qry)
     //in.view { i -> "$i" }
     out = bowtie2(in)
     out.view { i -> "$i" }

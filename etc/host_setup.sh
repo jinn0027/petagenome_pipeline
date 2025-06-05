@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p ~/bin
+
 if ! (type "apptainer" > /dev/null 2>&1); then
     curl -s https://raw.githubusercontent.com/apptainer/apptainer/main/tools/install-unprivileged.sh | bash -s - ~
 fi
