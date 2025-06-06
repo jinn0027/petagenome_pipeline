@@ -15,9 +15,11 @@ memory=32
 #outdir=/dev/shm/${USER}/petagenome_pipeline/out
 outdir=out
 
-dataDir="${MY_DIR}/../modules/test"
+#dataDir="${MY_DIR}/../modules/test"
+dataDir="${PETAGENOME_PIPELINE_DIR}/modules/test"
+#extDir="${MY_DIR}/../external"
+extDir="${PETAGENOME_PIPELINE_DIR}/external"
 
-extDir="${MY_DIR}/../external"
 virsorterDb="${extDir}/virsorter-data"
 virsorterMga="${extDir}/mga_linux_ia64"
 virsorter2Db="${extDir}/virsorter2-data"
@@ -37,7 +39,7 @@ shortFaa2="${dataDir}/2.faa"
 shortFna1="${dataDir}/q.fa"
 
 args="\
-    --petagenomeDir=${MY_DIR}/.. \
+    --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
     --output ${outdir} \
     --memory ${memory} \
     --threads ${threads} \
