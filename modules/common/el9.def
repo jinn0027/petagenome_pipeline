@@ -39,6 +39,7 @@ From: almalinux:9
             libmamba=2.0.5 \
             libmambapy=2.0.5 \
             conda-libmamba-solver=24.11.1
+    popd
 
 %environment
     export LC_ALL=C

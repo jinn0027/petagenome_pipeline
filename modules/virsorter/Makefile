@@ -14,11 +14,11 @@ all : ${SBX} ${SIF} ${SBX_UPDATE_DB}
 .PHONY : clean
 clean :
 	if [ -d ${SBX} ] ; then \
-	    ${SINGULARITY} exec --fakeroot --writable ${SBX} sh -c \
+	    ${SINGULARITY} exec --pwd /opt --fakeroot --writable ${SBX} sh -c \
 	        "rm -rf /opt/VirSorter /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
 	fi
 	if [ -d ${SBX_UPDATE_DB} ] ; then \
-	    ${SINGULARITY} exec --fakeroot --writable ${SBX_UPDATE_DB} sh -c \
+	    ${SINGULARITY} exec --pwd /opt --fakeroot --writable ${SBX_UPDATE_DB} sh -c \
 	        "rm -rf /opt/VirSorter /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
 	fi
 	rm -rf ${SBX} ${SIF} ${SBX_UPDATE_DB} build-temp-* *~
@@ -41,12 +41,12 @@ db_updated : ../../external/${DB_UPDATED}
 
 .PHONY : shell
 shell : ${SBX}
-	${SINGULARITY} shell --fakeroot --writable ${SBX}
+	${SINGULARITY} shell --pwd /opt --fakeroot --writable ${SBX}
 
 .PHONY : help
 help : ${SIF}
-	${SINGULARITY} exec ${SBX} wrapper_phage_contigs_sorter_iPlant.pl --help
+	${SINGULARITY} exec --pwd /opt ${SBX} wrapper_phage_contigs_sorter_iPlant.pl --help
 
 .PHONY : version
 version : ${SIF}
-	${SINGULARITY} exec ${SIF} wrapper_phage_contigs_sorter_iPlant.pl --help | head -n 5
+	${SINGULARITY} exec --pwd /opt ${SIF} wrapper_phage_contigs_sorter_iPlant.pl --help | head -n 5
