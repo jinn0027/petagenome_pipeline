@@ -6,6 +6,6 @@ do
         continue
     fi
     if [ -d $i ] ; then
-        make -C $i clean
+        make -j$(nproc) -C $i clean
     fi
 done
