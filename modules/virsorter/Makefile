@@ -23,11 +23,11 @@ clean :
 	fi
 	rm -rf ${SBX} ${SIF} ${SBX_UPDATE_DB} build-temp-* *~
 
-${SBX} : ${DEF}
-	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX} ${DEF}
+${SBX} : ${SIF}
+	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX} ${SIF}
 
-${SIF} : ${SBX}
-	${SINGULARITY} build --fakeroot --fix-perms ${SIF} ${SBX}
+${SIF} : ${DEF}
+	${SINGULARITY} build --fakeroot --fix-perms ${SIF} ${DEF}
 
 ${SBX_UPDATE_DB} : ${DEF_UPDATE_DB}
 	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX_UPDATE_DB} ${DEF_UPDATE_DB}
