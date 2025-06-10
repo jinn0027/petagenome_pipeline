@@ -12,5 +12,7 @@ if ! (type "nextflow" > /dev/null 2>&1); then
     mv nextflow ~/bin
 fi
 
-export PATH=~/bin:$PATH
+if ! (type "apptainer" > /dev/null 2>&1) || ! (type "nextflow" > /dev/null 2>&1) ; then
+    export PATH=~/bin:$PATH
+fi
 export PETAGENOME_PIPELINE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
