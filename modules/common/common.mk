@@ -1,7 +1,8 @@
 SINGULARITY?=apptainer
 UNREMOVABLE_DIRS+=/usr/share/polkit-1/rules.d \
                   /etc/polkit-1/rules.d \
-                  /root/go
+                  /root/go \
+                  /opt
 
 MOD?=noname
 DEF=${MOD}.def
@@ -20,14 +21,13 @@ clean :
 		if [ -d ${OVL} ] ; then \
 	        for i in ${UNREMOVABLE_DIRS} ; do \
 	            ${SINGULARITY} exec --pwd /opt --fakeroot --overlay ${OVL} ${SBX} sh -c \
-	                 "if [ -e $${i} ] ; then chmod -R 777 -rf $${i} ; fi"; \
+	                 "if [ -e $${i} ] ; then chmod -R 777 $${i} ; fi"; \
 	        done \
-	    else \
-	        for i in ${UNREMOVABLE_DIRS} ; do \
-	            ${SINGULARITY} exec --pwd /opt --fakeroot --writable ${SBX} sh -c \
-	                 "if [ -e $${i} ] ; then chmod -R 777 -rf $${i} ; fi"; \
-	        done \
-	    fi \
+	    fi ; \
+	    for i in ${UNREMOVABLE_DIRS} ; do \
+	        ${SINGULARITY} exec --pwd /opt --fakeroot --writable ${SBX} sh -c \
+	             "if [ -e $${i} ] ; then chmod -R 777 $${i} ; fi"; \
+	    done \
 	fi
 	@rm -rf ${SBX} ${SIF} ${OVL} build-temp-* *~
 
