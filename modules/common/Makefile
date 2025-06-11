@@ -8,11 +8,10 @@ sbx : el9.sbx gcc.sbx java.sbx golang.sbx
 
 .PHONY : clean
 clean :
-	@for i in $$(ls | grep '.sbx') ; do \
-	    ${SINGULARITY} exec --fakeroot --writable $$i sh -c \
-	    "rm -rf /root/golang /usr/share/polkit-1/rules.d /etc/polkit-1/rules.d"; \
-	done
-	rm -rf *.sif *.sbx build-temp-* *~
+	+make -f Makefile.el9 clean
+	+make -f Makefile.gcc clean
+	+make -f Makefile.java clean
+	+make -f Makefile.golang clean
 
 ### almalinux9
 
