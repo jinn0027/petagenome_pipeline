@@ -1,4 +1,4 @@
-MOD=meganit
+MOD=megahit
 
 include ../common/common.mk
 
