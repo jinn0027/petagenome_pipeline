@@ -9,6 +9,8 @@ SBX=${MOD}.sbx
 SIF=${MOD}.sif
 OVL=${MOD}.ovl
 
+BUILD_DEP?=
+
 .PHONY : all
 all : ${SIF}
 
@@ -29,10 +31,10 @@ clean :
 	fi
 	@rm -rf ${SBX} ${SIF} ${OVL} build-temp-* *~
 
-${SIF} : ${DEF}
+${SIF} : ${DEF} ${BUILD_DEP}
 	${SINGULARITY} build --fakeroot --fix-perms ${SIF} ${DEF}
 
-${SBX} : ${SIF}
+${SBX} : ${SIF} ${BUILD_DEP}
 	${SINGULARITY} build --fakeroot --fix-perms --sandbox ${SBX} ${SIF}
 
 .PHONY : shell
