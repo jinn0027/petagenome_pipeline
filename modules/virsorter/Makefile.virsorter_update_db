@@ -1,0 +1,15 @@
+MOD=virsorter_update_db
+
+include ../common/common.mk
+
+UNREMOVABLE_DIRS+=" /opt/VirSorter"
+
+DB_UPDATED=virsorter-data-v2.updated.tar.gz
+EXTERNAL_DB_UPDATED=../../external/${DB_UPDATED}
+
+${EXTERNAL_DB_UPDATED} : ${SBX}
+	${SINGULARITY} run --fakeroot --writable ${SBX}
+	@mv -f ${SBX}/opt/VirSorter/${DB_UPDATED} ${EXTERNAL_DB_UPDATED}
+
+.PHONY : db_updated
+db_updated : ${EXTERNAL_DB_UPDATED}
