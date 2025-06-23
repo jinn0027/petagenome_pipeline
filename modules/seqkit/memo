@@ -1,8 +1,0 @@
-seqkit.def.1 :
-バイナリをそのまま実行
-
-seqkit.def.2 :
-condaから2.9.0をインストール
-
-seqkit.def.3 :
-ソースコード(go)をインストール
