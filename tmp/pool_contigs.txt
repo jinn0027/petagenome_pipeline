@@ -1,0 +1,61 @@
+pre_assembly_label = {SPAdes_meta,}
+assembly_label = {SPAdes_meta_c,}
+
+type = {virome|bacteriome}
+merge_label = ...
+
+if type==virome --> prefix=vPConfig
+  l_thre=1000
+if type==bacteriome --> prefix=bPConfig
+  l_thre=5000
+# directoryチェックも行っている
+
+rep_fa_ = {dir_out_}/rep_contig.{pre_assembly_label}.{merge_label}.{l_thre}.fa
+out_table_name_ = {dir_out_}/name.{merge_label}_{assembly_label}{l_thre}.txt
+
+project
+dir_project_
+
+sample[]
+
+  in_ = contig.{sample}_{pre_assembly_label}.{l_thre}.fa
+  
+  # concatenate assemblies
+  上記を全部mergeして以下に出力
+  merged_in = merged_contig.{pre_assembly_label}.{merge_label}.{l_thre}.fa
+  
+  # removeing redundancy by CD-HIT-EST
+  cd-hit-est -c 0.95 -G 1 -mask NX -d 150 -n 10 -T {n_threads} -M {mem}000 -i {merged_in} -o {rep_fa_}
+  
+  # rename and filter (L>=#{l_thre}) contigs
+  # this contig name format is nessecary for later procedures.
+  # the corresponding name table will be output in #{out}.#{l_thre}.name.txt.
+  python filter_contig.rename.py -min {l_thre} --rename --prefix {prefix}.{project}.{merge_label}.n. --table {out}.{l_thre}.name.txt {rep_fa_} > {out}.{l_thre}.fa
+  
+  # summaize contig name ( contig in each sample / representative contig / renamed representative contig ) 
+  ruby ${SCRIPT_CLSTR_} -i #{rep_fa_}.clstr --include_rep > #{rep_fa_}.name
+  ruby ${SCRIPT_JOIN_} #{rep_fa_}.name 2 #{out}.#{l_thre}.name.txt 2 | awk -F '\\t' '{OFS=\"\\t\"} {print $2,$1,$3}' > #{out_table_name_}
+  for l in 0..(a_samples.length - 1) do
+    sample = a_samples[l]
+    out_table_name_each_ = "#{dir_out_}/name.#{sample}_#{pre_assembly_label}.#{merge_label}.#{l_thre}.txt"
+    awk -F \"\\t\" '{OFS=\"\\t\"} { if ($1 ~ /#{sample}/) print $0 }' #{out_table_name_} > #{out_table_name_each_}
+  end
+
+  # get length of contigs
+  python ${SCRIPT_LENGTH_} #{out}.#{l_thre}.fa > #{out}.#{l_thre}.length.txt
+  
+  # stats of assemblies
+  R --vanilla --slave --args #{out}.#{l_thre}.length.txt 2 < ${SCRIPT_STATS_} > #{out}.#{l_thre}.stats.txt
+  
+  # blastdb
+  makeblastdb -in #{out}.#{l_thre}.fa -out #{out}.#{l_thre} -dbtype nucl -parse_seqids
+
+	
+---
+  
+SCRIPT_RENAME = filter_contig.rename.py
+SCRIPT_CLUSTR = parse.cdhit_clstr.rb
+SCRIPT_JOIN = join_with_tab.rb
+
+SCRIPT_LENGTH = get_sequence_length.py
+SCRIPT_STATS = stats.assembly.R

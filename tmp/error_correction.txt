@@ -1,0 +1,29 @@
+project
+dir_project_
+sample[]
+
+  [input]
+      query1 = {sample}_1.fastq.gz
+      query2 = {sample}_2.fastq.gz
+      
+  [output]
+      dir_out = {sample}/
+      
+      
+  spades.py --only-error-correction --pe1-1 {query1} --pe1-2 {query2} --memory {mem} --threads {n_threads} -o {dir_out}
+  
+  * 
+  in1 = {dir_out}/corrected/#{query1_base}.00.0_0.cor.fastq.gz
+  in2 = {dir_out}/corrected/#{query2_base}.00.0_0.cor.fastq.gz
+  
+  fastqc -o {dir_fastqc_out} in1
+  fastqc -o {dir_fastqc_out} in2
+  
+  zcat in1 | python <script_length} -t fastq | gzip -c > {dir_out} > ...length.txt.gz
+  zcat in2 | python <script_length} -t fastq | gzip -c > {dir_out} > ...length.txt.gz
+ 
+---
+
+get_sequence_length.py
+
+

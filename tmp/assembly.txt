@@ -1,0 +1,40 @@
+type = {virome|bacteriome}
+
+project
+dir_project_
+sample[]
+
+  query1 = {sample}_1.00.0_0.cor.fastq.gz
+  query2 = {sample}_2.00.0_0.cor.fastq.gz
+  
+  #spades meta
+  spades.py --only-assembler --pe1-1 {query1} --pe1-2 {query2} --meta --memory {mem} --threads {n_threads} -o {dir_out}
+
+  #length filter  
+  filter_contig.rename.py --min 1000 --rename --prefix {prefix}.{sample}.n. --table #{out}.1000.name.txt {dir_out}/scaffolds.fasta > {out}.1000.fa
+  filter_contig.rename.py --min 5000 {out}.1000.fa > {out}.5000.fa
+  filter_contig.rename.py --min 10000 {out}.1000.fa > {out}.10000.fa
+
+  #get length of congigs
+  get_script_length.py {out}.1000.fa > {out}.1000.length.txt
+  get_script_length.py {out}.5000.fa > {out}.5000.length.txt
+  get_script_length.py {out}.10000.fa > {out}.10000.length.txt
+  
+  # stats of assemblies
+  R --vanilla --slave --args {out}.1000.length.txt 2 < stats.assembly.R > {out}.1000.stats.txt
+  R --vanilla --slave --args {out}.5000.length.txt 2 < stats.assembly.R > {out}.5000.stats.txt
+  R --vanilla --slave --args {out}.10000.length.txt 2 < stats.assembly.R > {out}.10000.stats.txt
+  ###Rscript stats.assembly.R {out}.1000.length.txt 2 > {out}.1000.stats.txt
+  ###R --vanilla --slave --file=stats.assembly.R --args {out}.1000.length.txt 2 > {out}.1000.stats.txt
+
+  # blastb
+  makeblastdb --in {out}.1000.fa -out {out}.1000 -dbtype nucl -parse_seqids
+  makeblastdb --in {out}.5000.fa -out {out}.5000 -dbtype nucl -parse_seqids
+  makeblastdb --in {out}.10000.fa -out {out}.10000 -dbtype nucl -parse_seqids
+
+----
+
+SCRIPT_LENGTH = get_sequence_length.py
+SCRIPT_RENAME = filter_contig.rename.py
+SCRIPT_STATS = stats.assembly.R
+
