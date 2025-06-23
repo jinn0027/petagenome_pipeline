@@ -1,0 +1,17 @@
+Bootstrap: localimage
+From: ../common/el9.sif
+
+%setup
+
+%files
+
+%post
+    pushd /opt
+        # install bbmap
+        echo "############ bbmap ###############"
+        /opt/miniconda3/bin/mamba install -y -q bbmap=39.13
+    popd
+
+%environment
+
+%runscript

@@ -1,0 +1,22 @@
+Bootstrap: localimage
+From: ../common/el9.sif
+
+%setup
+
+%files
+    ../../external/prinseq.tar.gz /opt
+
+%post
+    pushd /opt
+        # install prinseq
+        echo "############ prinseq ###############"
+        tar -I pigz -xvf prinseq.tar.gz
+        chown -R $(whoami) prinseq
+        chmod +x prinseq/*.pl
+    popd
+
+%environment
+    export PATH=/opt/prinseq:$PATH
+
+%runscript
+

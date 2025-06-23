@@ -1,0 +1,20 @@
+Bootstrap: localimage
+From: ../common/el9.sif
+
+%setup
+
+%files
+    ../../external/cutadapt.tar.gz /opt
+
+%post
+    pushd /opt
+        # install cutadapt
+        echo "############ cutadapt ###############"
+        tar -I pigz -xvf cutadapt.tar.gz
+        chown -R $(whoami) cutadapt
+        /opt/miniconda3/bin/pip install cutadapt
+    popd
+
+%environment
+
+%runscript

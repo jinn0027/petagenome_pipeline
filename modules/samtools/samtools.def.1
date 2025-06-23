@@ -1,0 +1,38 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/htslib.tar.gz /opt
+    ../../external/samtools.tar.gz /opt
+
+%post
+    pushd /opt
+        # install htslib
+        echo "############ htslib ###############"
+        tar -I pigz -xvf htslib.tar.gz
+        chown -R $(whoami) htslib
+        pushd htslib
+            autoreconf
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
+
+        # install samtools
+        echo "############ samtools ###############"
+        tar -I pigz -xvf samtools.tar.gz
+        chown -R $(whoami) samtools
+        pushd samtools
+            autoreconf
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
+    popd
+
+%environment
+
+%runscript
+

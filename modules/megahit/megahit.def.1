@@ -1,0 +1,28 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/megahit.tar.gz /opt
+
+%post
+    pushd /opt
+        # install megahit
+        echo "############ megahit ###############"
+        tar -I pigz -xvf megahit.tar.gz
+        chown -R $(whoami) megahit
+        pushd megahit
+            mkdir build
+            pushd build
+                cmake .. -DCMAKE_BUILD_TYPE=Release
+                make -j$(nproc)
+                make install
+            popd
+        popd
+    popd
+
+%environment
+
+%runscript
+

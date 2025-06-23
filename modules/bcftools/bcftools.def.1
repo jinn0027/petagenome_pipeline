@@ -1,0 +1,37 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/htslib.tar.gz /opt
+    ../../external/bcftools.tar.gz /opt
+
+%post
+    pushd /opt
+        # install htslib
+        echo "############ htslib ###############"
+        tar -I pigz -xvf htslib.tar.gz
+        chown -R $(whoami) htslib
+        pushd htslib
+            autoreconf
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
+
+        # install bcftools
+        echo "############ bcftools ###############"
+        tar -I pigz -xvf bcftools.tar.gz
+        chown -R $(whoami) bcftools
+        pushd bcftools
+            autoreconf
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
+    popd
+
+%environment
+
+%runscript

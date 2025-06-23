@@ -1,0 +1,17 @@
+## 1 - Complete phage contigs - category 1 (sure)
+## Contig_id,Nb genes contigs,Fragment,Nb genes,Category,Nb phage hallmark genes,Phage gene enrichment sig,Non-Caudovirales phage gene enrichment sig,Pfam depletion sig,Uncharacterized enrichment sig,Strand switch depletion sig,Short genes enrichment sig
+VIRSorter_Caudo-linear,14,VIRSorter_Caudo-linear,14,1,4,11.87224239056431,,3.05856205247858,,,
+VIRSorter_lavidaviridae-linear__NC_021333_1__s:6760__e:15358__index:41__accession:GCF_000909155_1__Phaeocystis_globosa_virus_virophage__complete_genome,9,VIRSorter_lavidaviridae-linear__NC_021333_1__s:6760__e:15358__index:41__accession:GCF_000909155_1__Phaeocystis_globosa_virus_virophage__complete_genome,9,1,1,8.38821448904142,16.83442411407179,2.72227712884346,,,
+## 2 - Complete phage contigs - category 2 (somewhat sure)
+## Contig_id,Nb genes contigs,Fragment,Nb genes,Category,Nb phage hallmark genes,Phage gene enrichment sig,Non-Caudovirales phage gene enrichment sig,Pfam depletion sig,Uncharacterized enrichment sig,Strand switch depletion sig,Short genes enrichment sig
+## 3 - Complete phage contigs - category 3 (not so sure)
+## Contig_id,Nb genes contigs,Fragment,Nb genes,Category,Nb phage hallmark genes,Phage gene enrichment sig,Non-Caudovirales phage gene enrichment sig,Pfam depletion sig,Uncharacterized enrichment sig,Strand switch depletion sig,Short genes enrichment sig
+## 4 - Prophages - category 1 (sure)
+## Contig_id,Nb genes contigs,Fragment,Nb genes,Category,Nb phage hallmark genes,Phage gene enrichment sig,Non-Caudovirales phage gene enrichment sig,Pfam depletion sig,Uncharacterized enrichment sig,Strand switch depletion sig,Short genes enrichment sig
+VIRSorter_Caudo-provirus__NC_014002_1__s:1410405__e:1825129__index:272__accession:GCF_000025865_1__Methanohalophilus_mahii_DSM_5219__complete_genome,227,VIRSorter_Caudo-provirus__NC_014002_1__s:1410405__e:1825129__index:272__accession:GCF_000025865_1__Methanohalophilus_mahii_DSM_5219__complete_genome-gene_112-gene_124,13,1,4,gene_112-gene_124:7.91922232205439,,,,,
+## 5 - Prophages - category 2 (somewhat sure)
+## Contig_id,Nb genes contigs,Fragment,Nb genes,Category,Nb phage hallmark genes,Phage gene enrichment sig,Non-Caudovirales phage gene enrichment sig,Pfam depletion sig,Uncharacterized enrichment sig,Strand switch depletion sig,Short genes enrichment sig
+VIRSorter_Caudo-circular-circular,41,VIRSorter_Caudo-circular-circular-gene_0-gene_30,30,2,1,,,gene_0-gene_30:6.35162317361104,,,
+VIRSorter_NCLDV-linear,999,VIRSorter_NCLDV-linear-gene_50-gene_238,189,2,2,,gene_139-gene_238:2.70440743721079,gene_50-gene_143:2.08586177756411;gene_165-gene_235:4.01752113919356,gene_169-gene_235:3.41435947199317,gene_139-gene_238:2.70440743721079,gene_139-gene_238:2.70440743721079
+## 6 - Prophages - category 3 (not so sure)
+## Contig_id,Nb genes contigs,Fragment,Nb genes,Category,Nb phage hallmark genes,Phage gene enrichment sig,Non-Caudovirales phage gene enrichment sig,Pfam depletion sig,Uncharacterized enrichment sig,Strand switch depletion sig,Short genes enrichment sig

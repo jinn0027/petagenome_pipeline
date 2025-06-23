@@ -1,0 +1,40 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/htslib.tar.gz /opt
+    ../../external/falco.tar.gz /opt
+
+%post
+    pushd /opt
+        # install htslib
+        # cf) https://kazumaxneo.hatenablog.com/entry/2024/05/10/024009
+        echo "############ htslib ###############"
+        tar -I pigz -xvf htslib.tar.gz
+        chown -R $(whoami) htslib
+        pushd htslib
+            autoheader
+            autoreconf -i
+            ./configure
+            make -j$(nproc)
+            make install
+        popd
+
+        # install falco
+        # cf) https://kazumaxneo.hatenablog.com/entry/2024/04/20/011400
+        echo "############ falco ###############"
+        tar -I pigz -xvf falco.tar.gz
+        chown -R $(whoami) falco
+        pushd falco
+            ./autogen.sh
+            ./configure CXXFLAGS="-O3 -Wall" --enable-hts
+            make -j$(nproc) HAVE_HTSLIB=1 all
+            make HAVE_HTSLIB=1 install
+        popd
+    popd
+
+%environment
+
+%runscript

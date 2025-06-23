@@ -1,0 +1,24 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/bwa-mem2.tar.gz /opt
+
+%post
+    pushd /opt
+        # install bwa-mem2
+        echo "############ bwa-mem2 ###############"
+        tar -I pigz -xvf bwa-mem2.tar.gz
+        chown -R $(whoami) bwa-mem2
+        pushd bwa-mem2
+            make -j$(nproc)
+            make install
+        popd
+    popd
+
+%environment
+    export PATH=/opt/bwa-mem2:$PATH
+
+%runscript

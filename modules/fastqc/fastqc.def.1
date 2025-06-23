@@ -1,0 +1,20 @@
+Bootstrap: localimage
+From: ../common/java.sif
+
+%setup
+
+%files
+    ../../external/fastqc_v0.12.1.zip /opt
+
+%post
+    pushd /opt
+        # install fastqc
+        echo "############ fastqc ###############"
+        unzip fastqc_v0.12.1.zip
+        chown -R $(whoami) FastQC
+    popd
+
+%environment
+    export PATH=/opt/FastQC:$PATH
+
+%runscript

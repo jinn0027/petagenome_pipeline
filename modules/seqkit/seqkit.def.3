@@ -1,0 +1,23 @@
+Bootstrap: localimage
+From: ../common/golang.sif
+
+%setup
+
+%files
+    ../../external/seqkit.tar.gz /opt
+
+%post
+    pushd /opt
+        # install seqkit
+        echo "############ seqkit ###############"
+        tar -I pigz -xvf seqkit.tar.gz
+        chown -R $(whoami) seqkit
+        pushd seqkit/seqkit
+            go build
+            mv seqkit /usr/local/bin
+        popd
+    popd
+
+%environment
+
+%runscript
