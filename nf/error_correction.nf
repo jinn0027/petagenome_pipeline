@@ -11,7 +11,6 @@ process get_length {
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy'
     input:
         tuple val(id), path(reads, arity: '1..*')
-
     output:
         tuple val(id), path("out/*.length.txt.gz")
     script:
@@ -49,5 +48,7 @@ workflow error_correction {
 workflow {
     reads = channel.fromFilePairs(params.test_error_correction_reads, checkIfExists: true)
     out = error_correction(reads)
+    out.ec.view{ i -> "$i" }
+    out.fqc.view{ i -> "$i" }
     out.len.view{ i -> "$i" }
 }

@@ -114,16 +114,19 @@ workflow assembly {
     //blstdb.view{ i -> "$i" }
 
   emit:
-    asm_out = asm
-    flt_out = flt
-    len_out = len
-    sts_out = sts
-    blstdb_out = blstdb
+    asm
+    flt
+    len
+    sts
+    blstdb
 }
 
 workflow {
     reads = channel.fromFilePairs(params.test_assembly_reads, checkIfExists: true)
     out = assembly(reads)
-    //out.asm_out.view{ i -> "$i" }
-    out.blstdb_out.view{ i -> "$i" }
+    out.asm.view{ i -> "$i" }
+    out.flt.view{ i -> "$i" }
+    out.len.view{ i -> "$i" }
+    out.sts.view{ i -> "$i" }
+    out.blstdb.view{ i -> "$i" }
 }
