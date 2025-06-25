@@ -13,7 +13,7 @@ process get_length {
         tuple val(id), path(reads, arity: '1..*')
 
     output:
-        tuple val(id), path("out")
+        tuple val(id), path("out/*.length.txt.gz")
     script:
         """
         mkdir -p out
@@ -28,12 +28,26 @@ process get_length {
         """
 }
 
+workflow error_correction {
+  take:
+    reads
+
+  main:
+    ec = spades_error_correction(reads).map { id, reads, unpaired -> tuple( id, reads ) }
+    //ec.view { i -> "$i" }
+    fqc = fastqc(ec)
+    //fqc.view{ i -> "$i" }
+    len = get_length(ec)
+    //len.view{ i -> "$i" }
+
+  emit:
+    ec
+    fqc
+    len
+}
+
 workflow {
-   reads = channel.fromFilePairs(params.test_error_correction_reads, checkIfExists: true)
-   ec = spades_error_correction(reads).map { id, reads, unpaired -> tuple( id, reads ) }
-   //ec.view { i -> "$i" }
-   fqc = fastqc(ec)
-   //fqc.view{ i -> "$i" }
-   out = get_length(ec)
-   out.view{ i -> "$i" }
+    reads = channel.fromFilePairs(params.test_error_correction_reads, checkIfExists: true)
+    out = error_correction(reads)
+    out.len.view{ i -> "$i" }
 }

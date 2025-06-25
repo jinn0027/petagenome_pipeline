@@ -84,8 +84,12 @@ process stats_assembly {
         """
 }
 
-workflow {
-    reads = channel.fromFilePairs(params.test_assembly_reads, checkIfExists: true)
+workflow assembly {
+
+  take:
+    reads
+    
+  main:
     asm = spades_assembler(reads).map { id, paired, unpaired -> tuple( id, paired ) }
     //asm.view { i -> "$i" }
     flt = filter_contig_rename(asm)
@@ -107,5 +111,19 @@ workflow {
     //refs.view( i -> "$i" )
 
     blstdb = blast_makerefdb(refs)
-    blstdb.view{ i -> "$i" }
+    //blstdb.view{ i -> "$i" }
+
+  emit:
+    asm_out = asm
+    flt_out = flt
+    len_out = len
+    sts_out = sts
+    blstdb_out = blstdb
+}
+
+workflow {
+    reads = channel.fromFilePairs(params.test_assembly_reads, checkIfExists: true)
+    out = assembly(reads)
+    //out.asm_out.view{ i -> "$i" }
+    out.blstdb_out.view{ i -> "$i" }
 }

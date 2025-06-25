@@ -47,7 +47,8 @@ args="\
     --random_seed ${random_seed} \
     "
 
-test=${1:-"assembly"}
+test=${1:-"error_correction"}
+#test=${1:-"assembly"}
 
 case ${test} in
     "main")
@@ -56,6 +57,7 @@ case ${test} in
         ;;
     "error_correction")
         nextflow run error_correction.nf ${args} \
+                 --assembly_type virome \
                  --test_error_correction_reads ${longFnqGzPair}
         ;;
     "assembly")
