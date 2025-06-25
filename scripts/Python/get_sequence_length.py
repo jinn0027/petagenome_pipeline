@@ -15,5 +15,5 @@ record_iter = SeqIO.parse(args.input_, args.file_type)
 for entry in record_iter:
 	id = entry.id
 	length = len(entry.seq)
-	print "%s\t%d" % (id, length)
+	print( "%s\t%d" % (id, length))
 

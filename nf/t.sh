@@ -47,12 +47,16 @@ args="\
     --random_seed ${random_seed} \
     "
 
-test=${1:-"main"}
+test=${1:-"error_correction"}
 
 case ${test} in
     "main")
         nextflow run main.nf ${args} \
                  --test_main_reads ${longFnqGzPair}
+        ;;
+    "error_correction")
+        nextflow run error_correction.nf ${args} \
+                 --test_error_correction_reads ${longFnqGzPair}
         ;;
     "bbmap")
         nextflow run bbmap.nf ${args} \
