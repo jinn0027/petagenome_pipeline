@@ -85,16 +85,27 @@ process stats_assembly {
 }
 
 workflow {
-   reads = channel.fromFilePairs(params.test_assembly_reads, checkIfExists: true)
-   asm = spades_assembler(reads).map { id, paired, unpaired -> tuple( id, paired ) }
-   asm.view { i -> "$i" }
-   flt = filter_contig_rename(asm)
-   //flt.view { i -> "$i" }
-   len = get_length(flt)
-   len.view{ i -> "$i" }
-   sts = stats_assembly(len)
-   sts.view{ i -> "$i" }
-   params.blast_dbtype = "nucl"
-   //fqc = fastqc(ec)
-   //fqc.view{ i -> "$i" }
+    reads = channel.fromFilePairs(params.test_assembly_reads, checkIfExists: true)
+    asm = spades_assembler(reads).map { id, paired, unpaired -> tuple( id, paired ) }
+    //asm.view { i -> "$i" }
+    flt = filter_contig_rename(asm)
+    //flt.view { i -> "$i" }
+    //log.info "${flt.dump()}"
+
+    len = get_length(flt)
+    //len.view{ i -> "$i" }
+    sts = stats_assembly(len)
+    //sts.view{ i -> "$i" }
+
+    refs = flt.flatMap { key, files ->
+        files.collect{ file_path ->
+	    if (file_path.size() != 0) {
+              return [file_path.getBaseName(), file_path]
+	    }
+        }.findAll{ it != null }
+    }
+    //refs.view( i -> "$i" )
+
+    blstdb = blast_makerefdb(refs)
+    blstdb.view{ i -> "$i" }
 }
