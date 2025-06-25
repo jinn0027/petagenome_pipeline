@@ -4,7 +4,8 @@ def batch_iterator(iterator, args, f_table) :
 
 	while entry :
 		try :
-			entry = iterator.next()
+			#entry = iterator.next()
+			entry = next(iterator.next)
 		except StopIteration :
 			entry = None
 		if entry is None :

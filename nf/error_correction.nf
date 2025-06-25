@@ -23,7 +23,7 @@ process get_length {
             zcat \$i | \
                 awk '{if(\$1~/^\\+/||\$1~/^@/){print(\$1)}else{print(\$0)}}' | \
                 python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py -t fastq | \
-                gzip -c >> out/\$(basename \$i).length.txt.gz
+                pigz -c >> out/\$(basename \$i).length.txt.gz
         done
         """
 }
