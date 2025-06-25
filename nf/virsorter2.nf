@@ -7,7 +7,7 @@ process virsorter2 {
     container = "${params.petagenomeDir}/modules/virsorter2/virsorter2.sif"
     containerOptions "-B ${params.virsorter2_db}:${local_db} -B /tmp:/home"
     //containerOptions "-B ${params.virsorter2_db}:${local_db} --writable-tmpfs"
-    publishDir "${params.output}/virsorter2/${read_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy'
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

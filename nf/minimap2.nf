@@ -10,7 +10,7 @@ params.test_minimap2_e2e = false
 process minimap2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
-    publishDir "${params.output}/minimap2", mode: 'copy'
+    publishDir "${params.output}/${task.process}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1')
 
@@ -29,7 +29,7 @@ process minimap2_makerefdb {
 process minimap2 {
     tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
-    publishDir "${params.output}/minimap2/${ref_id}/${qry_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
 
@@ -49,7 +49,7 @@ process minimap2 {
 process minimap2_e2e {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
-    publishDir "${params.output}/minimap2/${ref_id}/${qry_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:

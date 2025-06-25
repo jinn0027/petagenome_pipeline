@@ -11,7 +11,7 @@ params.blast_outfmt = 6
 process blast_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
-    publishDir "${params.output}/blast", mode: 'copy'
+    publishDir "${params.output}/${task.process}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -36,7 +36,7 @@ process blast_makerefdb {
 process blastn {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
-    publishDir "${params.output}/blast/${ref_id}/${qry_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:

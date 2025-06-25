@@ -10,7 +10,7 @@ params.cdhit_mask = "NX"
 process cdhit_est {
     tag "${read_id}"
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
-    publishDir "${params.output}/cdhit/${read_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy'
     input:
         tuple val(read_id), path(read, arity: '1')
 

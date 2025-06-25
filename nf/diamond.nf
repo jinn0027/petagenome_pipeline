@@ -10,7 +10,7 @@ params.diamond_outfmt = 6
 process diamond_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
-    publishDir "${params.output}/diamond", mode: 'copy'
+    publishDir "${params.output}/${task.process}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1')
 
@@ -30,7 +30,7 @@ process diamond_makerefdb {
 process diamond_blastp {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
-    publishDir "${params.output}/diamond/${ref_id}/${qry_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:

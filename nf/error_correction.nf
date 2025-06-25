@@ -8,7 +8,7 @@ process get_length {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/get_length/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy'
     input:
         tuple val(pair_id), path(reads, arity: '1..*')
 

@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 process fastqc {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastqc/fastqc.sif"
-    publishDir "${params.output}/fastqc/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy'
     input:
         tuple val(pair_id), path(reads, arity: '2')
 

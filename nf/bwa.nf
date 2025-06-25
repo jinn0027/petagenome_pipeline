@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 process bwa_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
-    publishDir "${params.output}/bwa", mode: 'copy'
+    publishDir "${params.output}/${task.process}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1')
 
@@ -23,7 +23,7 @@ process bwa_makerefdb {
 process bwa_mem {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
-    publishDir "${params.output}/bwa/${ref_id}/${qry_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
