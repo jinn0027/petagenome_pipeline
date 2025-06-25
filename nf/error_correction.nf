@@ -5,15 +5,15 @@ include { spades_error_correction } from "${params.petagenomeDir}/nf/spades"
 include { fastqc } from "${params.petagenomeDir}/nf/fastqc"
 
 process get_length {
-    tag "${pair_id}"
+    tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${id}", mode: 'copy'
     input:
-        tuple val(pair_id), path(reads, arity: '1..*')
+        tuple val(id), path(reads, arity: '1..*')
 
     output:
-        tuple val(pair_id), path("out")
+        tuple val(id), path("out")
     script:
         """
         mkdir -p out
@@ -30,7 +30,7 @@ process get_length {
 
 workflow {
    reads = channel.fromFilePairs(params.test_error_correction_reads, checkIfExists: true)
-   ec = spades_error_correction(reads).map { pair_id, reads, unpaired -> tuple( pair_id, reads ) }
+   ec = spades_error_correction(reads).map { id, reads, unpaired -> tuple( id, reads ) }
    //ec.view { i -> "$i" }
    fqc = fastqc(ec)
    //fqc.view{ i -> "$i" }

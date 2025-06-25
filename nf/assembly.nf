@@ -35,14 +35,14 @@ process filter_contig_rename {
 }
 
 process get_length {
-    tag "${pair_id}"
+    tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${id}", mode: 'copy'
     input:
-        tuple val(pair_id), path(reads, arity: '1..*')
+        tuple val(id), path(reads, arity: '1..*')
     output:
-        tuple val(pair_id), path("out/*.length.txt")
+        tuple val(id), path("out/*.length.txt")
     script:
         """
         mkdir -p out
@@ -58,14 +58,14 @@ process get_length {
 }
 
 process stats_assembly {
-    tag "${pair_id}"
+    tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${id}", mode: 'copy'
     input:
-        tuple val(pair_id), path(lengths, arity: '1..*')
+        tuple val(id), path(lengths, arity: '1..*')
     output:
-        tuple val(pair_id), path("out/*.stats.txt")
+        tuple val(id), path("out/*.stats.txt")
     script:
         """
         mkdir -p out
@@ -86,7 +86,7 @@ process stats_assembly {
 
 workflow {
    reads = channel.fromFilePairs(params.test_assembly_reads, checkIfExists: true)
-   asm = spades_assembler(reads).map { pair_id, reads, unpaired -> tuple( pair_id, reads ) }
+   asm = spades_assembler(reads).map { id, paired, unpaired -> tuple( id, paired ) }
    asm.view { i -> "$i" }
    flt = filter_contig_rename(asm)
    //flt.view { i -> "$i" }

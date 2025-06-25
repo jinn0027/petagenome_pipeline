@@ -83,7 +83,7 @@ workflow {
        out.view { i -> "$i" }
    } else {
        ec = spades_error_correction(reads)
-           .map { pair_id, reads, unpaired -> tuple( pair_id, reads ) }
+           .map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }
        ec.view { i -> "$i" }
        out = spades_assembler(ec)
        out.view { i -> "$i" }
