@@ -34,5 +34,6 @@ workflow {
    //ec.view { i -> "$i" }
    fqc = fastqc(ec)
    //fqc.view{ i -> "$i" }
-   get_length(ec)
+   out = get_length(ec)
+   out.view{ i -> "$i" }
 }
