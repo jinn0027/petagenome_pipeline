@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 include { spades_assembler } from "${params.petagenomeDir}/nf/spades"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/blast"
 
-process filter_contig_rename {
+process filter_and_rename {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
@@ -31,7 +31,7 @@ process get_length {
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     input:
-        tuple val(id), path(reads, arity: '3'), path(name_txt)
+        tuple val(id), path(reads, arity: '3')
     output:
         tuple val(id), path("out/*.length.txt")
     script:
@@ -79,8 +79,8 @@ workflow assembly {
     reads
   main:
     asm = spades_assembler(reads).map { id, paired, unpaired -> tuple( id, paired ) }
-    flt = filter_contig_rename(asm)
-    len = get_length(flt)
+    flt = filter_and_rename(asm)
+    len = get_length(flt.map{id, contigs, name -> tuple(id, contigs)})
     sts = stats_assembly(len)
     ctg = flt.flatMap { key, contigs, name ->
         contigs.collect{ contig_path ->
