@@ -6,7 +6,7 @@ params.test_spades_e2e = false
 process spades_error_correction {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -32,7 +32,7 @@ process spades_error_correction {
 process spades_assembler {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

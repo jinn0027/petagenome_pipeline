@@ -12,7 +12,7 @@ process virsorter {
     def local_mga = "/opt/VirSorter/mga_linux_ia64"
     container = "${params.petagenomeDir}/modules/virsorter/virsorter.sif"
     containerOptions "-B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
-    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

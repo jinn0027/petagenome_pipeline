@@ -10,7 +10,7 @@ params.prodigal_outfmt = "gbk"
 process prodigal {
     tag "${read_id}"
     container = "${params.petagenomeDir}/modules/prodigal/prodigal.sif"
-    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

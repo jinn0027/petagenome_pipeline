@@ -8,7 +8,7 @@ process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(id), path(reads, arity: '1..*')
     output:
@@ -30,15 +30,10 @@ process get_length {
 workflow error_correction {
   take:
     reads
-
   main:
     ec = spades_error_correction(reads).map { id, reads, unpaired -> tuple( id, reads ) }
-    //ec.view { i -> "$i" }
     fqc = fastqc(ec)
-    //fqc.view{ i -> "$i" }
     len = get_length(ec)
-    //len.view{ i -> "$i" }
-
   emit:
     ec
     fqc

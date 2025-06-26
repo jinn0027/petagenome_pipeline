@@ -10,7 +10,7 @@ params.test_minimap2_e2e = false
 process minimap2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
-    publishDir "${params.output}/${task.process}", mode: 'copy'
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
 

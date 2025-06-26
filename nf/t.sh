@@ -47,6 +47,8 @@ args="\
     --random_seed ${random_seed} \
     "
 
+args+=" --publish_output false"
+
 #test=${1:-"error_correction"}
 test=${1:-"assembly"}
 
@@ -57,12 +59,10 @@ case ${test} in
         ;;
     "error_correction")
         nextflow run error_correction.nf ${args} \
-                 --assembly_type virome \
                  --test_error_correction_reads ${longFnqGzPair}
         ;;
     "assembly")
         nextflow run assembly.nf ${args} \
-                 --assembly_type virome \
                  --test_assembly_reads ${longFnqGzPair}
         ;;
     "bbmap")

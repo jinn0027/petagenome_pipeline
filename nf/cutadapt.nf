@@ -8,7 +8,7 @@ params.cutadapt_minimum_length = 50
 process cutadapt {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/cutadapt/cutadapt.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

@@ -10,7 +10,7 @@ process metaphlan2 {
     def local_db = "/opt/MetaPhlAn2/db_v20"
     container = "${params.petagenomeDir}/modules/metaphlan2/metaphlan2.sif"
     containerOptions "-B ${params.metaphlan2_db}:${local_db}"
-    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

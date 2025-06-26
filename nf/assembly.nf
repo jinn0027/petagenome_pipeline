@@ -8,7 +8,7 @@ process filter_contig_rename {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(id), path(read, arity: '1')
     output:
@@ -29,7 +29,7 @@ process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(id), path(reads, arity: '3'), path(name_txt)
     output:
@@ -51,7 +51,7 @@ process stats_assembly {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(id), path(lengths, arity: '1..*')
     output:
@@ -75,10 +75,8 @@ process stats_assembly {
 }
 
 workflow assembly {
-
   take:
     reads
-    
   main:
     asm = spades_assembler(reads).map { id, paired, unpaired -> tuple( id, paired ) }
     flt = filter_contig_rename(asm)
@@ -92,7 +90,6 @@ workflow assembly {
         }.findAll{ it != null }
     }
     blstdb = blast_makerefdb(ctg)
-
   emit:
     asm
     flt

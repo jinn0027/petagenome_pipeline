@@ -2,6 +2,7 @@
 
 #rm -rf /dev/shm/${USER}/petagenome_pipeline/out/* /dev/shm/${USER}/petagenome_pipeline/work/*
 
-rm -rf out work tmp
+rm -rf out work tmp *~
+
 
 

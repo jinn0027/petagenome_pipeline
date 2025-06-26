@@ -8,7 +8,7 @@ params.bbmap_pairlen = 1500
 process bbmap_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
-    publishDir "${params.output}/${task.process}", mode: 'copy'
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -27,7 +27,7 @@ process bbmap_makerefdb {
 process bbmap {
     tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${ref_id}/${pair_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(pair_id), path(reads, arity: '2')
     output:
