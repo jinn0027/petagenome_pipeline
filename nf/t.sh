@@ -52,7 +52,8 @@ args+=" --publish_output true"
 
 #test=${1:-"error_correction"}
 #test=${1:-"assembly"}
-test=${1:-"pool_contigs"}
+#test=${1:-"pool_contigs"}
+test=${1:-"circular_contigs"}
 
 case ${test} in
     "main")
@@ -70,6 +71,10 @@ case ${test} in
     "pool_contigs")
         nextflow run pool_contigs.nf ${args} \
                  --test_pool_contigs_contigs "${longFnaPair}"
+        ;;
+    "circular_contigs")
+        nextflow run circular_contigs.nf ${args} \
+                 --test_circular_contigs_contig "${longFnaGz1}"
         ;;
     "bbmap")
         nextflow run bbmap.nf ${args} \
