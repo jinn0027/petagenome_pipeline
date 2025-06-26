@@ -12,25 +12,16 @@ process filter_contig_rename {
     input:
         tuple val(id), path(read, arity: '1')
     output:
-        tuple val(id), path("out/*.fa", arity:"3")
+        tuple val(id), path("out/contig.*.fa", arity:"3"), path("out/contig.name.txt")
     script:
-        def assembly_label = "SPAdes_meta"
-        def prefix
-        if (params.assembly_type == "virome") {
-            prefix = "v"
-        } else if (params.assembly_type == "bacteriome") {
-            previx = "b"
-        } else {
-            throw new Exception("Error: illegal assemlby_type ${params.assembly_type}")
-        }
         """
         mkdir -p out
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-             --min 1000 --rename --prefix ${prefix}.${id}.n. --table out/contig.${id}_${assembly_label}.name.txt ${read} > out/contig.${id}_${assembly_label}.1000.fa
+             --min 1000 --rename --prefix n. --table out/contig.name.txt ${read} > out/contig.1000.fa
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-             --min 5000 out/contig.${id}_${assembly_label}.1000.fa > out/contig.${id}_${assembly_label}.5000.fa
+             --min 5000 out/contig.1000.fa > out/contig.5000.fa
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-             --min 10000 out/contig.${id}_${assembly_label}.1000.fa > out/contig.${id}_${assembly_label}.10000.fa
+             --min 10000 out/contig.1000.fa > out/contig.10000.fa
         """
 }
 
@@ -40,7 +31,7 @@ process get_length {
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy'
     input:
-        tuple val(id), path(reads, arity: '1..*')
+        tuple val(id), path(reads, arity: '3'), path(name_txt)
     output:
         tuple val(id), path("out/*.length.txt")
     script:
@@ -49,10 +40,9 @@ process get_length {
         reads_=( ${reads} )
         for i in \${reads_[@]}
         do
-            cat \$i | \
-                awk '{if(\$1~/^\\+/||\$1~/^@/){print(\$1)}else{print(\$0)}}' | \
-                python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py -t fasta \
-                > out/\$(basename \$i).length.txt
+            awk '{if(\$1~/^\\+/||\$1~/^@/){print(\$1)}else{print(\$0)}}' \${i} | \
+            python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py -t fasta \
+            > out/\$(basename \$i).length.txt
         done
         """
 }
@@ -91,33 +81,24 @@ workflow assembly {
     
   main:
     asm = spades_assembler(reads).map { id, paired, unpaired -> tuple( id, paired ) }
-    //asm.view { i -> "$i" }
     flt = filter_contig_rename(asm)
-    //flt.view { i -> "$i" }
-    //log.info "${flt.dump()}"
-
     len = get_length(flt)
-    //len.view{ i -> "$i" }
     sts = stats_assembly(len)
-    //sts.view{ i -> "$i" }
-
-    refs = flt.flatMap { key, files ->
-        files.collect{ file_path ->
-	    if (file_path.size() != 0) {
-              return [file_path.getBaseName(), file_path]
+    ctg = flt.flatMap { key, contigs, name ->
+        contigs.collect{ contig_path ->
+	    if (contig_path.size() != 0) {
+              return [contig_path.getBaseName(), contig_path]
 	    }
         }.findAll{ it != null }
     }
-    //refs.view( i -> "$i" )
-
-    blstdb = blast_makerefdb(refs)
-    //blstdb.view{ i -> "$i" }
+    blstdb = blast_makerefdb(ctg)
 
   emit:
     asm
     flt
     len
     sts
+    ctg
     blstdb
 }
 

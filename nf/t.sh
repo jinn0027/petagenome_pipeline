@@ -47,8 +47,8 @@ args="\
     --random_seed ${random_seed} \
     "
 
-test=${1:-"error_correction"}
-#test=${1:-"assembly"}
+#test=${1:-"error_correction"}
+test=${1:-"assembly"}
 
 case ${test} in
     "main")
