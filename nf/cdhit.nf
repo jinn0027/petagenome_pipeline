@@ -8,13 +8,13 @@ params.cdhit_word_length = 5
 params.cdhit_mask = "NX"
 
 process cdhit_est {
-    tag "${read_id}"
+    tag "${id}"
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
-    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     input:
-        tuple val(read_id), path(read, arity: '1')
+        tuple val(id), path(read, arity: '1')
     output:
-        tuple val(read_id), path("out/*.fasta", arity: '1')
+        tuple val(id), path("out/${id}.fasta"), path("out/${id}.fasta.clstr")
     script:
         """
         mkdir -p out
@@ -27,7 +27,7 @@ process cdhit_est {
             -n ${params.cdhit_word_length} \\
             -mask ${params.cdhit_mask} \\
             -i ${read} \\
-            -o out/${read_id}.fasta
+            -o out/${id}.fasta
         """
 }
 
