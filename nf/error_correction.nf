@@ -33,7 +33,7 @@ workflow error_correction {
   main:
     ec = spades_error_correction(reads)
     fqc = fastqc( ec.map { id, reads, unpaired -> tuple( id, reads ) } )
-    len = get_length(ec)
+    len = get_length( ec.map { id, reads, unpaired -> tuple( id, reads ) } )
   emit:
     ec
     fqc
