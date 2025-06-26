@@ -23,6 +23,22 @@ include { blast_makerefdb } from "${params.petagenomeDir}/nf/blast"
 //	# main script for exploring circular contigs
 //	f_qsub.puts "ruby ${SCRIPT_SELF_}  -d #{dir_out_}  -i #{query_fa_}  -n #{n_threads}  --len_l #{len_l} --len_c #{len_c} --pi_rd #{pi_thre_rd} --qc_rd #{qc_thre_rd} "
 
+process explore_circular_contig {
+    tag "${id}"
+    container = "${params.petagenomeDir}/modules/common/el9.sif"
+    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
+    input:
+        tuple val(id), path(contig, arity: '1')
+    output:
+        tuple val(id), path("out/*")
+    script:
+        """
+        mkdir -p out
+        """
+}
+
+
 //	# copy results to adjust to the existing scripts
 //	f_qsub.puts "cp  #{dir_out_}/contig.updated.#{len_l}.c_#{len_c}.fa  #{out}.fa"
 //	f_qsub.puts "cp  #{dir_out_}/contig.updated.#{len_l}.c_#{len_c}.length.txt  #{out}.length.txt"
