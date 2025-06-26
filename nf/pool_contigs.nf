@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { cdhit_est } from "${params.petagenomeDir}/nf/cdhit"
+
 process merge_contigs {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
@@ -28,13 +30,17 @@ process merge_contigs {
         """
 }
 
+//  cd-hit-est -c 0.95 -G 1 -mask NX -d 150 -n 10 -T {n_threads} -M {mem}000 -i {merged_in} -o {rep_fa_}
+
 workflow pool_contigs {
   take:
     contigs
   main:
     merged = merge_contigs(contigs)
+    cdhit = cdhit_est(merged)
   emit:
     merged
+    cdhit
 }
 
 workflow {
@@ -47,4 +53,5 @@ workflow {
     contigs.view{ i -> "$i" }
     out = pool_contigs(contigs)
     out.merged.view{ i -> "$i" }
+    out.cdhit.view{ i -> "$i" }
 }
