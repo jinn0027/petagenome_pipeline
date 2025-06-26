@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 include { cdhit_est } from "${params.petagenomeDir}/nf/cdhit"
+include { blast_makerefdb } from "${params.petagenomeDir}/nf/blast"
 
-// concatenate assemblies
 process merge_contigs {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
@@ -33,7 +33,6 @@ process merge_contigs {
         """
 }
 
-// rename and filter (L>=#{l_thre}) contigs
 process filter_and_rename {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
@@ -51,7 +50,6 @@ process filter_and_rename {
         """
 }
 
-// summarize contig name ( contig in each sample / representative contig / renamed representative contig )
 process summarize_name {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
@@ -71,14 +69,13 @@ process summarize_name {
         awk '{print(\$1)}' out/${id}.name.txt | sort | uniq > out/${id}.samples.txt
         while read sample
         do
-            awk -F \"\\t\" -v sample=\${sample} '{OFS=\"\\t\"} { if (\$1 ~ sample) print \$0 }' out/${id}.name.txt > out/${id}.\${sample}.name.txt
+            awk -F \"\\t\" -v sample=\${sample} \
+                '{OFS=\"\\t\"} { if (\$1 ~ sample) print \$0 }' \
+                out/${id}.name.txt \
+                > out/${id}.\${sample}.name.txt
         done<out/${id}.samples.txt
         """
 }
-
-//	f_qsub.puts "R --vanilla --slave --args #{out}.#{l_thre}.length.txt 2 < ${SCRIPT_STATS_} > #{out}.#{l_thre}.stats.txt"
-//	# blastdb
-//	f_qsub.puts "${MAKEBLASTDB_} -in #{out}.#{l_thre}.fa -out #{out}.#{l_thre} -dbtype nucl -parse_seqids"
 
 process get_length {
     tag "${id}"
@@ -102,7 +99,7 @@ process get_length {
         """
 }
 
-process stats_assembly {
+process get_stats {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
@@ -139,23 +136,22 @@ workflow pool_contigs {
 
     // removing redundancy by CD-HIT-EST
     cdhit = cdhit_est( merged.map{ id, fasta, list -> tuple(id, fasta ) } )
-    cdhit_ = cdhit.map{ id, fasta, clstr -> tuple(id, fasta, l_thre) }
-
-    cdhit_.view{ i -> "$i" } 
 
     // rename and filter (L>=#{l_thre}) contigs
-    flt = filter_and_rename(cdhit_)
+    flt = filter_and_rename( cdhit.map{ id, fasta, clstr -> tuple(id, fasta, l_thre) } )
 
     // summarize contig name ( contig in each sample / representative contig / renamed representative contig )
-    name = summarize_name(
-        flt.map{ id, fasta, name -> tuple(id, name) },
-	cdhit.map{ id, fasta, clstr -> tuple(id, clstr) }
-    )
-    name.view{ i -> "$i" } 
+    name = summarize_name( flt.map{ id, fasta, name -> tuple(id, name) }, cdhit.map{ id, fasta, clstr -> tuple(id, clstr) } )
 
+    // get length of contigs
     len = get_length( flt.map{ id, fasta, name -> tuple(id, fasta) } )
-    sts = stats_assembly(len)
 
+    // stats of assemblies
+    sts = get_stats(len)
+
+    // blastdb
+    blstdb = blast_makerefdb( flt.map{ id, contig, name -> tuple(id, contig) } )
+    
   emit:
     merged
     cdhit
@@ -163,10 +159,12 @@ workflow pool_contigs {
     name
     len
     sts
+    blstdb
 }
 
 workflow {
-    def l_thre = "1000"
+    def l_thre = "1000" // virome
+    //def l_thre = "5000" // bacteriome
 
     contigs = channel.fromPath(params.test_pool_contigs_contigs, checkIfExists: true)
       .collect()
@@ -176,8 +174,11 @@ workflow {
 	 [key, it ] }
     contigs.view{ i -> "$i" }
     out = pool_contigs(contigs, l_thre)
-    out.merged.view{ i -> "$i" }
+    //out.merged.view{ i -> "$i" }
     //out.cdhit.view{ i -> "$i" }
     //out.flt.view{ i -> "$i" }
     //out.name.view{ i -> "$i" }
+    //out.len.view{ i -> "$i" }
+    //out.sts.view{ i -> "$i" }
+    out.blstdb.view{ i -> "$i" }
 }

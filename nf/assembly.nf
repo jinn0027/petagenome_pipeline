@@ -47,7 +47,7 @@ process get_length {
         """
 }
 
-process stats_assembly {
+process get_stats {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
@@ -81,8 +81,8 @@ workflow assembly {
     asm = spades_assembler(reads).map { id, paired, unpaired -> tuple( id, paired ) }
     flt = filter_and_rename(asm)
     len = get_length(flt.map{id, contigs, name -> tuple(id, contigs)})
-    sts = stats_assembly(len)
-    ctg = flt.flatMap { key, contigs, name ->
+    sts = get_stats(len)
+    ctg = flt.flatMap { id, contigs, name ->
         contigs.collect{ contig_path ->
 	    if (contig_path.size() != 0) {
               return [contig_path.getBaseName(), contig_path]
