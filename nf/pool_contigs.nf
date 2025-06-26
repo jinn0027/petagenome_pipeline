@@ -13,6 +13,7 @@ process merge_contigs {
     script:
         """
         mkdir -p out
+        touch out/merged_contig.fa
         contigs_=( ${contigs} )
         for contig in \${contigs_[@]}
         do
@@ -29,7 +30,7 @@ process merge_contigs {
 
 workflow pool_contigs {
   take:
-    reads
+    contigs
   main:
     merged = merge_contigs(contigs)
   emit:
@@ -44,10 +45,6 @@ workflow {
          def key = it[0].simpleName.split('_')[0]
 	 [key, it ] }
     contigs.view{ i -> "$i" }
-
-//.map { contig_path -> tuple(contig_path.simpleName, contig_path) }
-    //contigs = channel.fromFilePairs(params.test_pool_contigs_contigs, checkIfExists: true)
-    //contigs.view{ i -> "$i" }
-    //out = merge_contigs(contigs)
-    //out.merged.view{ i -> "$i" }
+    out = pool_contigs(contigs)
+    out.merged.view{ i -> "$i" }
 }
