@@ -50,10 +50,10 @@ args="\
 
 args+=" --publish_output true"
 
-test=${1:-"error_correction"}
+#test=${1:-"error_correction"}
 #test=${1:-"assembly"}
 #test=${1:-"pool_contigs"}
-#test=${1:-"circular_contigs"}
+test=${1:-"circular_contigs"}
 
 test=${test%.*}
 

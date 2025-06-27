@@ -78,24 +78,27 @@ workflow assembly {
   take:
     reads
   main:
-    asm = spades_assembler(reads).map { id, paired, unpaired -> tuple( id, paired ) }
-    flt = filter_and_rename(asm)
+    asm = spades_assembler(reads)
+    flt = filter_and_rename(
+              asm.map { id, scaffolds, contigs ->
+                            tuple( id, 0 < scaffolds.size() ? scaffolds : contigs)
+                      }
+          )
     len = get_length(flt.map{id, contigs, name -> tuple(id, contigs)})
     sts = get_stats(len)
-    ctg = flt.flatMap { id, contigs, name ->
-        contigs.collect{ contig_path ->
-	    if (contig_path.size() != 0) {
-              return [contig_path.getBaseName(), contig_path]
+    flt = flt.flatMap { id, contigs, name ->
+        contigs.collect{ contig ->
+	    if (contig.size() != 0) {
+              return [contig.getBaseName(), contig]
 	    }
         }.findAll{ it != null }
     }
-    blstdb = blast_makerefdb(ctg)
+    blstdb = blast_makerefdb(flt)
   emit:
     asm
     flt
     len
     sts
-    ctg
     blstdb
 }
 
