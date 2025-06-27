@@ -74,6 +74,7 @@ process summarize_name {
                 out/${id}.name.txt \
                 > out/${id}.\${sample}.name.txt
         done<out/${id}.samples.txt
+        rm -f out/${id}.name_
         """
 }
 
