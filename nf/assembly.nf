@@ -31,9 +31,9 @@ process get_length {
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     input:
-        tuple val(id), path(reads, arity: '3')
+        tuple val(id), path(reads, arity: '0..*')
     output:
-        tuple val(id), path("out/*.length.txt")
+        tuple val(id), path("out/*.length.txt", arity: '0..*')
     script:
         """
         mkdir -p out
@@ -84,8 +84,6 @@ workflow assembly {
                             tuple( id, 0 < scaffolds.size() ? scaffolds : contigs)
                       }
           )
-    len = get_length(flt.map{id, contigs, name -> tuple(id, contigs)})
-    sts = get_stats(len)
     flt = flt.flatMap { id, contigs, name ->
         contigs.collect{ contig ->
 	    if (contig.size() != 0) {
@@ -93,6 +91,8 @@ workflow assembly {
 	    }
         }.findAll{ it != null }
     }
+    len = get_length(flt)
+    sts = get_stats(len)
     blstdb = blast_makerefdb(flt)
   emit:
     asm
