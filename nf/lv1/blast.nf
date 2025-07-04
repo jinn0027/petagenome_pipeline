@@ -36,14 +36,14 @@ process blast_makerefdb {
 process blastn {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("out.tsv", arity: '1')
+        tuple val(ref_id), val(qry_id), path("${qry_id}/out.tsv", arity: '1')
     script:
         """
-        mkdir -p out
+        mkdir -p ${qry_id}
         blastn \\
             -task ${params.blast_task} \\
             -num_threads ${params.threads} \\
@@ -53,7 +53,7 @@ process blastn {
             -evalue ${params.blast_evalue} \\
             -outfmt ${params.blast_outfmt} \\
             -num_alignments ${params.blast_num_alignments} \\
-            -out out.tsv
+            -out ${qry_id}/out.tsv
         """
 }
 
