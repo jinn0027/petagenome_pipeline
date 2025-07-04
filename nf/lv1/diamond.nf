@@ -10,20 +10,20 @@ params.diamond_outfmt = 6
 process diamond_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
 
     output:
-        tuple val(ref_id), path("ref_db/${ref_id}")
+        tuple val(ref_id), path("ref_db")
     script:
         """
-        mkdir -p ref_db/${ref_id}
+        mkdir -p ref_db
         diamond \\
             makedb \\
             --threads ${params.threads} \\
             --in ${ref} \\
-            -d ref_db//${ref_id}/${ref_id}
+            -d ref_db/ref
         """
 }
 
@@ -34,15 +34,15 @@ process diamond_blastp {
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("out/*.tsv", arity: '1')
+        tuple val(ref_id), val(qry_id), path("out.tsv", arity: '1')
     script:
         """
         mkdir -p out
         diamond \\
             blastp \\
             -q ${qry} \\
-            -d ${ref_db}/${ref_id} \\
-            -o out/${ref_id}_@_${qry_id}.tsv
+            -d ${ref_db}/ref \\
+            -o out.tsv
         """
 }
 
