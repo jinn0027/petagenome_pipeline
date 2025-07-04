@@ -330,14 +330,3 @@ if [ ! -f mga_linux_ia64 ] ; then
 fi
 
 popd # external
-
-pushd ../pezy
-    for i in $(ls)
-    do
-        if [ -d $i ] ; then
-            echo $i
-            tar -I pigz -cvf ${i}.tar.gz ${i}
-            rm -rf $i
-        fi
-    done
-popd # pezy
