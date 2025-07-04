@@ -10,13 +10,13 @@ process mmseqs2_makerefdb {
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
-        tuple val(ref_id), path("ref_db/${ref_id}")
+        tuple val(ref_id), path("${ref_id}")
     script:
         """
-        mkdir -p ref_db/${ref_id}
+        mkdir -p ${ref_id}
         mmseqs createdb \\
             ${ref} \\
-            ref_db/${ref_id}/${ref_id}
+            ${ref_id}/ref
         """
 }
 
@@ -27,33 +27,33 @@ process mmseqs2_makeqrydb {
     input:
         tuple val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(qry_id), path("qry_db/${qry_id}")
+        tuple val(qry_id), path("${qry_id}")
     script:
         """
-        mkdir -p qry_db/${qry_id}
+        mkdir -p ${qry_id}
         mmseqs createdb \\
             ${qry} \\
-            qry_db/${qry_id}/${qry_id}
+            ${qry_id}/qry
         """
 }
 
 process mmseqs2 {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref_db), val(qry_id), path(qry_db)
     output:
-        tuple val(ref_id), path("${ref_id}_@_${qry_id}.*")
+        tuple val(ref_id), path("${qry_id}/out.*")
     script:
         """
-        mkdir -p out tmp
+        mkdir -p ${qry_id} tmp
         mmseqs search \\
             --threads ${params.threads} \\
             --search-type ${params.mmseqs2_search_type} \\
-            ${qry_db}/${qry_id} \\
-            ${ref_db}/${ref_id} \\
-            ${ref_id}_@_${qry_id} \\
+            ${qry_db}/qry \\
+            ${ref_db}/ref \\
+            ${qry_id}/out \\
             tmp
         """
 }
