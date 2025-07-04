@@ -4,18 +4,18 @@ nextflow.enable.dsl=2
 process bwa_mem2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
 
     output:
-        tuple val(ref_id), path("ref_db/${ref_id}")
+        tuple val(ref_id), path("ref_db")
     script:
         """
-        mkdir -p ref_db/${ref_id}
+        mkdir -p ref_db
         bwa \\
             index \\
-            -p ref_db/${ref_id}/${ref_id} \\
+            -p ref_db/ref \\
             ${ref}
         """
 }
@@ -27,16 +27,16 @@ process bwa_mem2_mem {
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("out/*.sam", arity: '1')
+        tuple val(ref_id), val(qry_id), path("out.sam", arity: '1')
     script:
         """
         mkdir -p out
         bwa \\
             mem \\
             -t ${params.threads} \\
-            ${ref_db}/${ref_id} \\
+            ${ref_db}/ref \\
             ${qry} \\
-            > out/${ref_id}_@_${qry_id}.sam
+            > out.sam
         """
 }
 
