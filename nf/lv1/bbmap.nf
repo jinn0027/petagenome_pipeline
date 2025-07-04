@@ -26,14 +26,14 @@ process bbmap_makerefdb {
 process bbmap {
     tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}/${pair_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(pair_id), path(reads, arity: '2')
     output:
-        tuple val(ref_id), val(pair_id), path("out.sam", arity: '1')
+        tuple val(ref_id), val(pair_id), path("${pair_id}/out.sam", arity: '1')
     script:
         """
-        mkdir -p out
+        mkdir -p ${pair_id}
         bbmap.sh \\
             -Xmx${params.memory}g \\
             threads=${params.threads} \\
@@ -43,7 +43,7 @@ process bbmap {
             path=${ref_db} \\
             in=${reads[0]} \\
             in2=${reads[1]} \\
-            out=out.sam
+            out=${pair_id}/out.sam
         """
 }
 
