@@ -23,20 +23,20 @@ process bwa_mem2_makerefdb {
 process bwa_mem2_mem {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("out.sam", arity: '1')
+        tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
     script:
         """
-        mkdir -p out
+        mkdir -p ${qry_id}
         bwa \\
             mem \\
             -t ${params.threads} \\
             ${ref_db}/ref \\
             ${qry} \\
-            > out.sam
+            > ${qry_id}/out.sam
         """
 }
 
