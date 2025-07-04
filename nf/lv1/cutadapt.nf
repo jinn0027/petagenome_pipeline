@@ -12,15 +12,15 @@ process cutadapt {
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
-        tuple val(pair_id), path("out/*.fastq.gz", arity: '2')
+        tuple val(pair_id), path("out_{1,2}.fastq", arity: '2')
     script:
         """
         mkdir -p out
         cutadapt \\
             -a ${params.cutadapt_fwd} \\
             -g ${params.cutadapt_rev} \\
-            -o out/${pair_id}_1.fastq.gz \\
-            -p out/${pair_id}_2.fastq.gz \\
+            -o out_1.fastq \\
+            -p out_2.fastq \\
             --minimum-length ${params.cutadapt_minimum_length} \\
             ${reads[0]} \\
             ${reads[1]}
