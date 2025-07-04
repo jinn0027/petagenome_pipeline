@@ -10,14 +10,14 @@ params.cdhit_mask = "NX"
 process cdhit_est {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
-    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(id), path(read, arity: '1')
     output:
-        tuple val(id), path("out.fasta"), path("out.fasta.clstr")
+        tuple val(id), path("${id}/out.fasta"), path("${id}/out.fasta.clstr")
     script:
         """
-        mkdir -p out
+        mkdir -p ${id}
         cd-hit-est \\
             -M "${params.memory}000" \\
             -T ${params.threads} \\
@@ -27,7 +27,7 @@ process cdhit_est {
             -n ${params.cdhit_word_length} \\
             -mask ${params.cdhit_mask} \\
             -i ${read} \\
-            -o out.fasta
+            -o ${id}/out.fasta
         """
 }
 
