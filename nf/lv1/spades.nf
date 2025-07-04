@@ -109,7 +109,7 @@ workflow {
        out = spades_e2e(reads)
        out.view { i -> "$i" }
    } else {
-       ec = spades_error_correction(reads)
+       ec = spades_error_correction_gzip_output(reads)
            .map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }
        ec.view { i -> "$i" }
        out = spades_assembler(ec)
