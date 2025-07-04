@@ -11,11 +11,11 @@ params.blast_outfmt = 6
 process blast_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
-        tuple val(ref_id), path("ref_db/${ref_id}")
+        tuple val(ref_id), path("ref_db")
     script:
         """
         ref_=${ref}
@@ -24,10 +24,10 @@ process blast_makerefdb {
             ref_=\${ref_%%.gz}
             unpigz -c ${ref} > \${ref_}
         fi
-        mkdir -p ref_db/${ref_id}
+        mkdir -p ref_db
         makeblastdb \\
             -in \${ref_} \\
-            -out ref_db/${ref_id}/${ref_id} \\
+            -out ref_db/ref \\
             -dbtype ${params.blast_dbtype} \\
             -parse_seqids
         """
@@ -40,7 +40,7 @@ process blastn {
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("out/*.tsv", arity: '1')
+        tuple val(ref_id), val(qry_id), path("out.tsv", arity: '1')
     script:
         """
         mkdir -p out
@@ -48,12 +48,12 @@ process blastn {
             -task ${params.blast_task} \\
             -num_threads ${params.threads} \\
             -query ${qry} \\
-            -db ${ref_db}/${ref_id} \\
+            -db ${ref_db}/ref \\
             -perc_identity ${params.blast_perc_identity} \\
             -evalue ${params.blast_evalue} \\
             -outfmt ${params.blast_outfmt} \\
             -num_alignments ${params.blast_num_alignments} \\
-            -out out/${ref_id}_@_${qry_id}_out.tsv
+            -out out.tsv
         """
 }
 

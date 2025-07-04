@@ -12,7 +12,7 @@ process fastp {
         tuple val(pair_id), path(reads, arity: '2')
 
     output:
-        tuple val(pair_id), path("out/*.fastq.gz", arity: '2')
+        tuple val(pair_id), path("out/*.fastq", arity: '2')
     script:
         """
         mkdir -p out
@@ -21,8 +21,8 @@ process fastp {
             --low_complexity_filter \\
             -i ${reads[0]} \\
             -I ${reads[1]} \\
-            -o out/${pair_id}_1.fastq.gz \\
-            -O out/${pair_id}_2.fastq.gz \\
+            -o out/${pair_id}_1.fastq \\
+            -O out/${pair_id}_2.fastq \\
             --cut_front --cut_tail \\
             --cut_mean_quality ${params.fastp_cut_mean_quality} \\
             --length_required ${params.fastp_reads_minlength}

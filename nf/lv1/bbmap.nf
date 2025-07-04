@@ -8,19 +8,18 @@ params.bbmap_pairlen = 1500
 process bbmap_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
-        tuple val(ref_id), path("ref_db/${ref_id}")
+        tuple val(ref_id), path("ref_db")
     script:
         """
-        mkdir -p ref_db
         bbmap.sh \\
             -Xmx${params.memory}g \\
             threads=${params.threads} \\
             ref=${ref} \\
-            path=ref_db/${ref_id}
+            path=ref_db
         """
 }
 
@@ -31,7 +30,7 @@ process bbmap {
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(pair_id), path(reads, arity: '2')
     output:
-        tuple val(ref_id), val(pair_id), path("out/*.sam", arity: '1')
+        tuple val(ref_id), val(pair_id), path("out.sam", arity: '1')
     script:
         """
         mkdir -p out
@@ -44,7 +43,7 @@ process bbmap {
             path=${ref_db} \\
             in=${reads[0]} \\
             in2=${reads[1]} \\
-            out=out/${ref_id}_@_${pair_id}_bbmap_out.sam
+            out=out.sam
         """
 }
 
@@ -52,7 +51,7 @@ workflow {
     ref = channel.fromPath(params.test_bbmap_ref, checkIfExists: true)
         .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
     reads = channel.fromFilePairs(params.test_bbmap_reads, checkIfExists: true)
-   
+
     //ref.view { i -> "$i" }
     //reads.view { i -> "$i" }
 
