@@ -189,7 +189,7 @@ case ${test} in
                  --virsorter2_db "${virsorter2Db}" \
                  --test_virsorter2_read "${longFnaX1}"
         ;;
-    "toys/helloruby")
+    "helloruby")
         nextflow run ${nfDir}/toys/helloruby.nf ${args} \
                  --test_helloruby_reads "${shortFnqGzPair}"
         ;;
