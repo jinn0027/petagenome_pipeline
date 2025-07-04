@@ -7,11 +7,11 @@ process virsorter2 {
     container = "${params.petagenomeDir}/modules/virsorter2/virsorter2.sif"
     containerOptions "-B ${params.virsorter2_db}:${local_db} -B /tmp:/home"
     //containerOptions "-B ${params.virsorter2_db}:${local_db} --writable-tmpfs"
-    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
-        tuple val(read_id), path("out/final-viral-boundary.tsv"), path("out/final-viral-score.tsv")
+        tuple val(read_id), path("${read_id}/final-viral-boundary.tsv"), path("${read_id}/final-viral-score.tsv")
     script:
         """
         virsorter \\
@@ -21,7 +21,7 @@ process virsorter2 {
         virsorter \\
             run \\
             -j ${params.threads} \\
-            -w out \\
+            -w ${read_id} \\
             -i ${read}
         """
 }

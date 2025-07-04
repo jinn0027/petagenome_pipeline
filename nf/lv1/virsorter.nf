@@ -12,11 +12,11 @@ process virsorter {
     def local_mga = "/opt/VirSorter/mga_linux_ia64"
     container = "${params.petagenomeDir}/modules/virsorter/virsorter.sif"
     containerOptions "-B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
-    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
-        tuple val(read_id), path("${params.virsorter_aligner}/out/*.csv", arity: '1')
+        tuple val(read_id), path("${params.virsorter_aligner}/${read_id}/VIRSorter_global-phage-signal.csv", arity: '1')
     script:
         """
         read_=${read}
@@ -33,7 +33,7 @@ process virsorter {
         fi
         args="\\
             --db \${db_type} \\
-            --wdir ${params.virsorter_aligner}/out \\
+            --wdir ${params.virsorter_aligner}/${read_id} \\
             --data-dir ${local_db} \\
             --ncpu ${params.cpus} \\
             --fna \${read_}"
