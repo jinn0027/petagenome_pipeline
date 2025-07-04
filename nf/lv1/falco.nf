@@ -4,17 +4,17 @@ nextflow.enable.dsl=2
 process falco {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/falco/falco.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
-        tuple val(pair_id), path("out")
+        tuple val(pair_id), path("${pair_id}")
     script:
         """
-        mkdir -p out
+        mkdir -p ${pair_id}
         falco \\
             -t ${params.threads} \\
-            -o out \\
+            -o ${pair_id} \\
             ${reads[0]} \\
             ${reads[1]}
         """

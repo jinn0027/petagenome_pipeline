@@ -7,22 +7,22 @@ params.fastp_reads_minlength = 15
 process fastp {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastp/fastp.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(pair_id), path(reads, arity: '2')
 
     output:
-        tuple val(pair_id), path("out_{1,2}.fastq", arity: '2')
+        tuple val(pair_id), path("${pair_id}/out_{1,2}.fastq", arity: '2')
     script:
         """
-        mkdir -p out
+        mkdir -p ${pair_id}
         fastp \\
             -w ${params.threads} \\
             --low_complexity_filter \\
             -i ${reads[0]} \\
             -I ${reads[1]} \\
-            -o out_1.fastq \\
-            -O out_2.fastq \\
+            -o ${pair_id}/out_1.fastq \\
+            -O ${pair_id}/out_2.fastq \\
             --cut_front --cut_tail \\
             --cut_mean_quality ${params.fastp_cut_mean_quality} \\
             --length_required ${params.fastp_reads_minlength}
