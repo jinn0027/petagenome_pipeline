@@ -4,11 +4,11 @@ nextflow.enable.dsl=2
 process megahit {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/megahit/megahit.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
-        tuple val(pair_id), path("out/*.fa", arity: '1')
+        tuple val(pair_id), path("${pair_id}/out.contigs.fa", arity: '1')
     script:
         """
         megahit \\
@@ -16,8 +16,8 @@ process megahit {
             -t ${params.threads} \\
             -1 ${reads[0]} \\
             -2 ${reads[1]} \\
-            -o out \\
-            --out-prefix ${pair_id}
+            -o ${pair_id} \\
+            --out-prefix out
         """
 }
 
