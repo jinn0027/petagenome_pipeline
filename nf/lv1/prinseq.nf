@@ -16,14 +16,14 @@ params.prinseq_ns_max_n = 0
 process prinseq {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/prinseq/prinseq.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
-        tuple val(pair_id), path("out")
+        tuple val(pair_id), path("${pair_id}")
     script:
         """
-        mkdir -p out
+        mkdir -p ${pair_id}
 
         read0=${reads[0]}
         read1=${reads[1]}
@@ -48,8 +48,8 @@ process prinseq {
             -lc_threshold ${params.prinseq_lc_threshold} \\
             -trim_ns_right ${params.prinseq_trim_ns_right} \\
             -ns_max_n ${params.prinseq_ns_max_n} \\
-            -out_good out/good \\
-            -out_bad out/bad \\
+            -out_good ${pair_id}/good \\
+            -out_bad ${pair_id}/bad \\
             -fastq \${read0} \\
             -fastq2 \${read1}
         """
