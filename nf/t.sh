@@ -121,7 +121,7 @@ case ${test} in
                  --test_diamond_qry "${shortFaa2}"
         ;;
     "falco")
-        nextflow run ${nfDir}/falco.nf ${args} \
+        nextflow run ${nfDir}/lv1/falco.nf ${args} \
                  --test_falco_reads "${shortFnqGzPair}"
         ;;
     "fastp")

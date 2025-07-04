@@ -14,7 +14,7 @@ process falco {
         mkdir -p out
         falco \\
             -t ${params.threads} \\
-            -o out\\
+            -o out \\
             ${reads[0]} \\
             ${reads[1]}
         """
