@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { cdhit_est } from "${params.petagenomeDir}/nf/cdhit"
-include { blast_makerefdb } from "${params.petagenomeDir}/nf/blast"
+include { cdhit_est } from "${params.petagenomeDir}/nf/lv1/cdhit"
+include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
 process merge_contigs {
     tag "${id}"

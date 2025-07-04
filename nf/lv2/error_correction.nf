@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { spades_error_correction } from "${params.petagenomeDir}/nf/spades"
-include { fastqc } from "${params.petagenomeDir}/nf/fastqc"
+include { spades_error_correction } from "${params.petagenomeDir}/nf/lv1/spades"
+include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
 
 process get_length {
     tag "${id}"

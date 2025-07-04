@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { spades_assembler } from "${params.petagenomeDir}/nf/spades"
-include { blast_makerefdb } from "${params.petagenomeDir}/nf/blast"
+include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades"
+include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
 process filter_and_rename {
     tag "${id}"

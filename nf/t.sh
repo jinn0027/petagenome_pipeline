@@ -15,9 +15,8 @@ memory=32
 #outdir=/dev/shm/${USER}/petagenome_pipeline/out
 outdir=out
 
-#dataDir="${MY_DIR}/../modules/test"
+nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
 dataDir="${PETAGENOME_PIPELINE_DIR}/modules/test"
-#extDir="${MY_DIR}/../external"
 extDir="${PETAGENOME_PIPELINE_DIR}/external"
 
 virsorterDb="${extDir}/virsorter-data"
@@ -59,126 +58,126 @@ test=${test%.*}
 
 case ${test} in
     "main")
-        nextflow run main.nf ${args} \
+        nextflow run ${nfDir}/toys/main.nf ${args} \
                  --test_main_reads "${longFnqGzPair}"
         ;;
     "error_correction")
-        nextflow run error_correction.nf ${args} \
+        nextflow run ${nfDir}/lv2/error_correction.nf ${args} \
                  --test_error_correction_reads "${longFnqGzPair}"
         ;;
     "assembly")
-        nextflow run assembly.nf ${args} \
+        nextflow run ${nfDir}/lv2/assembly.nf ${args} \
                  --test_assembly_reads "${longFnqGzPair}"
         ;;
     "pool_contigs")
-        nextflow run pool_contigs.nf ${args} \
+        nextflow run ${nfDir}/lv2/pool_contigs.nf ${args} \
                  --test_pool_contigs_contigs "${longFnaPair}"
         ;;
     "circular_contigs")
-        nextflow run circular_contigs.nf ${args} \
+        nextflow run ${nfDir}/lv2/circular_contigs.nf ${args} \
                  --test_circular_contigs_contig "${longFnaGz1}"
         ;;
     "bbmap")
-        nextflow run bbmap.nf ${args} \
+        nextflow run ${nfDir}/lv1/bbmap.nf ${args} \
                  --test_bbmap_ref "${longFnaGz1}" \
                  --test_bbmap_reads "${shortFnqGzPair}"
         ;;
     "blast")
-        nextflow run blast.nf ${args} \
+        nextflow run ${nfDir}/lv1/blast.nf ${args} \
                  --test_blast_ref "${longFnaGz1}" \
                  --test_blast_qry "${shortFna1}"
         ;;
     "bowtie")
-        nextflow run bowtie.nf ${args} \
+        nextflow run ${nfDir}/lv1/bowtie.nf ${args} \
                  --test_bowtie_ref "${longFnaGz1}" \
                  --test_bowtie_qry "${shortFna1}"
         ;;
     "bowtie2")
-        nextflow run bowtie2.nf ${args} \
+        nextflow run ${nfDir}/lv1/bowtie2.nf ${args} \
                  --test_bowtie2_ref "${longFnaGz1}" \
                  --test_bowtie2_qry "${shortFna1}"
         ;;
     "bwa")
-        nextflow run bwa.nf ${args} \
+        nextflow run ${nfDir}/lv1/bwa.nf ${args} \
                  --test_bwa_ref "${longFnaGz1}" \
                  --test_bwa_qry "${shortFna1}"
         ;;
     "bwa_mem2")
-        nextflow run bwa_mem2.nf ${args} \
+        nextflow run ${nfDir}/lv1/bwa_mem2.nf ${args} \
                  --test_bwa_mem2_ref "${longFnaGz1}" \
                  --test_bwa_mem2_qry "${shortFna1}"
         ;;
     "cdhit")
-        nextflow run cdhit.nf ${args} \
+        nextflow run ${nfDir}/lv1/cdhit.nf ${args} \
                  --test_cdhit_read "${shortFnaGz1}"
         ;;
     "cutadapt")
-        nextflow run cutadapt.nf ${args} \
+        nextflow run ${nfDir}/lv1/cutadapt.nf ${args} \
                  --test_cutadapt_reads "${longFnqGzPair}"
         ;;
     "diamond")
-        nextflow run diamond.nf ${args} \
+        nextflow run ${nfDir}/lv1/diamond.nf ${args} \
                  --test_diamond_ref "${shortFaaGz1}" \
                  --test_diamond_qry "${shortFaa2}"
         ;;
     "falco")
-        nextflow run falco.nf ${args} \
+        nextflow run ${nfDir}/falco.nf ${args} \
                  --test_falco_reads "${shortFnqGzPair}"
         ;;
     "fastp")
-        nextflow run fastp.nf ${args} \
+        nextflow run ${nfDir}/lv1/fastp.nf ${args} \
                  --test_fastp_reads "${shortFnqGzPair}"
         ;;
     "fastqc")
-        nextflow run fastqc.nf ${args} \
+        nextflow run ${nfDir}/lv1/fastqc.nf ${args} \
                  --test_fastqc_reads "${shortFnqGzPair}"
         ;;
     "megahit")
-        nextflow run megahit.nf ${args} \
+        nextflow run ${nfDir}/lv1/megahit.nf ${args} \
                  --test_megahit_reads "${longFnqGzPair}"
         ;;
     "metaphlan")
-        nextflow run metaphlan.nf ${args} \
+        nextflow run ${nfDir}/lv1/metaphlan.nf ${args} \
                  --test_metaphlan_read "${shortFnqGz1}" \
                  --metaphlan_db "${metaphlan4Db}"
         ;;
     "metaphlan2")
-        nextflow run metaphlan2.nf ${args} \
+        nextflow run ${nfDir}/lv1/metaphlan2.nf ${args} \
                  --test_metaphlan2_read "${shortFnqGz1}" \
                  --metaphlan2_db "${metaphlan2Db}"
         ;;
     "minimap2")
-        nextflow run minimap2.nf ${args} \
+        nextflow run ${nfDir}/lv1/minimap2.nf ${args} \
                  --test_minimap2_ref "${longFnaX8}" \
                  --test_minimap2_qry "${longFnaX1}"
         ;;
     "mmseqs2")
-        nextflow run mmseqs2.nf ${args} \
+        nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
                  --test_mmseqs2_ref "${longFnaX8}" \
                  --test_mmseqs2_qry "${longFnaX1}"
         ;;
     "prinseq")
-        nextflow run prinseq.nf ${args} \
+        nextflow run ${nfDir}/lv1/prinseq.nf ${args} \
                  --test_prinseq_reads "${shortFnqGzPair}"
         ;;
     "prodigal")
-        nextflow run prodigal.nf ${args} \
+        nextflow run ${nfDir}/lv1/prodigal.nf ${args} \
                  --test_prodigal_read "${longFnaGz1}"
         ;;
     "spades")
-        nextflow run spades.nf ${args} \
+        nextflow run ${nfDir}/lv1/spades.nf ${args} \
                  --test_spades_reads "${longFnqGzPair}"
-        nextflow run spades.nf \
+        nextflow run ${nfDir}/lv1/spades.nf \
                  --test_spades_reads "${shortFnqGzPair}"
         ;;
     "virsorter")
-        nextflow run virsorter.nf ${args} \
+        nextflow run ${nfDir}/lv1/virsorter.nf ${args} \
                  --virsorter_db "${virsorterDb}" \
                  --virsorter_mga "${virsorterMga}" \
                  --virsorter_db_type refseq \
                  --virsorter_aligner blast \
                  --test_virsorter_read "${longFnaX1}" \
-        nextflow run virsorter.nf ${args} \
+        nextflow run ${nfDir}/lv1/virsorter.nf ${args} \
                  --virsorter_db "${virsorterDb}" \
                  --virsorter_mga "${virsorterMga}" \
                  --virsorter_db_type virome \
@@ -186,12 +185,12 @@ case ${test} in
                  --test_virsorter_read "${longFnaX1}" \
         ;;
     "virsorter2")
-        nextflow run virsorter2.nf ${args} \
+        nextflow run ${nfDir}/lv1/virsorter2.nf ${args} \
                  --virsorter2_db "${virsorter2Db}" \
                  --test_virsorter2_read "${longFnaX1}"
         ;;
     "toys/helloruby")
-        nextflow run toys/helloruby.nf ${args} \
+        nextflow run ${nfDir}/toys/helloruby.nf ${args} \
                  --test_helloruby_reads "${shortFnqGzPair}"
         ;;
     "*")
