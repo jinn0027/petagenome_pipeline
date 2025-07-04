@@ -8,18 +8,18 @@ params.bbmap_pairlen = 1500
 process bbmap_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
-        tuple val(ref_id), path("ref_db")
+        tuple val(ref_id), path("${ref_id}")
     script:
         """
         bbmap.sh \\
             -Xmx${params.memory}g \\
             threads=${params.threads} \\
             ref=${ref} \\
-            path=ref_db
+            path=${ref_id}
         """
 }
 
