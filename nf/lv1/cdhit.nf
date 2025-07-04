@@ -14,7 +14,7 @@ process cdhit_est {
     input:
         tuple val(id), path(read, arity: '1')
     output:
-        tuple val(id), path("out/${id}.fasta"), path("out/${id}.fasta.clstr")
+        tuple val(id), path("out.fasta"), path("out.fasta.clstr")
     script:
         """
         mkdir -p out
@@ -27,7 +27,7 @@ process cdhit_est {
             -n ${params.cdhit_word_length} \\
             -mask ${params.cdhit_mask} \\
             -i ${read} \\
-            -o out/${id}.fasta
+            -o out.fasta
         """
 }
 
