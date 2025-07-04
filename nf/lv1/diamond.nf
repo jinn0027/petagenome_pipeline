@@ -10,20 +10,20 @@ params.diamond_outfmt = 6
 process diamond_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
 
     output:
-        tuple val(ref_id), path("ref_db")
+        tuple val(ref_id), path("${ref_id}")
     script:
         """
-        mkdir -p ref_db
+        mkdir -p ${ref_id}
         diamond \\
             makedb \\
             --threads ${params.threads} \\
             --in ${ref} \\
-            -d ref_db/ref
+            -d ${ref_id}/ref
         """
 }
 
