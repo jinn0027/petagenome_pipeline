@@ -15,53 +15,53 @@ process minimap2_makerefdb {
         tuple val(ref_id), path(ref, arity: '1')
 
     output:
-        tuple val(ref_id), path("ref_db/${ref_id}")
+        tuple val(ref_id), path("${ref_id}")
     script:
         """
-        mkdir -p ref_db/${ref_id}
+        mkdir -p ${ref_id}
         minimap2 \\
             -t ${params.threads} \\
             -a ${ref} \\
-            -d ref_db/${ref_id}/${ref_id}.idx
+            -d ${ref_id}/ref.idx
         """
 }
 
 process minimap2 {
     tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
 
     output:
-        tuple val(ref_id), val(qry_id), path("out/*.sam", arity: '1')
+        tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
     script:
         """
-        mkdir -p out
+        mkdir -p ${qry_id}
         minimap2 \\
             -t ${params.threads} \\
-            -a ${ref_db}/${ref_id}.idx \\
+            -a ${ref_db}/ref.idx \\
             ${qry} \\
-            > out/${ref_id}_@_${qry_id}.sam
+            > ${qry_id}/out.sam
         """
 }
 
 process minimap2_e2e {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}/${qry_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy'
     input:
         tuple val(ref_id), path(ref, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("out/*.sam", arity: '1')
+        tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
     script:
         """
-        mkdir -p out
+        mkdir -p ${qry_id}
         minimap2 \\
             -t ${params.threads} \\
             -a ${ref} \\
             ${qry} \\
-            > out/${ref_id}_@_${qry_id}.sam
+            > ${qry_id}/out.sam
         """
 }
 
@@ -71,7 +71,7 @@ workflow {
 
     qry = channel.fromPath(params.test_minimap2_qry, checkIfExists: true)
         .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
-   
+
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 
