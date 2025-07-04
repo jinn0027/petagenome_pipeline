@@ -167,7 +167,7 @@ case ${test} in
     "spades")
         nextflow run ${nfDir}/lv1/spades.nf ${args} \
                  --test_spades_reads "${longFnqGzPair}"
-        nextflow run ${nfDir}/lv1/spades.nf \
+        nextflow run ${nfDir}/lv1/spades.nf ${args} \
                  --test_spades_reads "${shortFnqGzPair}"
         ;;
     "virsorter")

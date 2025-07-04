@@ -10,14 +10,14 @@ params.prodigal_outfmt = "gbk"
 process prodigal {
     tag "${read_id}"
     container = "${params.petagenomeDir}/modules/prodigal/prodigal.sif"
-    publishDir "${params.output}/${task.process}/${read_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
         tuple val(read_id), \
-              path("out/*.faa", arity: '1'), \
-              path("out/*.fna", arity: '1'), \
-              path("out/*.${params.prodigal_outfmt}", arity: '1')
+              path("${read_id}/out.faa", arity: '1'), \
+              path("${read_id}/out.fna", arity: '1'), \
+              path("${read_id}/out.${params.prodigal_outfmt}", arity: '1')
     script:
         """
         read_=${read}
@@ -26,14 +26,14 @@ process prodigal {
             read_=\${read_%%.gz}
             unpigz -c ${read} > \${read_}
         fi
-        mkdir -p out
+        mkdir -p ${read_id}
         prodigal \\
             -p ${params.prodigal_procedure} \\
             -i \${read_} \\
             -f ${params.prodigal_outfmt} \\
-            -a out/${read_id}.faa \\
-            -d out/${read_id}.fna \\
-            -o out/${read_id}.${params.prodigal_outfmt}
+            -a ${read_id}/out.faa \\
+            -d ${read_id}/out.fna \\
+            -o ${read_id}/out.${params.prodigal_outfmt}
         """
 }
 

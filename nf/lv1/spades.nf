@@ -6,42 +6,42 @@ params.test_spades_e2e = false
 process spades_error_correction {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), \
-              path("out/corrected/paired/*.cor.fastq.gz", arity: '2'), \
-	      path("out/corrected/unpaired/*.cor.fastq.gz")
+              path("${pair_id}/corrected/paired/*.cor.fastq.gz", arity: '2'), \
+              path("${pair_id}/corrected/unpaired/*.cor.fastq.gz")
     script:
         """
-        mkdir out
+        mkdir ${pair_id}
         spades.py \\
             --threads ${params.threads} \\
             --memory ${params.memory} \\
             --only-error-correction \\
             --pe1-1 ${reads[0]} \\
             --pe1-2 ${reads[1]} \\
-            -o out
-        mkdir -p out/corrected/paired out/corrected/unpaired 
-        mv out/corrected/*unpaired*.cor.fastq.gz out/corrected/unpaired
-        mv out/corrected/*.cor.fastq.gz out/corrected/paired
+            -o ${pair_id}
+        mkdir -p ${pair_id}/corrected/paired ${pair_id}/corrected/unpaired 
+        mv ${pair_id}/corrected/*unpaired*.cor.fastq.gz ${pair_id}/corrected/unpaired
+        mv ${pair_id}/corrected/*.cor.fastq.gz ${pair_id}/corrected/paired
         """
 }
 
 process spades_assembler {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), \
-              path("out/scaffolds.fasta", arity: '0..*'), \
-              path("out/contigs.fasta", arity: '0..*')
+              path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
+              path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
         """
-        mkdir -p out
+        mkdir -p ${pair_id}
         spades.py \\
             --threads ${params.threads} \\
             --memory ${params.memory} \\
@@ -49,30 +49,30 @@ process spades_assembler {
             --meta \\
             --pe1-1 ${reads[0]} \\
             --pe1-2 ${reads[1]} \\
-            -o out
+            -o ${pair_id}
         """
 }
 
 process spades_e2e {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    publishDir "${params.output}/${task.process}/${pair_id}", mode: 'copy'
+    publishDir "${params.output}/${task.process}", mode: 'copy'
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), \
-              path("out/scaffolds.fasta", arity: '0..*'), \
-              path("out/contigs.fasta", arity: '0..*')
+              path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
+              path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
         """
-        mkdir -p out
+        mkdir -p ${pair_id}
         spades.py \\
             --threads ${params.threads} \\
             --memory ${params.memory} \\
             --meta \\
             --pe1-1 ${reads[0]} \\
             --pe1-2 ${reads[1]} \\
-            -o out
+            -o ${pair_id}
         """
 }
 
