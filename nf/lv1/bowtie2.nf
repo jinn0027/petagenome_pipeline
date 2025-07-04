@@ -4,19 +4,19 @@ nextflow.enable.dsl=2
 process bowtie2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
-        tuple val(ref_id), path("ref_db")
+        tuple val(ref_id), path("${ref_id}")
     script:
         """
-        mkdir -p ref_db
+        mkdir -p ${ref_id}
         bowtie2-build \\
             --threads ${params.threads} \\
             --seed ${params.random_seed} \\
             ${ref} \\
-            ref_db/ref
+            ${ref_id}/ref
         """
 }
 

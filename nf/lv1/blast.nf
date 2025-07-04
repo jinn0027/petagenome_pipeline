@@ -11,11 +11,11 @@ params.blast_outfmt = 6
 process blast_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
-        tuple val(ref_id), path("ref_db")
+        tuple val(ref_id), path("${ref_id}")
     script:
         """
         ref_=${ref}
@@ -24,10 +24,10 @@ process blast_makerefdb {
             ref_=\${ref_%%.gz}
             unpigz -c ${ref} > \${ref_}
         fi
-        mkdir -p ref_db
+        mkdir -p ${ref_id}
         makeblastdb \\
             -in \${ref_} \\
-            -out ref_db/ref \\
+            -out ${ref_id}/ref \\
             -dbtype ${params.blast_dbtype} \\
             -parse_seqids
         """
