@@ -28,10 +28,6 @@ if [ ! -f MetaPhlAn.tar.gz ] ; then
     git clone https://github.com/biobakery/MetaPhlAn -b 4.1.1 --recursive
 fi
 
-if [ ! -f MetaPhlAn2.tar.gz ] ; then
-    git clone https://github.com/biobakery/MetaPhlAn2 --recursive
-fi
-
 if [ ! -f VirSorter.tar.gz ] ; then
     git clone https://github.com/simroux/VirSorter -b v1.0.6 --recursive
 fi
@@ -151,10 +147,7 @@ fi
 for i in $(ls)
 do
     if [ -d $i ] ; then
-	if [ "$i" == "metaphlan2_db" ] ; then
-	    continue
-	fi
-	if [ "$i" == "metaphlan4_db" ] ; then
+	if [ "$i" == "metaphlan_db" ] ; then
 	    continue
 	fi
 	if [ "$i" == "virsorter-data" ] ; then
@@ -193,59 +186,38 @@ if [ ! -f fastqc_v0.12.1.zip ] ; then
     wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip
 fi
 
-# MetaPhlAn(4) database @ 2025/1/29
-#wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_latest -O mpa_latest
-#metaphlan4_index=$(cat mpa_latest)
+# MetaPhlAn database @ 2025/1/29
 
-if [ ! -d metaphlan4_db ] ; then
-    metaphlan4_index=mpa_vJun23_CHOCOPhlAnSGB_202403
-    echo ${metaphlan4_index} > mpa_latest
+if [ ! -d metaphlan_db ] ; then
+    metaphlan_index=mpa_vJun23_CHOCOPhlAnSGB_202403
+    echo ${metaphlan_index} > mpa_latest
 
-    if [ ! -f ${metaphlan4_index}.md5 ] ; then
-        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}.md5
+    if [ ! -f ${metaphlan_index}.md5 ] ; then
+        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan_index}.md5
     fi
 
-    if [ ! -f ${metaphlan4_index}.tar.gz ] ; then
-        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}.tar
-        gzip ${metaphlan4_index}.tar
+    if [ ! -f ${metaphlan_index}.tar.gz ] ; then
+        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan_index}.tar
+        gzip ${metaphlan_index}.tar
     fi
 
-    #if [ ! -f ${metaphlan4_index}_marker_info.txt.bz2 ] ; then
-    #    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}_marker_info.txt.bz2
-    #fi
-
-    #if [ ! -f ${metaphlan4_index}_species.txt.bz2 ] ; then
-    #    wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/${metaphlan4_index}_species.txt.bz2
-    #fi
-
-    if [ ! -f ${metaphlan4_index}_bt2.md5 ] ; then
-        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan4_index}_bt2.md5
+    if [ ! -f ${metaphlan_index}_bt2.md5 ] ; then
+        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan_index}_bt2.md5
     fi
 
-    if [ ! -f ${metaphlan4_index}_bt2.tar.gz ] ; then
-        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan4_index}_bt2.tar
-        gzip ${metaphlan4_index}_bt2.tar
+    if [ ! -f ${metaphlan_index}_bt2.tar.gz ] ; then
+        wget http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes/${metaphlan_index}_bt2.tar
+        gzip ${metaphlan_index}_bt2.tar
     fi
 
-    mkdir -p metaphlan4_db
-    cp mpa_latest metaphlan4_db
-    tar -I pigz -xvf ${metaphlan4_index}.tar.gz -C metaphlan4_db --no-same-owner
-    tar -I pigz -xvf ${metaphlan4_index}_bt2.tar.gz -C metaphlan4_db --no-same-owner
-    pushd metaphlan4_db
+    mkdir -p metaphlan_db
+    cp mpa_latest metaphlan_db
+    tar -I pigz -xvf ${metaphlan_index}.tar.gz -C metaphlan_db --no-same-owner
+    tar -I pigz -xvf ${metaphlan_index}_bt2.tar.gz -C metaphlan_db --no-same-owner
+    pushd metaphlan_db
         pbunzip2 *.bz2
     popd
-    chmod -R 777 metaphlan4_db
-fi
-
-# MetaPhlAn2 database @ 2025/1/22
-if [ ! -f mpa_v20_m200.zip ] ; then
-    wget https://figshare.com/ndownloader/articles/6200807/versions/1 -O mpa_v20_m200.zip
-fi
-
-if [ ! -d metaphlan2_db ] ; then
-    mkdir -p metaphlan2_db
-    unzip -d metaphlan2_db mpa_v20_m200.zip
-    chmod -R 777 metaphlan2_db
+    chmod -R 777 metaphlan_db
 fi
 
 # VirSorter Metagenome Annotator @ 2012/10/7 (retrieved at 2025/1/22)

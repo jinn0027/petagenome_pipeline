@@ -22,8 +22,7 @@ extDir="${PETAGENOME_PIPELINE_DIR}/external"
 virsorterDb="${extDir}/virsorter-data"
 virsorterMga="${extDir}/mga_linux_ia64"
 virsorter2Db="${extDir}/virsorter2-data"
-metaphlan2Db="${extDir}/metaphlan2_db"
-metaphlan4Db="${extDir}/metaphlan4_db"
+metaphlanDb="${extDir}/metaphlan_db"
 
 longFnqGzPair="${dataDir}/ecoli_1K_{1,2}.fq.gz"
 longFnaPair="${dataDir}/NC_*.fna"
@@ -139,12 +138,7 @@ case ${test} in
     "metaphlan")
         nextflow run ${nfDir}/lv1/metaphlan.nf ${args} \
                  --test_metaphlan_read "${shortFnqGz1}" \
-                 --metaphlan_db "${metaphlan4Db}"
-        ;;
-    "metaphlan2")
-        nextflow run ${nfDir}/lv1/metaphlan2.nf ${args} \
-                 --test_metaphlan2_read "${shortFnqGz1}" \
-                 --metaphlan2_db "${metaphlan2Db}"
+                 --metaphlan_db "${metaphlanDb}"
         ;;
     "minimap2")
         nextflow run ${nfDir}/lv1/minimap2.nf ${args} \

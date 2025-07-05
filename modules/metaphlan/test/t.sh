@@ -10,7 +10,7 @@ fq1=../../test/s_6_1.fastq.gz
 wdir=work
 odir=results
 refdir=ref
-dbdir=../../../external/metaphlan4_db
+dbdir=../../../external/metaphlan_db
 
 log=t.log
 
