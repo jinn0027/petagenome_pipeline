@@ -8,20 +8,20 @@ process filter_and_rename {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(id), path(read, arity: '1')
     output:
-        tuple val(id), path("out/contig.*.fa", arity:"3"), path("out/contig.name.txt")
+        tuple val(id), path("${id}/contig.*.fa", arity:"3"), path("${id}/contig.name.txt")
     script:
         """
-        mkdir -p out
+        mkdir -p ${id}
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-             --min 1000 --rename --prefix n. --table out/contig.name.txt ${read} > out/contig.1000.fa
+             --min 1000 --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.1000.fa
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-             --min 5000 out/contig.1000.fa > out/contig.5000.fa
+             --min 5000 ${id}/contig.1000.fa > ${id}/contig.5000.fa
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-             --min 10000 out/contig.1000.fa > out/contig.10000.fa
+             --min 10000 ${id}/contig.1000.fa > ${id}/contig.10000.fa
         """
 }
 
@@ -29,20 +29,20 @@ process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(id), path(reads, arity: '0..*')
     output:
-        tuple val(id), path("out/*.length.txt", arity: '0..*')
+        tuple val(id), path("${id}/*.length.txt", arity: '0..*')
     script:
         """
-        mkdir -p out
+        mkdir -p ${id}
         reads_=( ${reads} )
         for i in \${reads_[@]}
         do
             awk '{if(\$1~/^\\+/||\$1~/^@/){print(\$1)}else{print(\$0)}}' \${i} | \
             python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py -t fasta \
-            > out/\$(basename \$i).length.txt
+            > ${id}/\$(basename \$i).length.txt
         done
         """
 }
@@ -51,24 +51,24 @@ process get_stats {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(id), path(lengths, arity: '1..*')
     output:
-        tuple val(id), path("out/*.stats.txt")
+        tuple val(id), path("${id}/*.stats.txt")
     script:
         """
-        mkdir -p out
+        mkdir -p ${id}
         lengths_=( ${lengths} )
         for i in \${lengths_[@]}
         do
           outname=\$(basename \${i} | sed "s#length#stats#")
           n=\$(cat \${i} | wc -l)
           if [ \${n} -gt 0 ] ; then
-              #R --vanilla --slave --args \${i} 2 <  ${params.petagenomeDir}/scripts/R/stats.assembly.R > out/\${outname}
-              Rscript ${params.petagenomeDir}/scripts/R/stats.assembly.R \${i} 2 > out/\${outname}
+              #R --vanilla --slave --args \${i} 2 <  ${params.petagenomeDir}/scripts/R/stats.assembly.R > ${id}/\${outname}
+              Rscript ${params.petagenomeDir}/scripts/R/stats.assembly.R \${i} 2 > ${id}/\${outname}
           else
-              touch out/\${outname}
+              touch ${id}/\${outname}
           fi
         done
         """

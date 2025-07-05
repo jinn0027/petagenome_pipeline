@@ -8,21 +8,20 @@ process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
         tuple val(id), path(reads, arity: '1..*')
     output:
-        tuple val(id), path("out/*.length.txt.gz")
+        tuple val(id), path("${id}/*.length.txt")
     script:
         """
-        mkdir -p out
+        mkdir -p ${id}
         reads_=( ${reads} )
         for i in \${reads_[@]}
         do
-            zcat \$i | \
-                awk '{if(\$1~/^\\+/||\$1~/^@/){print(\$1)}else{print(\$0)}}' | \
-                python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py -t fastq | \
-                pigz -c >> out/\$(basename \$i).length.txt.gz
+            awk '{if(\$1~/^\\+/||\$1~/^@/){print(\$1)}else{print(\$0)}}' \${i} | \
+            python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py -t fastq \
+            > ${id}/\${i}.length.txt
         done
         """
 }
