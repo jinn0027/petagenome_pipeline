@@ -28,7 +28,7 @@ testPair="/scratch/local/data/metagenome/${sample}_XXXXXXXX_XXXXXXXX_L001_R{1,2}
 l_thre=5000
 fastpOutPair="out/fastp/ERR1620255_XXXXXXXX_XXXXXXXX_L001_R/out_{1,2}.fastq*"
 errorCorrectionOutPair="out/error_correction:spades_error_correction/out/corrected/paired/out_{1,2}00.0_0.cor.fastq"
-assemblyOutContig="out/assembly_filter_and_rename/out/contig.${l_thre}.fa"
+assemblyOutContigs="out/assembly_filter_and_rename/out/contig.${l_thre}.fa"
 
 args="\
     --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
@@ -60,7 +60,7 @@ case ${test} in
         nextflow run ${nfDir}/lv1/fastp.nf ${args} \
                  -with-report report_${test}.html \
                  -with-trace trace_${test}.txt \
-                 --test_fastp_reads "${testPair1}"
+                 --test_fastp_reads "${testPair}"
         ;;
     "error_correction")
         nextflow run ${nfDir}/lv2/error_correction.nf ${args} \
@@ -78,7 +78,7 @@ case ${test} in
         nextflow run ${nfDir}/lv2/pool_contigs.nf ${args} \
                  -with-report report_${test}.html \
                  -with-trace trace_${test}.txt \
-                 --test_pool_contigs_contigs "${testPair1}"
+                 --test_pool_contigs_contigs "${assemblyOutContigs}"
         ;;
     "*")
 esac
