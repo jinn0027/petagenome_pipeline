@@ -11,6 +11,7 @@ From: almalinux:9
     dnf makecache
 
     dnf install -y \
+        procps-ng-3.* \
         git-2.* \
         perl-4:5.* \
         pigz-2.* \

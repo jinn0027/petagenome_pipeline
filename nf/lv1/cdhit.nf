@@ -2,9 +2,11 @@
 nextflow.enable.dsl=2
 
 params.cdhit_identity_threshold = 0.95
+//params.cdhit_identity_threshold = 0.80
 params.cdhit_global_sequence_identity = 1
 params.cdhit_description_length = 150
 params.cdhit_word_length = 5
+//params.cdhit_word_length = 8
 params.cdhit_mask = "NX"
 
 process cdhit_est {

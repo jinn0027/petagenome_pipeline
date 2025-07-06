@@ -70,6 +70,8 @@ case ${test} in
         ;;
     "pool_contigs")
         nextflow run ${nfDir}/lv2/pool_contigs.nf ${args} \
+                 -with-report report_${test}.html \
+                 -with-trace trace_${test}.txt \
                  --test_pool_contigs_contigs "${longFnaPair}"
         ;;
     "circular_contigs")
@@ -190,4 +192,4 @@ case ${test} in
     "*")
 esac
 
-rm -rf /dev/shm/${USER}
+#rm -rf /dev/shm/${USER}

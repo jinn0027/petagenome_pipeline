@@ -6,11 +6,11 @@ export TMPDIR=$(pwd)/tmp
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
-threads=16
-#threads=$(nproc)
+#threads=16
+threads=$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
-memory=256
+memory=512
 #memory=128
 #outdir=/dev/shm/${USER}/petagenome_pipeline/out
 outdir=out
@@ -19,10 +19,16 @@ nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
 dataDir="${PETAGENOME_PIPELINE_DIR}/modules/test"
 extDir="${PETAGENOME_PIPELINE_DIR}/external"
 
-testPair1="/scratch/local/data/metagenome/ERR1620255_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
-testPair2="/scratch/local/data/metagenome/ERR1620256_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
-testPair3="/scratch/local/data/metagenome/ERR1620257_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
-testPair4="/scratch/local/data/metagenome/ERR1620258_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+sample="ERR1620255"
+#sample="ERR1620256"
+#sample="ERR1620257"
+#sample="ERR1620258"
+
+testPair="/scratch/local/data/metagenome/${sample}_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+l_thre=5000
+fastpOutPair="out/fastp/ERR1620255_XXXXXXXX_XXXXXXXX_L001_R/out_{1,2}.fastq*"
+errorCorrectionOutPair="out/error_correction:spades_error_correction/out/corrected/paired/out_{1,2}00.0_0.cor.fastq"
+assemblyOutContig="out/assembly_filter_and_rename/out/contig.${l_thre}.fa"
 
 args="\
     --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
@@ -35,11 +41,6 @@ args="\
 
 args+=" --publish_output true"
 
-xargs+="\
-    -with-trace \
-    -with-report \
-    "
-
 #test=${1:-"fastp"}
 #test=${1:-"error_correction"}
 #test=${1:-"assembly"}
@@ -51,28 +52,35 @@ test=${test%.*}
 case ${test} in
     "main")
         nextflow run ${nfDir}/toys/main.nf ${args} \
-                 --test_main_reads "${testPair1}"
+                 -with-report report_${test}.html \
+                 -with-trace trace_${test}.txt \
+                 --test_main_reads "${testPair}"
         ;;
     "fastp")
         nextflow run ${nfDir}/lv1/fastp.nf ${args} \
+                 -with-report report_${test}.html \
+                 -with-trace trace_${test}.txt \
                  --test_fastp_reads "${testPair1}"
         ;;
     "error_correction")
         nextflow run ${nfDir}/lv2/error_correction.nf ${args} \
-                 --test_error_correction_reads "${testPair1}"
+                 -with-report report_${test}.html \
+                 -with-trace trace_${test}.txt \
+                 --test_error_correction_reads "${fastpOutPair}"
         ;;
     "assembly")
         nextflow run ${nfDir}/lv2/assembly.nf ${args} \
-                 --test_assembly_reads "${testPair1}"
+                 -with-report report_${test}.html \
+                 -with-trace trace_${test}.txt \
+                 --test_assembly_reads "${errorCorrectionOutPair}"
         ;;
     "pool_contigs")
         nextflow run ${nfDir}/lv2/pool_contigs.nf ${args} \
+                 -with-report report_${test}.html \
+                 -with-trace trace_${test}.txt \
                  --test_pool_contigs_contigs "${testPair1}"
         ;;
     "*")
 esac
 
-rm -rf /dev/shm/${USER}
-
-#                 -with-report report.html \
-#                 -with-trace \
+#rm -rf /dev/shm/${USER}
