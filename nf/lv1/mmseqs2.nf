@@ -4,6 +4,7 @@ nextflow.enable.dsl=2
 params.mmseqs2_ref_type = "0" //Database type 0: auto, 1: amino acid 2: nucleotides [0]
 params.mmseqs2_qry_type = "0" //Database type 0: auto, 1: amino acid 2: nucleotides [0]
 params.mmseqs2_search_type = "0" // Search type 0: auto 1: amino acid, 2: translated, 3: nucleotide, 4: translated nucleotide alignment [0]
+params.mmseqs2_cluster_mode = "cluster" // cluster or linclust
 
 process mmseqs2_makerefdb {
     tag "${ref_id}"
@@ -52,7 +53,7 @@ process mmseqs2_cluster {
     script:
         """
         mkdir -p ${ref_id} tmp
-        mmseqs cluster \\
+        mmseqs ${params.mmseqs2_cluster_mode} \\
             --threads ${params.threads} \\
             ${ref_db}/ref \\
             ${ref_id}/clu \\

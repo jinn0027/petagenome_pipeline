@@ -160,13 +160,14 @@ case ${test} in
         ;;
     "mmseqs2")
         nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
+                 --mmseqs2_cluster_mode linclust \
                  --test_mmseqs2_module cluster \
                  --test_mmseqs2_ref "${shortFnaGz1}"
-        #nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
-        #         --mmseqs2_search_type 3 \
-        #         --test_mmseqs2_module search \
-        #         --test_mmseqs2_ref "${longFnaX8}" \
-        #         --test_mmseqs2_qry "${longFnaX1}"
+        nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
+                 --mmseqs2_search_type 3 \
+                 --test_mmseqs2_module search \
+                 --test_mmseqs2_ref "${longFnaX8}" \
+                 --test_mmseqs2_qry "${longFnaX1}"
         ;;
     "prinseq")
         nextflow run ${nfDir}/lv1/prinseq.nf ${args} \
