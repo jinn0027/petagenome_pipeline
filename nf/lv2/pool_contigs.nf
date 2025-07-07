@@ -2,6 +2,7 @@
 nextflow.enable.dsl=2
 
 include { cdhit_est } from "${params.petagenomeDir}/nf/lv1/cdhit"
+include { mmseqs2_makerefdb; mmseqs2_cluster } from "${params.petagenomeDir}/nf/lv1/mmseqs2"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
 process merge_contigs {
@@ -137,6 +138,8 @@ workflow pool_contigs {
 
     // removing redundancy by CD-HIT-EST
     cdhit = cdhit_est( merged.map{ id, fasta, list -> tuple(id, fasta ) } )
+    //merged_db = mmseqs2_makerefdb(merged)
+    //cdhit = mmseqs2_cluster(merged_db)
 
     // rename and filter (L>=#{l_thre}) contigs
     flt = filter_and_rename( cdhit.map{ id, fasta, clstr -> tuple(id, fasta, l_thre) } )
@@ -152,7 +155,7 @@ workflow pool_contigs {
 
     // blastdb
     blstdb = blast_makerefdb( flt.map{ id, contig, name -> tuple(id, contig) } )
-    
+
   emit:
     merged
     cdhit
