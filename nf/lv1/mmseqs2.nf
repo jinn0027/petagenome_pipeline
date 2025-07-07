@@ -48,15 +48,31 @@ process mmseqs2_cluster {
     input:
         tuple val(ref_id), path(ref_db)
     output:
-        tuple val(ref_id), path("${ref_id}")
+        tuple val(ref_id), path("${ref_id}/out.fasta"), path("${ref_id}/out.tsv")
     script:
         """
         mkdir -p ${ref_id} tmp
         mmseqs cluster \\
             --threads ${params.threads} \\
             ${ref_db}/ref \\
-            ${ref_id}/out \\
+            ${ref_id}/clu \\
             tmp
+        mmseqs createtsv \\
+            --threads ${params.threads} \\
+            ${ref_db}/ref \\
+            ${ref_db}/ref \\
+            ${ref_id}/clu \\
+            ${ref_id}/out.tsv
+        mmseqs result2repseq \\
+            --threads ${params.threads} \\
+            ${ref_db}/ref \\
+            ${ref_id}/clu \\
+            ${ref_id}/clu_rep
+        mmseqs result2flat \\
+            ${ref_db}/ref \\
+            ${ref_db}/ref \\
+            ${ref_id}/clu_rep \\
+            ${ref_id}/out.fasta
         """
 }
 
