@@ -48,10 +48,11 @@ args="\
 
 args+=" --publish_output true"
 
+test=${1:-"main"}
 #test=${1:-"error_correction"}
 #test=${1:-"assembly"}
 #test=${1:-"pool_contigs"}
-test=${1:-"circular_contigs"}
+#test=${1:-"circular_contigs"}
 
 test=${test%.*}
 
@@ -159,6 +160,11 @@ case ${test} in
         ;;
     "mmseqs2")
         nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
+                 --test_mmseqs2_module cluster \
+                 --test_mmseqs2_ref "${longFnaX8}"
+        nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
+                 --mmseqs2_search_type 3 \
+                 --test_mmseqs2_module search \
                  --test_mmseqs2_ref "${longFnaX8}" \
                  --test_mmseqs2_qry "${longFnaX1}"
         ;;
