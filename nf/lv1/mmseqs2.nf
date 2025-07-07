@@ -37,7 +37,7 @@ process mmseqs2_makeqrydb {
         """
 }
 
-process mmseqs2 {
+process mmseqs2_search {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
@@ -76,7 +76,7 @@ workflow {
     in = ref_db.combine(qry_db)
     //in.view { i -> "$i" }
 
-    out = mmseqs2(in)
+    out = mmseqs2_search(in)
     //out.view { i -> "$i" }
 }
 
