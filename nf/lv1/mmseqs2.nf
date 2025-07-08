@@ -73,7 +73,8 @@ process mmseqs2_cluster {
             ${ref_db}/ref \\
             ${ref_db}/ref \\
             ${ref_id}/clu_rep \\
-            ${ref_id}/out.fasta
+            ${ref_id}/out.fasta \\
+            --use-fasta-header
         """
 }
 

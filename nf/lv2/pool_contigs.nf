@@ -5,6 +5,9 @@ include { cdhit_est } from "${params.petagenomeDir}/nf/lv1/cdhit"
 include { mmseqs2_makerefdb; mmseqs2_cluster } from "${params.petagenomeDir}/nf/lv1/mmseqs2"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
+//params.pool_contigs_clustering_process = "cdhit"
+params.pool_contigs_clustering_process = "mmseqs2"
+
 process merge_contigs {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
@@ -64,7 +67,11 @@ process summarize_name {
     script:
         """
         mkdir -p ${id}
-        ruby ${params.petagenomeDir}/scripts/Ruby/parse.cdhit_clstr.rb -i ${clstr} --include_rep > ${id}/${id}.name_
+        if [ "${params.pool_contigs_clustering_process}" = "mmseqs2" ] ; then
+            cp -f ${clstr} ${id}/${id}.name_
+        else
+            ruby ${params.petagenomeDir}/scripts/Ruby/parse.cdhit_clstr.rb -i ${clstr} --include_rep > ${id}/${id}.name_
+        fi
         ruby ${params.petagenomeDir}/scripts/Ruby/join_with_tab.rb ${id}/${id}.name_ 2 ${name} 2 | \
              awk -F '\\t' '{OFS=\"\\t\"} {print \$2,\$1,\$3}' > ${id}/${id}.name.txt
         awk '{print(\$1)}' ${id}/${id}.name.txt | sort | uniq > ${id}/${id}.samples.txt
@@ -136,16 +143,19 @@ workflow pool_contigs {
     // concatenate assemblies
     merged = merge_contigs(contigs)
 
-    // removing redundancy by CD-HIT-EST
-    cdhit = cdhit_est( merged.map{ id, fasta, list -> tuple(id, fasta ) } )
-    //merged_db = mmseqs2_makerefdb(merged)
-    //cdhit = mmseqs2_cluster(merged_db)
+    // removing redundancy
+    if ( params.pool_contigs_clustering_process == "mmseqs2" ) {
+        merged_db = mmseqs2_makerefdb(merged)
+        clust = mmseqs2_cluster(merged_db)
+    } else {
+        clust = cdhit_est( merged.map{ id, fasta, list -> tuple(id, fasta ) } )
+    }
 
     // rename and filter (L>=#{l_thre}) contigs
-    flt = filter_and_rename( cdhit.map{ id, fasta, clstr -> tuple(id, fasta, l_thre) } )
+    flt = filter_and_rename( clust.map{ id, fasta, clstr -> tuple(id, fasta, l_thre) } )
 
     // summarize contig name ( contig in each sample / representative contig / renamed representative contig )
-    name = summarize_name( flt.map{ id, fasta, name -> tuple(id, name) }, cdhit.map{ id, fasta, clstr -> tuple(id, clstr) } )
+    name = summarize_name( flt.map{ id, fasta, name -> tuple(id, name) }, clust.map{ id, fasta, clstr -> tuple(id, clstr) } )
 
     // get length of contigs
     len = get_length( flt.map{ id, fasta, name -> tuple(id, fasta) } )
@@ -158,7 +168,7 @@ workflow pool_contigs {
 
   emit:
     merged
-    cdhit
+    clust
     flt
     name
     len
@@ -179,7 +189,7 @@ workflow {
     contigs.view{ i -> "$i" }
     out = pool_contigs(contigs, l_thre)
     //out.merged.view{ i -> "$i" }
-    //out.cdhit.view{ i -> "$i" }
+    //out.clust.view{ i -> "$i" }
     //out.flt.view{ i -> "$i" }
     //out.name.view{ i -> "$i" }
     //out.len.view{ i -> "$i" }
