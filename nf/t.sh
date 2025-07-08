@@ -33,6 +33,7 @@ longFnaX8="${dataDir}/8seq.fa"
 shortFnqGzPair="${dataDir}/s_6_{1,2}.fastq.gz"
 shortFnaGz1="${dataDir}/s_6_1.fasta.gz"
 shortFnqGz1="${dataDir}/s_6_1.fastq.gz"
+shortFnaX2Gz1="${dataDir}/s_6_1_x2.fasta.gz"
 shortFaaGz1="${dataDir}/1.faa.gz"
 shortFaa2="${dataDir}/2.faa"
 shortFna1="${dataDir}/q.fa"
@@ -121,7 +122,7 @@ case ${test} in
         nextflow run ${nfDir}/lv1/cdhit.nf ${args} \
                  -with-report report_${test}.html \
                  -with-trace trace_${test}.txt \
-                 --test_cdhit_read "${shortFnaGz1}"
+                 --test_cdhit_read "${shortFnaX2Gz1}"
         ;;
     "cutadapt")
         nextflow run ${nfDir}/lv1/cutadapt.nf ${args} \
@@ -162,7 +163,7 @@ case ${test} in
         nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
                  --mmseqs2_cluster_mode linclust \
                  --test_mmseqs2_module cluster \
-                 --test_mmseqs2_ref "${shortFnaGz1}"
+                 --test_mmseqs2_ref "${shortFnaX2Gz1}"
         nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
                  --mmseqs2_search_type 3 \
                  --test_mmseqs2_module search \
