@@ -11,15 +11,15 @@ cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
 memory=512
 
-test=fastp
+test=error_correction
 
 nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
 
 for i in ERR1620255 ERR1620256 ERR1620257 ERR1620258
 do
-    dataDir=/scratch/local/data/metagenome
-    outDir=out_fastp_${i}
-    inPairs="${dataDir}/${i}_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+    inDir=out_fastp_${i}/fastp/${i}_XXXXXXXX_XXXXXXXX_L001_R
+    inPairs="${inDir}/out_{1,2}.fastq"
+    outDir=out_error_correction_${i}
 
     args="\
         --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
@@ -31,8 +31,8 @@ do
         --publish_output true \
         "
 
-    nextflow run ${nfDir}/lv1/fastp.nf ${args} \
+    nextflow run ${nfDir}/lv2/error_correction.nf ${args} \
              -with-report report_${test}_${i}.html \
              -with-trace trace_${test}_${i}.txt \
-             --test_fastp_reads "${inPairs}"
+             --test_error_correction_reads "${inPairs}"
 done
