@@ -14,7 +14,7 @@ process merge_contigs {
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
-        tuple val(id), path(contigs, arity: '1..*')
+        tuple val(id), path(contigs, arity: '1..*', stageAs: "?/*")
     output:
         tuple val(id), path("${id}/merged_contig.fa"), path("${id}/contig_list.txt")
     script:
@@ -177,9 +177,6 @@ workflow pool_contigs {
 }
 
 workflow {
-    def l_thre = "1000" // virome
-    //def l_thre = "5000" // bacteriome
-
     contigs = channel.fromPath(params.test_pool_contigs_contigs, checkIfExists: true)
       .collect()
       .map{ it.sort() }
@@ -187,7 +184,7 @@ workflow {
          def key = it[0].simpleName.split('_')[0]
 	 [key, it ] }
     contigs.view{ i -> "$i" }
-    out = pool_contigs(contigs, l_thre)
+    out = pool_contigs(contigs, params.test_pool_contigs_l_thre)
     //out.merged.view{ i -> "$i" }
     //out.clust.view{ i -> "$i" }
     //out.flt.view{ i -> "$i" }

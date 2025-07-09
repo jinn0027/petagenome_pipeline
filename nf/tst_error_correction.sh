@@ -35,4 +35,6 @@ do
              -with-report report_${test}_${i}.html \
              -with-trace trace_${test}_${i}.txt \
              --test_error_correction_reads "${inPairs}"
+
+    rm -rf nfwork/*
 done

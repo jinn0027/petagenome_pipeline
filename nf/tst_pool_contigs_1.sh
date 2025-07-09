@@ -15,7 +15,12 @@ test=pool_contigs
 
 nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
 
-inContigs="out_assembly_*/assembly:filter_and_rename/out/contig.5000.fa"
+for i in ERR1620255 ERR1620256 ERR1620257 ERR1620258
+do
+    ln -s out_assembly_${i}/assembly:filter_and_rename/out/contig.5000.fa contig.5000.${i}.fa
+done
+
+inContigs="contig.5000.*.fa"
 
 outDir=out_pool_contigs
 
