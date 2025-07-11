@@ -82,11 +82,11 @@ workflow assembly {
     l_thre
   main:
     asm = spades_assembler(reads)
-    asm = asm.map{ id, scaffolds, contigs ->
-        tuple( id, 0 < scaffolds.size() ? scaffolds : contigs, l_thre)
+    asm = asm.map { id, scaffolds, contigs ->
+        tuple(id, 0 < scaffolds.size() ? scaffolds : contigs)
     }
 
-    flt = filter_and_rename(asm)
+    flt = filter_and_rename(asm.map { id, contigs -> tuple(id, contigs, l_thre) } )
     flt = flt.flatMap { id, contigs, name ->
         contigs.collect { c ->
 	    if (c.size() != 0) {
