@@ -74,6 +74,7 @@ case ${test} in
         nextflow run ${nfDir}/lv2/assembly.nf ${args} \
                  -with-report report_${test}.html \
                  -with-trace trace_${test}.txt \
+                 --test_assembly_l_thre 5000 \
                  --test_assembly_reads "${longFnqGzPair}"
         ;;
     "pool_contigs")

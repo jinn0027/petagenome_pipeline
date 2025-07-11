@@ -6,19 +6,37 @@ include { error_correction } from "${params.petagenomeDir}/nf/lv2/error_correcti
 include { assembly } from "${params.petagenomeDir}/nf/lv2/assembly"
 include { pool_contigs } from "${params.petagenomeDir}/nf/lv2/pool_contigs"
 
+workflow bacteriome_pipeline {
+  take:
+    reads
+
+  main:
+    def l_thre = 5000
+
+    fp = fastp(reads)
+    ec = error_correction(fp)
+    as = assembly(ec.ec.map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }, l_thre)
+    pc = pool_contigs(as.flt, l_thre)
+
+  emit:
+    fp
+    ec.ec
+    ec.fqc
+    ec.len
+    as.flt
+    as.len
+    as.sts
+    as.blstdb
+    pc.merged
+    pc.clust
+    pc.flt
+    pc.name
+    pc.len
+    pc.sts
+    pc.blstdb
+}
+
 workflow {
-    reads = channel.fromFilePairs(params.test_bacteriome_pipeline_reads, checkIfExists: true)
-    fastp = fastp(reads)
-    //fastp.view { i -> "$i" }
-    err_corr = error_correction(fastp)
-    //err_corr.ec.view{ i -> "$i" }
-    //err_corr.fqc.view{ i -> "$i" }
-    //err_corr.len.view{ i -> "$i" }
-    asm = assembly(err_corr.ec.map { pair_id, paired, unpaired -> tuple( pair_id, paired ) })
-    //asm.asm.view{ i -> "$i" }
-    asm.flt.view{ i -> "$i" }
-    //asm.len.view{ i -> "$i" }
-    //asm.sts.view{ i -> "$i" }
-    //asm.blstdb.view{ i -> "$i" }
-    //out = pool_contigs(asm.flt)
+  reads = channel.fromFilePairs(params.test_bacteriome_pipeline_reads, checkIfExists: true)
+  out = bacteriome_pipeline(reads)
 }

@@ -145,7 +145,7 @@ workflow pool_contigs {
 
     // removing redundancy
     if ( params.pool_contigs_clustering_process == "mmseqs2" ) {
-        merged_db = mmseqs2_makerefdb(merged)
+        merged_db = mmseqs2_makerefdb( merged.map{ id, fasta, list -> tuple(id, fasta ) } )
         clust = mmseqs2_cluster(merged_db)
     } else {
         clust = cdhit_est( merged.map{ id, fasta, list -> tuple(id, fasta ) } )

@@ -34,6 +34,7 @@ do
     nextflow run ${nfDir}/lv2/assembly.nf ${args} \
              -with-report report_${test}_${i}.html \
              -with-trace trace_${test}_${i}.txt \
+             --test_assembly_l_thre 5000 \
              --test_assembly_reads "${inPairs}"
 
     rm -rf nfwork/*

@@ -10,18 +10,20 @@ process filter_and_rename {
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     input:
-        tuple val(id), path(read, arity: '1')
+        tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
-        tuple val(id), path("${id}/contig.*.fa", arity:"3"), path("${id}/contig.name.txt")
+        tuple val(id), path("${id}/contig.${l_thre}.fa", arity: '0..*'), path("${id}/contig.name.txt")
     script:
         """
         mkdir -p ${id}
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-             --min 1000 --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.1000.fa
-        python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-             --min 5000 ${id}/contig.1000.fa > ${id}/contig.5000.fa
-        python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-             --min 10000 ${id}/contig.1000.fa > ${id}/contig.10000.fa
+             --min ${l_thre} --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.${l_thre}.fa
+        #python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
+        #     --min 1000 --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.1000.fa
+        #python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
+        #     --min 5000 ${id}/contig.1000.fa > ${id}/contig.5000.fa
+        #python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
+        #     --min 10000 ${id}/contig.1000.fa > ${id}/contig.10000.fa
         """
 }
 
@@ -77,23 +79,26 @@ process get_stats {
 workflow assembly {
   take:
     reads
+    l_thre
   main:
     asm = spades_assembler(reads)
-    flt = filter_and_rename(
-              asm.map { id, scaffolds, contigs ->
-                            tuple( id, 0 < scaffolds.size() ? scaffolds : contigs)
-                      }
-          )
+    asm = asm.map{ id, scaffolds, contigs ->
+        tuple( id, 0 < scaffolds.size() ? scaffolds : contigs, l_thre)
+    }
+
+    flt = filter_and_rename(asm)
     flt = flt.flatMap { id, contigs, name ->
-        contigs.collect{ contig ->
-	    if (contig.size() != 0) {
-              return [contig.getBaseName(), contig]
+        contigs.collect { c ->
+	    if (c.size() != 0) {
+              return [c.getBaseName(), c]
 	    }
         }.findAll{ it != null }
     }
+
     len = get_length(flt)
     sts = get_stats(len)
     blstdb = blast_makerefdb(flt)
+
   emit:
     asm
     flt
@@ -104,7 +109,7 @@ workflow assembly {
 
 workflow {
     reads = channel.fromFilePairs(params.test_assembly_reads, checkIfExists: true)
-    out = assembly(reads)
+    out = assembly(reads, params.test_assembly_l_thre)
     out.asm.view{ i -> "$i" }
     out.flt.view{ i -> "$i" }
     out.len.view{ i -> "$i" }
