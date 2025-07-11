@@ -9,10 +9,9 @@ include { pool_contigs } from "${params.petagenomeDir}/nf/lv2/pool_contigs"
 workflow bacteriome_pipeline {
   take:
     reads
+    l_thre
 
   main:
-    def l_thre = 0
-
     fp = fastp(reads)
     ec = error_correction(fp)
     as = assembly(ec.ec.map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }, l_thre)
@@ -68,5 +67,5 @@ workflow {
     ch -> reads = reads.mix(ch)
   }
 
-  out = bacteriome_pipeline(reads)
+  out = bacteriome_pipeline(reads, 0)
 }
