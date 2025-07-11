@@ -20,7 +20,6 @@ workflow bacteriome_pipeline {
 
     if (true) {
         flt_collected = as.flt.collect(flat: false, sort: true)
-        flt_collected.view { i -> "NNN $i" }
         flt_all = flt_collected.map { list_of_tuples ->
             def first_key = list_of_tuples[0][0] // リストの最初のタプルの最初の要素を結果のキーにする
             def all_contigs = []
@@ -30,7 +29,7 @@ workflow bacteriome_pipeline {
             [first_key, all_contigs]
         }
     } else {
-        //flt_all = as.flt.groupTuple()
+        flt_all = as.flt.groupTuple()
     }
 
     pc = pool_contigs(flt_all, l_thre)
@@ -67,5 +66,5 @@ workflow {
     ch -> reads = reads.mix(ch)
   }
 
-  out = bacteriome_pipeline(reads, 0)
+  out = bacteriome_pipeline(reads, params.test_bacteriome_pipeline_lthre)
 }
