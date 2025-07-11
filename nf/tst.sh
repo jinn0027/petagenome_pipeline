@@ -18,7 +18,8 @@ nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
 #dataDir=
 dataDir="${PETAGENOME_PIPELINE_DIR}/modules/test"
 
-inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+inPairs="/scratch/local/data/metagenome/ERR1620255_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+#inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
 #inPairs="${PETAGENOME_PIPELINE_DIR}/modules/test/ecoli_1K_{1,2}.fq.gz"
 
 outDir=out_bacteriome_pipeline
