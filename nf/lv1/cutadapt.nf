@@ -1,6 +1,9 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.cutadapt_cutadapt_memory = params.memory
+params.cutadapt_cutadapt_threads = params.threads
+
 params.cutadapt_fwd = "AATGATACGGCGACCACCGAGAUCTACAC"
 params.cutadapt_rev = "CAAGCAGAAGACGGCATACGAGAT"
 params.cutadapt_minimum_length = 50
@@ -9,6 +12,9 @@ process cutadapt {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/cutadapt/cutadapt.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory params.cutadapt_cutadapt_memory
+    cpus params.cutadapt_cutadapt_threads
+
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

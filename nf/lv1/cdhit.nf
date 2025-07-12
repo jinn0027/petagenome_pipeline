@@ -2,7 +2,7 @@
 nextflow.enable.dsl=2
 
 params.cdhit_cdhit_est_memory = params.memory
-params.cdhit_cdhit_est_threads_threads = params.threads
+params.cdhit_cdhit_est_threads = params.threads
 
 params.cdhit_identity_threshold = 0.95
 params.cdhit_global_sequence_identity = 1
@@ -15,7 +15,7 @@ process cdhit_est {
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory params.cdhit_cdhit_est_memory
-    cpus params.cdhit_cdhit_est_threads_threads
+    cpus params.cdhit_cdhit_est_threads
 
     input:
         tuple val(id), path(read, arity: '1')
@@ -25,8 +25,8 @@ process cdhit_est {
         """
         mkdir -p ${id}
         cd-hit-est \\
-            -M "${params.memory}000" \\
-            -T ${params.threads} \\
+            -M "${params.cdhit_cdhit_est_memory}000" \\
+            -T ${params.cdhit_cdhit_est_threads} \\
             -c ${params.cdhit_identity_threshold} \\
             -G ${params.cdhit_global_sequence_identity} \\
             -d ${params.cdhit_description_length} \\
