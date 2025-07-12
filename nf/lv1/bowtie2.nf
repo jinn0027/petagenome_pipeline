@@ -11,8 +11,8 @@ process bowtie2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory params.bowtie2_bowtie2_makerefdb_memory
-    cpus params.bowtie2_bowtie2_makerefdb_threads
+    memory "${params.bowtie2_bowtie2_makerefdb_memory} GB"
+    cpus "${params.bowtie2_bowtie2_makerefdb_threads}"
 
     input:
         tuple val(ref_id), path(ref, arity: '1')
@@ -33,9 +33,8 @@ process bowtie2 {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
-
-    memory params.bowtie2_bowtie2_memory
-    cpus params.bowtie2_bowtie2_threads
+    memory "${params.bowtie2_bowtie2_memory} GB"
+    cpus "${params.bowtie2_bowtie2_threads}"
 
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')

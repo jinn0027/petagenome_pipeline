@@ -55,6 +55,8 @@ test=${1:-"main"}
 #test=${1:-"pool_contigs"}
 #test=${1:-"circular_contigs"}
 
+nextflow clean -f
+
 test=${test%.*}
 
 case ${test} in

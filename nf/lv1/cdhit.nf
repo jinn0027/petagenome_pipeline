@@ -14,8 +14,8 @@ process cdhit_est {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory params.cdhit_cdhit_est_memory
-    cpus params.cdhit_cdhit_est_threads
+    memory "${params.cdhit_cdhit_est_memory} GB"
+    cpus "${params.cdhit_cdhit_est_threads}"
 
     input:
         tuple val(id), path(read, arity: '1')

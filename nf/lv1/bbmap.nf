@@ -15,8 +15,8 @@ process bbmap_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory params.bbmap_bbmap_makerefdb_memory
-    cpus params.bbmap_bbmap_makerefdb_threads
+    memory "${params.bbmap_bbmap_makerefdb_memory} GB"
+    cpus "${params.bbmap_bbmap_makerefdb_threads}"
 
     input:
         tuple val(ref_id), path(ref, arity: '1')
@@ -36,8 +36,8 @@ process bbmap {
     tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
-    memory params.bbmap_bbmap_memory
-    cpus params.bbmap_bbmap_threads
+    memory "${params.bbmap_bbmap_memory} GB"
+    cpus "${params.bbmap_bbmap_threads}"
 
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(pair_id), path(reads, arity: '2')
