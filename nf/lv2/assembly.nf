@@ -1,6 +1,15 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.assembly_filter_and_rename_memory = params.memory
+params.assembly_filter_and_rename_threads = params.threads
+
+params.assembly_get_length_memory = params.memory
+params.assembly_get_length_threads = params.threads
+
+params.assembly_get_stats_memory = params.memory
+params.assembly_get_stats_threads = params.threads
+
 include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
@@ -9,6 +18,9 @@ process filter_and_rename {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.assembly_filter_and_rename_memory} GB"
+    cpus "${params.assembly_filter_and_rename_threads}"
+
     input:
         tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
@@ -32,6 +44,9 @@ process get_length {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.assembly_get_length_memory} GB"
+    cpus "${params.assembly_get_length_threads}"
+
     input:
         tuple val(id), path(reads, arity: '0..*')
     output:
@@ -54,6 +69,9 @@ process get_stats {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.assembly_get_stats_memory} GB"
+    cpus "${params.assembly_get_stats_threads}"
+
     input:
         tuple val(id), path(lengths, arity: '1..*')
     output:

@@ -1,6 +1,9 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.error_correction_error_correction_memory = params.memory
+params.error_correction_error_correction_threads = params.threads
+
 include { spades_error_correction } from "${params.petagenomeDir}/nf/lv1/spades"
 include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
 
@@ -9,6 +12,9 @@ process get_length {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.error_correction_error_correction_memory} GB"
+    cpus "${params.error_correction_error_correction_threads}"
+
     input:
         tuple val(id), path(reads, arity: '1..*')
     output:

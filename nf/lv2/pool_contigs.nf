@@ -1,6 +1,21 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.pool_contigs_mergs_contigs_memory = params.memory
+params.pool_contigs_mergs_contigs_threads = params.threads
+
+params.pool_contigs_filter_and_rename_memory = params.memory
+params.pool_contigs_filter_and_rename_threads = params.threads
+
+params.pool_contigs_summarize_name_memory = params.memory
+params.pool_contigs_summarize_name_threads = params.threads
+
+params.pool_contigs_get_length_memory = params.memory
+params.pool_contigs_get_length_threads = params.threads
+
+params.pool_contigs_get_stats_memory = params.memory
+params.pool_contigs_get_stats_threads = params.threads
+
 include { cdhit_est } from "${params.petagenomeDir}/nf/lv1/cdhit"
 include { mmseqs2_makerefdb; mmseqs2_cluster } from "${params.petagenomeDir}/nf/lv1/mmseqs2"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
@@ -13,6 +28,9 @@ process merge_contigs {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.pool_contigs_mergs_contigs_memory} GB"
+    cpus "${params.pool_contigs_mergs_contigs_threads}"
+
     input:
         tuple val(id), path(contigs, arity: '1..*', stageAs: "?/*")
     output:
@@ -42,6 +60,9 @@ process filter_and_rename {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.pool_contigs_filter_and_rename_memory} GB"
+    cpus "${params.pool_contigs_filter_and_rename_threads}"
+
     input:
         tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
@@ -59,6 +80,9 @@ process summarize_name {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.pool_contigs_summarize_name_memory} GB"
+    cpus "${params.pool_contigs_summarize_name_threads}"
+
     input:
         tuple val(id), path(name, arity: '1')
         tuple val(id), path(clstr, arity: '1')
@@ -91,6 +115,9 @@ process get_length {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.pool_contigs_get_length_memory} GB"
+    cpus "${params.pool_contigs_get_length_threads}"
+
     input:
         tuple val(id), path(reads, arity: '1..*')
     output:
@@ -113,6 +140,9 @@ process get_stats {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.pool_contigs_get_stats_memory} GB"
+    cpus "${params.pool_contigs_get_stats_threads}"
+
     input:
         tuple val(id), path(lengths, arity: '1..*')
     output:

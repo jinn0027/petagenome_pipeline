@@ -76,14 +76,14 @@ case ${test} in
         nextflow run ${nfDir}/lv2/assembly.nf ${args} \
                  -with-report report_${test}.html \
                  -with-trace trace_${test}.txt \
-                 --test_assembly_l_thre 5000 \
+                 --test_assembly_l_thre 10 \
                  --test_assembly_reads "${longFnqGzPair}"
         ;;
     "pool_contigs")
         nextflow run ${nfDir}/lv2/pool_contigs.nf ${args} \
                  -with-report report_${test}.html \
                  -with-trace trace_${test}.txt \
-                 --test_pool_contigs_l_thre 1000 \
+                 --test_pool_contigs_l_thre 10 \
                  --test_pool_contigs_contigs "${longFnaPair}"
         ;;
     "circular_contigs")

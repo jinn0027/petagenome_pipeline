@@ -1,6 +1,9 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.circular_contigs_explore_circular_contigs_memory = params.memory
+params.circular_contigs_explore_circular_contigs_threads = params.threads
+
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
 //# E-value cutoff for circular formation
@@ -28,6 +31,8 @@ process explore_circular_contigs {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
+    memory "${params.circular_contigs_explore_circular_contigs_memory} GB"
+    cpus "${params.circular_contigs_explore_circular_contigs_threads}"
 
     def 
 
