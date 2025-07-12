@@ -1,6 +1,9 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.bowtie2_bowtie2_makerefdb_threads = params.threads
+params.bowtie2_bowtie2_threads = params.threads
+
 process bowtie2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
@@ -13,7 +16,7 @@ process bowtie2_makerefdb {
         """
         mkdir -p ${ref_id}
         bowtie2-build \\
-            --threads ${params.threads} \\
+            --threads ${params.bowtie2_bowtie2_makerefdb_threads} \\
             --seed ${params.random_seed} \\
             ${ref} \\
             ${ref_id}/ref
@@ -32,7 +35,7 @@ process bowtie2 {
         """
         mkdir -p ${qry_id}
         bowtie2 \\
-            -p ${params.threads} \\
+            -p ${params.bowtie2_bowtie2_threads} \\
             --seed ${params.random_seed} \\
             -f \\
             -x ${ref_db}/ref \\

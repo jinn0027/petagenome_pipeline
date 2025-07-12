@@ -6,7 +6,7 @@ export TMPDIR=$(pwd)/tmp
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
-threads=$(nproc)
+threads=1 #$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
 memory=512
@@ -22,9 +22,9 @@ dataDir="${PETAGENOME_PIPELINE_DIR}/modules/test"
 
 #inPairs="/scratch/local/data/metagenome/ERR1620255_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
 #inPairs="${PETAGENOME_PIPELINE_DIR}/modules/test/ecoli_1K_{1,2}.fq.gz"
-inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+#inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
 
-#inPairs="${PETAGENOME_PIPELINE_DIR}/modules/test/ecoli_1K_{1,2}.fq.gz:${PETAGENOME_PIPELINE_DIR}/modules/test/s_6_{1,2}.fastq.gz"
+inPairs="${PETAGENOME_PIPELINE_DIR}/modules/test/ecoli_1K_{1,2}.fq.gz:${PETAGENOME_PIPELINE_DIR}/modules/test/s_6_{1,2}.fastq.gz"
 #inPairs="${PETAGENOME_PIPELINE_DIR}/modules/test/ecoli_1K_{1,2}.fq.gz:${PETAGENOME_PIPELINE_DIR}/modules/test/s_6_{1,2}.fastq.gz:${PETAGENOME_PIPELINE_DIR}/modules/test/ecoli_1K_{1,2}.fq.gz"
 
 outDir=out_bacteriome_pipeline
@@ -41,6 +41,7 @@ args="\
 
 nextflow clean -f
 nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf ${args} \
+         --spades_error_correction_threads 16 \
          -with-report report_${test}.html \
          -with-trace trace_${test}.txt \
          --test_bacteriome_pipeline_lthre "${lthre}" \

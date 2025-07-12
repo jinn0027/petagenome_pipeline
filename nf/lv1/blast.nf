@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.blast_blastn_threads = params.threads
+
 params.blast_dbtype = "nucl"
 params.blast_task = "megablast"
 params.blast_num_alignments = "1"
@@ -46,7 +48,7 @@ process blastn {
         mkdir -p ${qry_id}
         blastn \\
             -task ${params.blast_task} \\
-            -num_threads ${params.threads} \\
+            -num_threads ${params.blast_blastn_threads} \\
             -query ${qry} \\
             -db ${ref_db}/ref \\
             -perc_identity ${params.blast_perc_identity} \\

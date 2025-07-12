@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.bwa_bwa_mem_threads = params.threads
+
 process bwa_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
@@ -32,7 +34,7 @@ process bwa_mem {
         mkdir -p ${qry_id}
         bwa \\
             mem \\
-            -t ${params.threads} \\
+            -t ${params.bwa_bwa_mem_threads} \\
             ${ref_db}/ref \\
             ${qry} \\
             > ${qry_id}/out.sam

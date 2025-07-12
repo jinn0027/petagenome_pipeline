@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.spades_error_correction_threads = params.threads
+params.spades_error_correction_memory = params.memory
 params.test_spades_e2e = false
 
 process spades_error_correction {
@@ -17,8 +19,8 @@ process spades_error_correction {
         """
         mkdir ${pair_id}
         spades.py \\
-            --threads ${params.threads} \\
-            --memory ${params.memory} \\
+            --threads ${params.spades_error_correction_threads} \\
+            --memory ${params.spades_error_correction_memory} \\
             --only-error-correction \\
             --disable-gzip-output \\
             --pe1-1 ${reads[0]} \\
