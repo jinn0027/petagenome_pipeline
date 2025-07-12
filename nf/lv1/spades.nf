@@ -1,6 +1,18 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.spades_spades_error_correction_memory = params.memory
+params.spades_spades_error_correction_threads = params.threads
+
+params.spades_spades_error_correction_gzip_output_memory = params.memory
+params.spades_spades_error_correction_gzip_output_threads = params.threads
+
+params.spades_spades_assembler_memory = params.memory
+params.spades_spades_assembler_threads = params.threads
+
+params.spades_spades_e2e_memory = params.memory
+params.spades_spades_e2e_threads = params.threads
+
 params.spades_error_correction_threads = params.threads
 params.spades_error_correction_memory = params.memory
 params.test_spades_e2e = false
@@ -9,6 +21,9 @@ process spades_error_correction {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.spades_spades_error_correction_memory} GB"
+    cpus "${params.spades_spades_error_correction_threads}"
+
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -19,8 +34,8 @@ process spades_error_correction {
         """
         mkdir ${pair_id}
         spades.py \\
-            --threads ${params.spades_error_correction_threads} \\
             --memory ${params.spades_error_correction_memory} \\
+            --threads ${params.spades_error_correction_threads} \\
             --only-error-correction \\
             --disable-gzip-output \\
             --pe1-1 ${reads[0]} \\
@@ -36,6 +51,9 @@ process spades_error_correction_gzip_output {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.spades_spades_error_correction_gzip_output_memory} GB"
+    cpus "${params.spades_spades_error_correction_gzip_output_threads}"
+
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -46,8 +64,8 @@ process spades_error_correction_gzip_output {
         """
         mkdir ${pair_id}
         spades.py \\
-            --threads ${params.threads} \\
-            --memory ${params.memory} \\
+            --memory ${params.spades_spades_error_correction_gzip_output_memory} \\
+            --threads ${params.spades_spades_error_correction_gzip_output_threads} \\
             --only-error-correction \\
             --pe1-1 ${reads[0]} \\
             --pe1-2 ${reads[1]} \\
@@ -62,6 +80,9 @@ process spades_assembler {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.spades_spades_assembler_memory} GB"
+    cpus "${params.spades_spades_assembler_threads}"
+
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -72,8 +93,8 @@ process spades_assembler {
         """
         mkdir -p ${pair_id}
         spades.py \\
-            --threads ${params.threads} \\
-            --memory ${params.memory} \\
+            --memory ${params.spades_spades_assembler_memory} \\
+            --threads ${params.spades_spades_assembler_threads} \\
             --only-assembler \\
             --meta \\
             --pe1-1 ${reads[0]} \\
