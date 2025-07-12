@@ -1,6 +1,18 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.mmseqs2_mmseqs2_makerefdb_memory = params.memory
+params.mmseqs2_mmseqs2_makerefdb_threads = params.threads
+
+params.mmseqs2_mmseqs2_makeqrydb_memory = params.memory
+params.mmseqs2_mmseqs2_makeqrydb_threads = params.threads
+
+params.mmseqs2_mmseqs2_cluster_memory = params.memory
+params.mmseqs2_mmseqs2_cluster_threads = params.threads
+
+params.mmseqs2_mmseqs2_search_memory = params.memory
+params.mmseqs2_mmseqs2_search_threads = params.threads
+
 params.mmseqs2_ref_type = "0" //Database type 0: auto, 1: amino acid 2: nucleotides [0]
 params.mmseqs2_qry_type = "0" //Database type 0: auto, 1: amino acid 2: nucleotides [0]
 params.mmseqs2_search_type = "0" // Search type 0: auto 1: amino acid, 2: translated, 3: nucleotide, 4: translated nucleotide alignment [0]
@@ -10,6 +22,9 @@ process mmseqs2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.mmseqs2_mmseqs2_makerefdb_memory} GB"
+    cpus "${params.mmseqs2_mmseqs2_makerefdb_threads}"
+
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -28,6 +43,9 @@ process mmseqs2_makeqrydb {
     tag "${qry_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.mmseqs2_mmseqs2_makeqrydb_memory} GB"
+    cpus "${params.mmseqs2_mmseqs2_makeqrydb_threads}"
+
     input:
         tuple val(qry_id), path(qry, arity: '1')
     output:
@@ -46,6 +64,9 @@ process mmseqs2_cluster {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.mmseqs2_mmseqs2_cluster_memory} GB"
+    cpus "${params.mmseqs2_mmseqs2_cluster_threads}"
+
     input:
         tuple val(ref_id), path(ref_db)
     output:
@@ -54,7 +75,7 @@ process mmseqs2_cluster {
         """
         mkdir -p ${ref_id} tmp
         mmseqs ${params.mmseqs2_cluster_mode} \\
-            --threads ${params.threads} \\
+            --threads ${params.mmseqs2_mmseqs2_cluster_threads} \\
             ${ref_db}/ref \\
             ${ref_id}/clu \\
             tmp
@@ -82,6 +103,9 @@ process mmseqs2_search {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    memory "${params.mmseqs2_mmseqs2_search_memory} GB"
+    cpus "${params.mmseqs2_mmseqs2_search_threads}"
+
     input:
         tuple val(ref_id), path(ref_db), val(qry_id), path(qry_db)
     output:
@@ -90,7 +114,7 @@ process mmseqs2_search {
         """
         mkdir -p ${qry_id} tmp
         mmseqs search \\
-            --threads ${params.threads} \\
+            --threads ${params.mmseqs2_mmseqs2_search_threads} \\
             --search-type ${params.mmseqs2_search_type} \\
             ${qry_db}/qry \\
             ${ref_db}/ref \\
