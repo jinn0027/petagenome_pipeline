@@ -1,6 +1,9 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.virsorter_virsorter_memory = params.memory
+params.virsorter_virsorter_threads = params.threads
+
 params.virsorter_db_type = "refseq"
 //params.virsorter_db = "virome"
 params.virsorter_aligner = "blast"
@@ -13,6 +16,9 @@ process virsorter {
     container = "${params.petagenomeDir}/modules/virsorter/virsorter.sif"
     containerOptions "-B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.virsorter_virsorter_memory} GB"
+    cpus "${params.virsorter_virsorter_threads}"
+
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
@@ -35,7 +41,7 @@ process virsorter {
             --db \${db_type} \\
             --wdir ${params.virsorter_aligner}/${read_id} \\
             --data-dir ${local_db} \\
-            --ncpu ${params.cpus} \\
+            --ncpu ${params.virsorter_virsorter_threads} \\
             --fna \${read_}"
         if [ "${params.virsorter_aligner}" = "diamond" ] ; then
             args+=" --diamond"

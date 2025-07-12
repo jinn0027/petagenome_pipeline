@@ -1,6 +1,9 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.metaphlan_metaphlan_memory = params.memory
+params.metaphlan_metaphlan_threads = params.threads
+
 params.metaphlan_input_type = "fastq"
 //fastq,fasta,bowtie2out,sam
 params.metaphlan_db = "/dev/shm/petagenome_pipeline/external/metaphlan_db"
@@ -11,6 +14,9 @@ process metaphlan {
     container = "${params.petagenomeDir}/modules/metaphlan/metaphlan.sif"
     containerOptions "-B ${params.metaphlan_db}:${local_db} -B /tmp:/home"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.metaphlan_metaphlan_memory} GB"
+    cpus "${params.metaphlan_metaphlan_threads}"
+
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
@@ -21,7 +27,7 @@ process metaphlan {
         """
         mkdir -p ${read_id}
         metaphlan \\
-            --nproc ${params.threads} \\
+            --nproc ${params.metaphlan_metaphlan_threads} \\
             --bowtie2db ${local_db} \\
             --input_type ${params.metaphlan_input_type} \\
             --bowtie2out ${read_id}/out.sam \\
