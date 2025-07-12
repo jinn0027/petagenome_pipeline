@@ -1,6 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.blast_blast_makerefdb__memory = params.memory
+params.blast_blast_makerefdb_threads = params.threads
+
+params.blast_blastn_memory = params.memory
 params.blast_blastn_threads = params.threads
 
 params.blast_dbtype = "nucl"
@@ -14,6 +18,9 @@ process blast_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory params.blast_blast_makerefdb__memory
+    cpus params.blast_blast_makerefdb_threads
+
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -39,6 +46,9 @@ process blastn {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    memory params.blast_blastn_memory
+    cpus params.blast_blastn_threads
+
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:

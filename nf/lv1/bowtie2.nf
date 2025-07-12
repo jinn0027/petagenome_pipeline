@@ -1,13 +1,19 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.bowtie2_bowtie2_makerefdb_memory = params.memory
 params.bowtie2_bowtie2_makerefdb_threads = params.threads
+
+params.bowtie2_bowtie2_memory = params.memory
 params.bowtie2_bowtie2_threads = params.threads
 
 process bowtie2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory params.bowtie2_bowtie2_makerefdb_memory
+    cpus params.bowtie2_bowtie2_makerefdb_threads
+
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -27,6 +33,10 @@ process bowtie2 {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+
+    memory params.bowtie2_bowtie2_memory
+    cpus params.bowtie2_bowtie2_threads
+
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
