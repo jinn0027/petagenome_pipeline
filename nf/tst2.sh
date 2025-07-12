@@ -40,8 +40,8 @@ args="\
     "
 
 args+="\
-    --spades_spades_error_correction_memory 80 \
-    --spades_spades_error_correction_threads 50 \
+    --spades_spades_error_correction_memory 100 \
+    --spades_spades_error_correction_threads 80 \
     --spades_spades_assembler_memory 100 \
     --spades_spades_assembler_threads 80 \
     --mmseqs2_mmseqs2_cluster_memory 20 \
@@ -50,7 +50,6 @@ args+="\
 
 nextflow clean -f
 nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf ${args} \
-         --spades_error_correction_threads 16 \
          -with-report report_${test}.html \
          -with-trace trace_${test}.txt \
          --test_bacteriome_pipeline_lthre "${lthre}" \

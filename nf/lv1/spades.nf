@@ -117,8 +117,8 @@ process spades_e2e {
         """
         mkdir -p ${pair_id}
         spades.py \\
-            --threads ${params.threads} \\
-            --memory ${params.memory} \\
+            --memory ${params.spades_spades_e2e_memory} \\
+            --threads ${params.spades_spades_e2e_threads} \\
             --meta \\
             --pe1-1 ${reads[0]} \\
             --pe1-2 ${reads[1]} \\

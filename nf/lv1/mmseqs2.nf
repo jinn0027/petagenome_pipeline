@@ -80,13 +80,13 @@ process mmseqs2_cluster {
             ${ref_id}/clu \\
             tmp
         mmseqs createtsv \\
-            --threads ${params.threads} \\
+            --threads ${params.mmseqs2_mmseqs2_cluster_threads} \\
             ${ref_db}/ref \\
             ${ref_db}/ref \\
             ${ref_id}/clu \\
             ${ref_id}/out.tsv
         mmseqs result2repseq \\
-            --threads ${params.threads} \\
+            --threads ${params.mmseqs2_mmseqs2_cluster_threads} \\
             ${ref_db}/ref \\
             ${ref_id}/clu \\
             ${ref_id}/clu_rep
