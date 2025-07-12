@@ -1,10 +1,16 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.falco_falco_memory = params.memory
+params.falco_falco_threads = params.threads
+
 process falco {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/falco/falco.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    memory "${params.falco_falco_memory} GB"
+    cpus "${params.falco_falco_threads}"
+
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -13,7 +19,7 @@ process falco {
         """
         mkdir -p ${pair_id}
         falco \\
-            -t ${params.threads} \\
+            -t ${params.falco_falco_threads} \\
             -o ${pair_id} \\
             ${reads[0]} \\
             ${reads[1]}

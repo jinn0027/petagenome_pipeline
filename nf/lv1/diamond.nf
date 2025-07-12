@@ -30,7 +30,7 @@ process diamond_makerefdb {
         mkdir -p ${ref_id}
         diamond \\
             makedb \\
-            --threads ${params.threads} \\
+            --threads ${params.diamond_diamond_makerefdb_threads} \\
             --in ${ref} \\
             -d ${ref_id}/ref
         """
@@ -52,6 +52,7 @@ process diamond_blastp {
         mkdir -p ${qry_id}
         diamond \\
             blastp \\
+            --threads ${params.diamond_diamond_blastp_threads} \\
             -q ${qry} \\
             -d ${ref_db}/ref \\
             -o ${qry_id}/out.tsv
