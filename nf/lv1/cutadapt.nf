@@ -12,8 +12,8 @@ process cutadapt {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/cutadapt/cutadapt.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory params.cutadapt_cutadapt_memory
-    cpus params.cutadapt_cutadapt_threads
+    memory "${params.cutadapt_cutadapt_memory} GB"
+    cpus "${params.cutadapt_cutadapt_threads}"
 
     input:
         tuple val(pair_id), path(reads, arity: '2')
