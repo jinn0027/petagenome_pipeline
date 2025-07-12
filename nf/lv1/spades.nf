@@ -34,8 +34,8 @@ process spades_error_correction {
         """
         mkdir ${pair_id}
         spades.py \\
-            --memory ${params.spades_error_correction_memory} \\
-            --threads ${params.spades_error_correction_threads} \\
+            --memory ${params.spades_spades_error_correction_memory} \\
+            --threads ${params.spades_spades_error_correction_threads} \\
             --only-error-correction \\
             --disable-gzip-output \\
             --pe1-1 ${reads[0]} \\
