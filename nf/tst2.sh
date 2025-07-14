@@ -6,12 +6,12 @@ export TMPDIR=$(pwd)/tmp
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
-threads=10 #$(nproc)
+threads=$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
-memory=10
+memory=512
 
-lthre=0
+lthre=5000
 
 test=bacteriome_pipeline
 
@@ -39,14 +39,14 @@ args="\
     --publish_output true \
     "
 
-args+="\
-    --spades_spades_error_correction_memory 80 \
-    --spades_spades_error_correction_threads 50 \
-    --spades_spades_assembler_memory 100 \
-    --spades_spades_assembler_threads 80 \
-    --mmseqs2_mmseqs2_cluster_memory 20 \
-    --mmseqs2_mmseqs2_cluster_threads 80 \
-    "
+#args+="\
+#    --spades_spades_error_correction_memory 80 \
+#    --spades_spades_error_correction_threads 50 \
+#    --spades_spades_assembler_memory 100 \
+#    --spades_spades_assembler_threads 80 \
+#    --mmseqs2_mmseqs2_cluster_memory 20 \
+#    --mmseqs2_mmseqs2_cluster_threads 80 \
+#    "
 
 nextflow clean -f
 nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf ${args} \
