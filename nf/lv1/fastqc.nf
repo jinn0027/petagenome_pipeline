@@ -17,6 +17,8 @@ process fastqc {
         tuple val(pair_id), path("${pair_id}")
     script:
         """
+        export XDG_CACHE_HOME=\$(pwd)/.cache
+        mkdir -p .cache
         mkdir -p ${pair_id}
         fastqc \\
             -t ${params.fastqc_fastqc_threads} \\
