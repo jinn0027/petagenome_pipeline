@@ -43,10 +43,11 @@ args="\
 
 nextflow clean -f
 nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf ${args} \
-         -with-report report_bacteriome_pipeline.${date}.html \
          -with-trace trace_bacteriome_pipeline.${date}.txt \
          --test_bacteriome_pipeline_lthre "${lthre}" \
          --test_bacteriome_pipeline_reads "${inPairs}"
+
+#         -with-report report_bacteriome_pipeline.${date}.html \
 
 #rm -rf nfwork/*
 
