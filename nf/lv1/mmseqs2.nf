@@ -126,7 +126,7 @@ process mmseqs2_cluster {
     script:
         """
         mkdir -p ${ref_id} tmp
-        if [ "${params.mmseqs2_cluster_mode}" = "cluster" ] ; then
+        if [ "${params.mmseqs2_cluster_mode}" == "cluster" ] ; then
             args="\\
                  -s ${params.mmseqs2_cluster_s} \\
                  -k ${params.mmseqs2_cluster_k} \\
