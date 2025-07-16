@@ -13,10 +13,62 @@ params.mmseqs2_mmseqs2_cluster_threads = params.threads
 params.mmseqs2_mmseqs2_search_memory = params.memory
 params.mmseqs2_mmseqs2_search_threads = params.threads
 
-params.mmseqs2_ref_type = "0" //Database type 0: auto, 1: amino acid 2: nucleotides [0]
-params.mmseqs2_qry_type = "0" //Database type 0: auto, 1: amino acid 2: nucleotides [0]
-params.mmseqs2_search_type = "0" // Search type 0: auto 1: amino acid, 2: translated, 3: nucleotide, 4: translated nucleotide alignment [0]
+params.mmseqs2_ref_type = 0 //Database type 0: auto, 1: amino acid 2: nucleotides [0]
+params.mmseqs2_qry_type = 0 //Database type 0: auto, 1: amino acid 2: nucleotides [0]
+
+//=== search params
+params.mmseqs2_search_type = 0 // Search type 0: auto 1: amino acid, 2: translated, 3: nucleotide, 4: translated nucleotide alignment [0]
+params.mmseqs2_search_s = 5.7 // Sensitivity: 1.0 faster; 4.0 fast; 7.5 sensitive [5.700]
+params.mmseqs2_search_k = 0 // k-mer length (0: automatically set to optimum) [0]
+params.mmseqs2_search_e = "1.000e-03"
+params.mmseqs2_search_c = 0.8 // List matches above this fraction of aligned (covered) residues (see --cov-mode) [0.800]
+params.mmseqs2_search_cov_mode = 0 // 0: coverage of query and target
+                                   // 1: coverage of target
+                                   // 2: coverage of query
+                                   // 3: target seq. length has to be at least x% of query length
+                                   // 4: query seq. length has to be at least x% of target length
+                                   // 5: short seq. needs to be at least x% of the other seq. length [0]
+params.mmseqs2_search_min_seq_id = 0.0 // List matches above this sequence identity (for clustering) (range 0.0-1.0) [0.000]
+params.mmseqs2_search_min_aln_len = 0 // Minimum alignment length (range 0-INT_MAX) [0]
+params.mmseqs2_search_split = 0 // Split input into N equally distributed chunks. 0: set the best split automatically [0]
+params.mmseqs2_search_split_mode = 2 // 0: split target db; 1: split query db; 2: auto, depending on main memory [2]
+params.mmseqs2_search_split_memory_limit = 0 // Set max memory per split. E.g. 800B, 5K, 10M, 1G. Default (0) to all available system memory [0]
+params.mmseqs2_search_max_seqs = 300 // Maximum results per query sequence allowed to pass the prefilter (affects sensitivity) [300]
+
+//=== cluster params
 params.mmseqs2_cluster_mode = "cluster" // cluster or linclust
+
+//=== cluster [cluster]
+params.mmseqs2_cluster_s = 4.0 // Sensitivity: 1.0 faster; 4.0 fast; 7.5 sensitive [4.000]
+params.mmseqs2_cluster_k = 0 // k-mer length (0: automatically set to optimum) [0]
+params.mmseqs2_cluster_e = "1.000e-03"
+params.mmseqs2_cluster_c = 0.8 // List matches above this fraction of aligned (covered) residues (see --cov-mode) [0.800]
+params.mmseqs2_cluster_cov_mode = 0 // 0: coverage of query and target
+                                    // 1: coverage of target
+                                    // 2: coverage of query
+                                    // 3: target seq. length has to be at least x% of query length
+                                    // 4: query seq. length has to be at least x% of target length
+                                    // 5: short seq. needs to be at least x% of the other seq. length [0]
+params.mmseqs2_cluster_min_seq_id = 0.0 // List matches above this sequence identity (for clustering) (range 0.0-1.0) [0.000]
+params.mmseqs2_cluster_min_aln_len = 0 // Minimum alignment length (range 0-INT_MAX) [0]
+params.mmseqs2_cluster_split = 0 // Split input into N equally distributed chunks. 0: set the best split automatically [0]
+params.mmseqs2_cluster_split_mode = 2 // 0: split target db; 1: split query db; 2: auto, depending on main memory [2]
+params.mmseqs2_cluster_split_memory_limit = 0 // Set max memory per split. E.g. 800B, 5K, 10M, 1G. Default (0) to all available system memory [0]
+params.mmseqs2_cluster_max_seqs = 20 // Maximum results per query sequence allowed to pass the prefilter (affects sensitivity) [20]
+
+//=== cluster [linclust]
+params.mmseqs2_linclust_k = 0 // k-mer length (0: automatically set to optimum) [0]
+params.mmseqs2_linclust_e = "1.000e-03"
+params.mmseqs2_linclust_c = 0.8 // List matches above this fraction of aligned (covered) residues (see --cov-mode) [0.800]
+params.mmseqs2_linclust_cov_mode = 0 // 0: coverage of query and target
+                                     // 1: coverage of target
+                                     // 2: coverage of query
+                                     // 3: target seq. length has to be at least x% of query length
+                                     // 4: query seq. length has to be at least x% of target length
+                                     // 5: short seq. needs to be at least x% of the other seq. length [0]
+params.mmseqs2_linclust_min_seq_id = 0.0 // List matches above this sequence identity (for clustering) (range 0.0-1.0) [0.900]
+params.mmseqs2_linclust_min_aln_len = 0 // Minimum alignment length (range 0-INT_MAX) [0]
+params.mmseqs2_linclust_split_memory_limit = 0 // Set max memory per split. E.g. 800B, 5K, 10M, 1G. Default (0) to all available system memory [0]
 
 process mmseqs2_makerefdb {
     tag "${ref_id}"
@@ -74,8 +126,34 @@ process mmseqs2_cluster {
     script:
         """
         mkdir -p ${ref_id} tmp
+        if [ "${params.mmseqs2_cluster_mode}" = "cluster" ] ; then
+            args="\\
+                 -s ${params.mmseqs2_cluster_s} \\
+                 -k ${params.mmseqs2_cluster_k} \\
+                 -e ${params.mmseqs2_cluster_e} \\
+                 -c ${params.mmseqs2_cluster_c} \\
+                 --cov-mode ${params.mmseqs2_cluster_cov_mode} \\
+                 --min-seq-id ${params.mmseqs2_cluster_min_seq_id} \\
+                 --min-aln-len ${params.mmseqs2_cluster_min_aln_len} \\
+                 --max-seqs ${params.mmseqs2_cluster_max_seqs} \\
+                 --split ${params.mmseqs2_cluster_split} \\
+                 --split-mode ${params.mmseqs2_cluster_split_mode} \\
+                 --split-memory-limit ${params.mmseqs2_cluster_split_memory_limit} \\
+                 "
+        else
+            args="\\
+                 -k ${params.mmseqs2_linclust_k} \\
+                 -e ${params.mmseqs2_linclust_e} \\
+                 -c ${params.mmseqs2_linclust_c} \\
+                 --cov-mode ${params.mmseqs2_linclust_cov_mode} \\
+                 --min-seq-id ${params.mmseqs2_linclust_min_seq_id} \\
+                 --min-aln-len ${params.mmseqs2_linclust_min_aln_len} \\
+                 --split-memory-limit ${params.mmseqs2_linclust_split_memory_limit} \\
+                 "
+        fi
         mmseqs ${params.mmseqs2_cluster_mode} \\
             --threads ${params.mmseqs2_mmseqs2_cluster_threads} \\
+            \${args} \\
             ${ref_db}/ref \\
             ${ref_id}/clu \\
             tmp
@@ -113,9 +191,23 @@ process mmseqs2_search {
     script:
         """
         mkdir -p ${qry_id} tmp
+        args="\\
+             --search-type ${params.mmseqs2_search_type} \\
+             -s ${params.mmseqs2_cluster_s} \\
+             -k ${params.mmseqs2_cluster_k} \\
+             -e ${params.mmseqs2_cluster_e} \\
+             -c ${params.mmseqs2_cluster_c} \\
+             --cov-mode ${params.mmseqs2_cluster_cov_mode} \\
+             --min-seq-id ${params.mmseqs2_cluster_min_seq_id} \\
+             --min-aln-len ${params.mmseqs2_cluster_min_aln_len} \\
+             --max-seqs ${params.mmseqs2_cluster_max_seqs} \\
+             --split ${params.mmseqs2_cluster_split} \\
+             --split-mode ${params.mmseqs2_cluster_split_mode} \\
+             --split-memory-limit ${params.mmseqs2_cluster_split_memory_limit} \\
+                 "
         mmseqs search \\
             --threads ${params.mmseqs2_mmseqs2_search_threads} \\
-            --search-type ${params.mmseqs2_search_type} \\
+            \${args} \\
             ${qry_db}/qry \\
             ${ref_db}/ref \\
             ${qry_id}/out \\

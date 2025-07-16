@@ -165,7 +165,7 @@ case ${test} in
         ;;
     "mmseqs2")
         nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
-                 --mmseqs2_cluster_mode linclust \
+                 --mmseqs2_cluster_mode cluster \
                  --test_mmseqs2_module cluster \
                  --test_mmseqs2_ref "${shortFnaX2Gz1}"
         nextflow run ${nfDir}/lv1/mmseqs2.nf ${args} \
