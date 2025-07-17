@@ -19,9 +19,9 @@ params.mmseqs2_qry_type = 0 //Database type 0: auto, 1: amino acid 2: nucleotide
 //=== search params
 params.mmseqs2_search_type = 0 // Search type 0: auto 1: amino acid, 2: translated, 3: nucleotide, 4: translated nucleotide alignment [0]
 params.mmseqs2_search_s = 5.7 // Sensitivity: 1.0 faster; 4.0 fast; 7.5 sensitive [5.700]
-params.mmseqs2_search_k = 0 // k-mer length (0: automatically set to optimum) [0]
+params.mmseqs2_search_k = 15 // k-mer length (0: automatically set to optimum) [0]->[15]?
 params.mmseqs2_search_e = "1.000e-03"
-params.mmseqs2_search_c = 0.8 // List matches above this fraction of aligned (covered) residues (see --cov-mode) [0.800]
+params.mmseqs2_search_c = 0.0 // List matches above this fraction of aligned (covered) residues (see --cov-mode) [0.800]->[0.0]?
 params.mmseqs2_search_cov_mode = 0 // 0: coverage of query and target
                                    // 1: coverage of target
                                    // 2: coverage of query
@@ -40,7 +40,7 @@ params.mmseqs2_cluster_mode = "cluster" // cluster or linclust
 
 //=== cluster [cluster]
 params.mmseqs2_cluster_s = 4.0 // Sensitivity: 1.0 faster; 4.0 fast; 7.5 sensitive [4.000]
-params.mmseqs2_cluster_k = 0 // k-mer length (0: automatically set to optimum) [0]
+params.mmseqs2_cluster_k = 15 // k-mer length (0: automatically set to optimum) [0]->[15]?
 params.mmseqs2_cluster_e = "1.000e-03"
 params.mmseqs2_cluster_c = 0.8 // List matches above this fraction of aligned (covered) residues (see --cov-mode) [0.800]
 params.mmseqs2_cluster_cov_mode = 0 // 0: coverage of query and target
