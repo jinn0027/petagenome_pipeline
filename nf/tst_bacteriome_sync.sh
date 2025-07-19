@@ -8,10 +8,10 @@ MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
 date=$(date +"%Y%m%d%H%M%S")
 
-threads=1 #$(nproc)
+threads=$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
-memory=10
+memory=512
 
 lthre=5000
 
@@ -30,16 +30,8 @@ args="\
     --publish_output true \
     "
 
-args+="\
-    --spades_spades_error_correction_memory 80 \
-    --spades_spades_error_correction_threads 30 \
-    --spades_spades_assembler_memory 100 \
-    --spades_spades_assembler_threads 30 \
-    --mmseqs2_mmseqs2_cluster_memory 100 \
-    --mmseqs2_mmseqs2_cluster_threads 100 \
-    "
-
 nextflow clean -f
+
 nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf ${args} \
          -with-report report_bacteriome_pipeline.${date}.html \
          -with-trace trace_bacteriome_pipeline.${date}.txt \
