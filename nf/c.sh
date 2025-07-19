@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rm -rf out* work tmp nfwork .nextflow.log* *~ report*.html trace*.txt
+rm -rf out* work tmp nfwork .nextflow.log* *~ report*.html timeline*.html trace*.txt dag*.png
 
 
 

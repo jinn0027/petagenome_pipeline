@@ -43,6 +43,8 @@ nextflow clean -f
 nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf ${args} \
          -with-report report_bacteriome_pipeline.${date}.html \
          -with-trace trace_bacteriome_pipeline.${date}.txt \
+         -with-timeline timeline_bacteriome_pipeline.${date}.html \
+         -with-dag dag_bacteriome_pipeline.${date}.png \
          --test_bacteriome_pipeline_lthre "${lthre}" \
          --test_bacteriome_pipeline_reads "${inPairs}"
 

@@ -64,6 +64,8 @@ case ${test} in
         nextflow run ${nfDir}/toys/main.nf ${args} \
                  -with-report report_${test}.html \
                  -with-trace trace_${test}.txt \
+                 -with-timeline timeline_${test}.html \
+                 -with-dag dag_${test}.png \
                  --test_main_reads "${longFnqGzPair}"
         ;;
     "error_correction")
