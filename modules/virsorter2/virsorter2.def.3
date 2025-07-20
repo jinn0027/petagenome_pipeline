@@ -10,6 +10,7 @@ From: ../common/gcc.sif
     ../../external/hmmer.tar.gz /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
         # install python libraries
         # (ref) https://github.com/jiarong/VirSorter2/tree/v2.2.4

@@ -7,6 +7,7 @@ From: ../common/gcc.sif
     ../../external/cdhit.tar.gz /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
         # install cdhit
         echo "############ cdhit ###############"

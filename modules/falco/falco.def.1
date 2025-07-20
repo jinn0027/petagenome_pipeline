@@ -8,6 +8,7 @@ From: ../common/gcc.sif
     ../../external/falco.tar.gz /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
         # install htslib
         # cf) https://kazumaxneo.hatenablog.com/entry/2024/05/10/024009

@@ -9,6 +9,7 @@ From: ../common/gcc.sif
     #../../external/mga_x86_64.tar.gz /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
         /opt/miniconda3/bin/mamba install -y -q \
             mcl=14.137 \

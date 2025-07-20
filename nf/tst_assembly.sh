@@ -1,5 +1,17 @@
 #!/bin/bash
 
+if [[ ! -v PETAGENOME_PIPELINE_DIR ]] ; then
+    echo "PETAGENOME_PIPELINE_DIR not defined"
+    echo "Please source <petagenome_dir>/etc/host_setup.sh"
+    exit 1
+fi
+if [ ! -d ${PETAGENOME_PIPELINE_DIR} ] ; then
+    echo "${PETAGENOME_PIPELINE_DIR} does not exist"
+    echo "Please source <petagenome_dir>/etc/host_setup.sh"
+    exit 1
+fi
+echo "PETAGENOME_PIPELINE_DIR : ${PETAGENOME_PIPELINE_DIR}"
+
 #export TMPDIR=/dev/shm/${USER}/tmp
 export TMPDIR=$(pwd)/tmp
 
@@ -34,6 +46,8 @@ do
     nextflow run ${nfDir}/lv2/assembly.nf ${args} \
              -with-report report_${test}_${i}.html \
              -with-trace trace_${test}_${i}.txt \
+             -with-timeline timeline_{test}_${i}.html \
+             -with-dag dag_${test}_${i}.png \
              --test_assembly_l_thre 5000 \
              --test_assembly_reads "${inPairs}"
 

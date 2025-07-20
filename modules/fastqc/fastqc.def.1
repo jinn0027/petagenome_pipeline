@@ -7,6 +7,7 @@ From: ../common/java.sif
     ../../external/fastqc_v0.12.1.zip /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
         # install fastqc
         echo "############ fastqc ###############"

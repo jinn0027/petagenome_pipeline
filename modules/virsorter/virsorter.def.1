@@ -13,6 +13,7 @@ From: ../common/gcc.sif
     ../../external/ncbi-blast-2.16.0+-x64-linux.tar.gz /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
         /opt/miniconda3/bin/mamba install -y -q \
             mcl=14.137 \

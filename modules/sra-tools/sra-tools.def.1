@@ -8,6 +8,7 @@ From: ../common/gcc.sif
     ../../external/sra-tools.tar.gz /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     dnf install -y \
         flex-2.* \
         bison-3.* \

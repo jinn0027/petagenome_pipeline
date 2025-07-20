@@ -2,5 +2,6 @@ Bootstrap: localimage
 From: ./el9.sif
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     dnf install -y \
         golang-1.*

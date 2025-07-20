@@ -1,5 +1,17 @@
 #!/bin/bash
 
+if [[ ! -v PETAGENOME_PIPELINE_DIR ]] ; then
+    echo "PETAGENOME_PIPELINE_DIR not defined"
+    echo "Please source <petagenome_dir>/etc/host_setup.sh"
+    exit 1
+fi
+if [ ! -d ${PETAGENOME_PIPELINE_DIR} ] ; then
+    echo "${PETAGENOME_PIPELINE_DIR} does not exist"
+    echo "Please source <petagenome_dir>/etc/host_setup.sh"
+    exit 1
+fi
+echo "PETAGENOME_PIPELINE_DIR : ${PETAGENOME_PIPELINE_DIR}"
+
 #export TMPDIR=/dev/shm/${USER}/tmp
 export TMPDIR=$(pwd)/tmp
 

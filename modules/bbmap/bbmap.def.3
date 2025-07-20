@@ -7,6 +7,7 @@ From: ../common/java.sif
     ../../external/BBMap_39.15.modified.tar.gz /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
         # install bbmap
         echo "############ bbmap ###############"

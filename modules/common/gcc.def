@@ -2,6 +2,7 @@ Bootstrap: localimage
 From: ./el9.sif
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     dnf install -y \
         gcc-c++-11.* \
         make-1:4.* \

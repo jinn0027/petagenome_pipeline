@@ -5,6 +5,7 @@ From: almalinux:9
     ../../external/Miniconda3-py39_24.9.2-0-Linux-x86_64.sh /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     dnf update -y
     dnf install -y epel-release
     dnf config-manager --set-enabled crb 
@@ -43,7 +44,10 @@ From: almalinux:9
             biopython=1.78
     popd
 
+    echo "alias ll=\"ls -l\"" >> /etc/bashrc
+    echo "alias dnf=\"LD_LIBRARY_PATH=/usr/local/lib dnf\"" >> /etc/bashrc
+
 %environment
     export LC_ALL=C
     export PATH=/opt/miniconda3/bin:$PATH
-    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/opt/miniconda3/lib:/usr/local/lib:$PATH

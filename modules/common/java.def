@@ -2,6 +2,7 @@ Bootstrap: localimage
 From: ./el9.sif
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     dnf install -y \
         ant-openjdk17-1.* \
         openmpi-java-2:4.*

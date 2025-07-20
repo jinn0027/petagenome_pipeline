@@ -6,6 +6,7 @@ From: ../common/el9.sif
 %files
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
         # install minimap2
         /opt/miniconda3/bin/conda install -y -q \

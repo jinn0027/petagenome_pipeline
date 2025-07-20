@@ -8,6 +8,7 @@ From: ../common/gcc.sif
     ../../external/bcftools.tar.gz /opt
 
 %post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
         # install htslib
         echo "############ htslib ###############"
