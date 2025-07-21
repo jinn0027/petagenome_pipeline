@@ -1,13 +1,13 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.bwa_bwa_makerefdb_memory = params.memory
 params.bwa_bwa_makerefdb_threads = params.threads
 
 params.bwa_bwa_mem_memory = params.memory
 params.bwa_bwa_mem_threads = params.threads
-
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 process bwa_makerefdb {
     tag "${ref_id}"

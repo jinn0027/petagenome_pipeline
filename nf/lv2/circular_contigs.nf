@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
+
 params.circular_contigs_explore_circular_contigs_memory = params.memory
 params.circular_contigs_explore_circular_contigs_threads = params.threads
-
-include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
 //# E-value cutoff for circular formation
 //e_thre = "1e-10"

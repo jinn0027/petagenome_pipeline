@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.falco_falco_memory = params.memory
 params.falco_falco_threads = params.threads
-
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 process falco {
     tag "${pair_id}"

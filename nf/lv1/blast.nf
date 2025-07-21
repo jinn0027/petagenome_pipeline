@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.blast_blast_makerefdb_memory = params.memory
 params.blast_blast_makerefdb_threads = params.threads
 
@@ -13,8 +15,6 @@ params.blast_num_alignments = "1"
 params.blast_perc_identity = "95"
 params.blast_evalue = "1e-20"
 params.blast_outfmt = 6
-
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 process blast_makerefdb {
     tag "${ref_id}"

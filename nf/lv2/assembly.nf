@@ -1,6 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades"
+include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
+
 params.assembly_filter_and_rename_memory = params.memory
 params.assembly_filter_and_rename_threads = params.threads
 
@@ -9,10 +13,6 @@ params.assembly_get_length_threads = params.threads
 
 params.assembly_get_stats_memory = params.memory
 params.assembly_get_stats_threads = params.threads
-
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
-include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades"
-include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
 process filter_and_rename {
     tag "${id}"

@@ -1,12 +1,12 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.error_correction_error_correction_memory = params.memory
-params.error_correction_error_correction_threads = params.threads
-
 include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { spades_error_correction } from "${params.petagenomeDir}/nf/lv1/spades"
 include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
+
+params.error_correction_error_correction_memory = params.memory
+params.error_correction_error_correction_threads = params.threads
 
 process get_length {
     tag "${id}"

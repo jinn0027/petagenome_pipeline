@@ -1,13 +1,13 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.fastp_fastp_memory = params.memory
 params.fastp_fastp_threads = params.threads
 
 params.fastp_cut_mean_quality = 15
 params.fastp_reads_minlength = 15
-
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 process fastp {
     tag "${pair_id}"

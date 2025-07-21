@@ -1,6 +1,11 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { cdhit_est } from "${params.petagenomeDir}/nf/lv1/cdhit"
+include { mmseqs2_makerefdb; mmseqs2_cluster } from "${params.petagenomeDir}/nf/lv1/mmseqs2"
+include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
+
 params.pool_contigs_mergs_contigs_memory = params.memory
 params.pool_contigs_mergs_contigs_threads = params.threads
 
@@ -15,11 +20,6 @@ params.pool_contigs_get_length_threads = params.threads
 
 params.pool_contigs_get_stats_memory = params.memory
 params.pool_contigs_get_stats_threads = params.threads
-
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
-include { cdhit_est } from "${params.petagenomeDir}/nf/lv1/cdhit"
-include { mmseqs2_makerefdb; mmseqs2_cluster } from "${params.petagenomeDir}/nf/lv1/mmseqs2"
-include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
 //params.pool_contigs_clustering_process = "cdhit"
 params.pool_contigs_clustering_process = "mmseqs2"

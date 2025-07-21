@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.megahit_megahit_memory = params.memory
 params.megahit_megahit_threads = params.threads
-
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 process megahit {
     tag "${pair_id}"

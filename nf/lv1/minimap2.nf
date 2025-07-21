@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.minimap2_minimap2_makerefdb_memory = params.memory
 params.minimap2_minimap2_makerefdb_threads = params.threads
 
@@ -15,8 +17,6 @@ params.minimap2_minid = 0.95
 params.minimap2_pairlen = 1500
 
 params.test_minimap2_e2e = false
-
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 process minimap2_makerefdb {
     tag "${ref_id}"

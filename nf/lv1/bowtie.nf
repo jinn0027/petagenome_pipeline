@@ -1,13 +1,13 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.bowtie_bowtie_makerefdb_memory = params.memory
 params.bowtie_bowtie_makerefdb_threads = params.threads
 
 params.bowtie_bowtie_memory = params.memory
 params.bowtie_bowtie_threads = params.threads
-
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 process bowtie_makerefdb {
     tag "${ref_id}"

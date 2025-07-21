@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.fastqc_fastqc_memory = params.memory
 params.fastqc_fastqc_threads = params.threads
-
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 process fastqc {
     tag "${pair_id}"
