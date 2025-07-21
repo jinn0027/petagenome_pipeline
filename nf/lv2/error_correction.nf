@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 params.error_correction_error_correction_memory = params.memory
 params.error_correction_error_correction_threads = params.threads
 
-include { createReadsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { spades_error_correction } from "${params.petagenomeDir}/nf/lv1/spades"
 include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
 
@@ -47,7 +47,7 @@ workflow error_correction {
 }
 
 workflow {
-    reads = createReadsChannel(params.test_error_correction_reads)
+    reads = createPairsChannel(params.test_error_correction_reads)
     out = error_correction(reads)
     out.ec.view{ i -> "$i" }
     out.fqc.view{ i -> "$i" }

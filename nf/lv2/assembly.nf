@@ -10,7 +10,7 @@ params.assembly_get_length_threads = params.threads
 params.assembly_get_stats_memory = params.memory
 params.assembly_get_stats_threads = params.threads
 
-include { createReadsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
@@ -127,7 +127,7 @@ workflow assembly {
 }
 
 workflow {
-    reads = createReadsChannel(params.test_assembly_reads)
+    reads = createPairsChannel(params.test_assembly_reads)
     out = assembly(reads, params.test_assembly_l_thre)
     out.asm.view{ i -> "$i" }
     out.flt.view{ i -> "$i" }

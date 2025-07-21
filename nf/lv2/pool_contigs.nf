@@ -16,7 +16,7 @@ params.pool_contigs_get_length_threads = params.threads
 params.pool_contigs_get_stats_memory = params.memory
 params.pool_contigs_get_stats_threads = params.threads
 
-include { createPathChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { cdhit_est } from "${params.petagenomeDir}/nf/lv1/cdhit"
 include { mmseqs2_makerefdb; mmseqs2_cluster } from "${params.petagenomeDir}/nf/lv1/mmseqs2"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
@@ -208,7 +208,7 @@ workflow pool_contigs {
 }
 
 workflow {
-    def contigs = createPathChannel(params.test_pool_contigs_contigs)
+    def contigs = createSeqsChannel(params.test_pool_contigs_contigs)
     contigs.view{ i -> "$i" }
     out = pool_contigs(contigs, params.test_pool_contigs_l_thre)
     //out.merged.view{ i -> "$i" }
