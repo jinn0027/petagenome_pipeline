@@ -53,18 +53,25 @@ workflow bacteriome_pipeline {
 }
 
 workflow {
-  def reads_list = params.test_bacteriome_pipeline_reads.split(':')
+    def reads_list = params.test_bacteriome_pipeline_reads.split(';')
 
-  def individual_channels = []
-  reads_list.each { reads ->
-    def ch = channel.fromFilePairs(reads, checkIfExists: true)
-    individual_channels << ch
-  }
+    def individual_channels = []
+    reads_list.each { reads ->
+        def ch = channel.fromFilePairs(reads, checkIfExists: true)
+        individual_channels << ch
+    }
 
-  def reads = individual_channels.first()
-  individual_channels.tail().each {
-    ch -> reads = reads.mix(ch)
-  }
+    def reads_mixed = individual_channels.first()
+    individual_channels.tail().each {
+        ch -> reads_mixed = reads_mixed.mix(ch)
+    }
 
-  out = bacteriome_pipeline(reads, params.test_bacteriome_pipeline_lthre)
+    index = 0
+    def reads = reads_mixed.map { id, pair ->
+        def new_id = "${String.format('%02d', index)}_${id}"
+        index += 1
+        return tuple(new_id, pair)
+    }
+
+    out = bacteriome_pipeline(reads, params.test_bacteriome_pipeline_lthre)
 }

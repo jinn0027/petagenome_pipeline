@@ -7,6 +7,8 @@ params.fastp_fastp_threads = params.threads
 params.fastp_cut_mean_quality = 15
 params.fastp_reads_minlength = 15
 
+include { createReadsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process fastp {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastp/fastp.sif"
@@ -36,7 +38,7 @@ process fastp {
 }
 
 workflow {
-    reads = channel.fromFilePairs(params.test_fastp_reads, checkIfExists: true)
+    reads = createReadsChannel(params.test_fastp_reads)
     out = fastp(reads)
     out.view { i -> "$i" }
 }

@@ -60,9 +60,31 @@ process bbmap {
 }
 
 workflow {
-    ref = channel.fromPath(params.test_bbmap_ref, checkIfExists: true)
-        .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
+    def ref_list = params.test_bbmap_ref.split(':')
+
+    def individual_channels = []
+    reads_list.each { reads ->
+        def ch = channel.fromPath(params.test_bbmap_ref, checkIfExists: true)
+                        .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
+        individual_channels << ch
+    }
+
+    def reads_mixed = individual_channels.first()
+    individual_channels.tail().each {
+        ch -> reads_mixed = reads_mixed.mix(ch)
+    }
+
+    index = 0
+    def reads = reads_mixed.map { id, pair ->
+        def new_id = "${String.format('%02d', index)}_${id}"
+        index += 1
+        return tuple(new_id, pair)
+    }
+
+
     reads = channel.fromFilePairs(params.test_bbmap_reads, checkIfExists: true)
+
+
 
     //ref.view { i -> "$i" }
     //reads.view { i -> "$i" }
