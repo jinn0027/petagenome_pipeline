@@ -18,38 +18,48 @@ export TMPDIR=$(pwd)/tmp
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
-threads=$(nproc)
+date=$(date +"%Y%m%d%H%M%S")
+
+threads=1 #$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
-memory=512
+memory=10
 
-test=assembly
+#lthre=5000
+lthre=0
 
 nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
+outDir=out
+inPairs="out/error_correction:spades_error_correction/*/corrected/paired/out_{1,2}00.0_0.cor.fastq"
 
-for i in ERR1620255 ERR1620256 ERR1620257 ERR1620258
-do
-    inDir=out_error_correction_${i}/error_correction:spades_error_correction/out/corrected/paired/
-    inPairs="${inDir}/out_{1,2}00.0_0.cor.fastq"
-    outDir=out_assembly_${i}
+args="\
+    --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
+    --output ${outDir} \
+    --memory ${memory} \
+    --threads ${threads} \
+    --cpus ${cpus} \
+    --random_seed ${random_seed} \
+    --publish_output true \
+    "
 
-    args="\
-        --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
-        --output ${outDir} \
-        --memory ${memory} \
-        --threads ${threads} \
-        --cpus ${cpus} \
-        --random_seed ${random_seed} \
-        --publish_output true \
-        "
+args+="\
+    --fastp_fastp_memory 10 \
+    --fastp_fastp_threads 30 \
+    --spades_spades_error_correction_memory 80 \
+    --spades_spades_error_correction_threads 30 \
+    --spades_spades_assembler_memory 100 \
+    --spades_spades_assembler_threads 30 \
+    --mmseqs2_mmseqs2_cluster_memory 100 \
+    --mmseqs2_mmseqs2_cluster_threads 100 \
+    "
 
-    nextflow run ${nfDir}/lv2/assembly.nf ${args} \
-             -with-report report_${test}_${i}.html \
-             -with-trace trace_${test}_${i}.txt \
-             -with-timeline timeline_{test}_${i}.html \
-             -with-dag dag_${test}_${i}.png \
-             --test_assembly_l_thre 5000 \
-             --test_assembly_reads "${inPairs}"
+nextflow run ${nfDir}/lv2/assembly.nf ${args} \
+         -with-report report_assembly.${date}.html \
+         -with-trace trace_assembly.${date}.txt \
+         -with-timeline timeline_assembly.${date}.html \
+         -with-dag dag_assembly.${date}.png \
+         --test_assembly_l_thre ${lthre} \
+         --test_assembly_reads "${inPairs}"
 
-    rm -rf nfwork/*
-done
+#rm -rf nfwork/*
+

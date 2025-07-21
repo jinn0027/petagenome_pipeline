@@ -43,6 +43,8 @@ args="\
     "
 
 args+="\
+    --fastp_fastp_memory 10 \
+    --fastp_fastp_threads 30 \
     --spades_spades_error_correction_memory 80 \
     --spades_spades_error_correction_threads 30 \
     --spades_spades_assembler_memory 100 \

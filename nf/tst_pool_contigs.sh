@@ -18,18 +18,19 @@ export TMPDIR=$(pwd)/tmp
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
-threads=$(nproc)
+date=$(date +"%Y%m%d%H%M%S")
+
+threads=1 #$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
-memory=512
+memory=10
 
-test=pool_contigs
+#lthre=5000
+lthre=0
 
 nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
-
-inContigs="out_assembly_*/assembly:filter_and_rename/out/contig.5000.fa"
-
-outDir=out_pool_contigs
+outDir=out
+inContigs="out/assembly:filter_and_rename/*/contig.${lthre}.fa"
 
 args="\
     --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
@@ -41,12 +42,23 @@ args="\
     --publish_output true \
     "
 
+args+="\
+    --fastp_fastp_memory 10 \
+    --fastp_fastp_threads 30 \
+    --spades_spades_error_correction_memory 80 \
+    --spades_spades_error_correction_threads 30 \
+    --spades_spades_assembler_memory 100 \
+    --spades_spades_assembler_threads 30 \
+    --mmseqs2_mmseqs2_cluster_memory 100 \
+    --mmseqs2_mmseqs2_cluster_threads 100 \
+    "
+
 nextflow run ${nfDir}/lv2/pool_contigs.nf ${args} \
-         -with-report report_${test}.html \
-         -with-trace trace_${test}.txt \
-         -with-timeline timeline_{test}.html \
-         -with-dag dag_${test}.png \
-         --test_pool_contigs_l_thre 5000 \
+         -with-report report_pool_contigs.${date}.html \
+         -with-trace trace_pool_contigs.${date}.txt \
+         -with-timeline timeline_pool_contigs.${date}.html \
+         -with-dag dag_pool_contigs.${date}.png \
+         --test_pool_contigs_l_thre ${lthre} \
          --test_pool_contigs_contigs "${inContigs}"
 
 rm -rf nfwork/*
