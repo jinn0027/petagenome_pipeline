@@ -51,12 +51,18 @@ args+="\
     --mmseqs2_mmseqs2_cluster_threads 100 \
     "
 
-nextflow run ${nfDir}/lv1/fastp.nf ${args} \
-         -with-report report_fastp.${date}.html \
-         -with-trace trace_fastp.${date}.txt \
-         -with-timeline timeline_fastp.${date}.html \
-         -with-dag dag_fastp.${date}.png \
-         --test_fastp_reads "${inPairs}"
+args_dbg="\
+    -with-report report_fastp.${date}.html \
+    -with-trace trace_fastp.${date}.txt \
+    -with-timeline timeline_fastp.${date}.html \
+    -with-dag dag_fastp.${date}.png \
+    "
+
+nextflow clean -f
+nextflow run ${nfDir}/lv1/fastp.nf \
+    ${args} \
+    ${args_dbg} \
+    --test_fastp_reads "${inPairs}"
 
 #rm -rf nfwork/*
 

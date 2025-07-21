@@ -74,36 +74,24 @@ test=${test%.*}
 case ${test} in
     "main")
         nextflow run ${nfDir}/toys/main.nf ${args} \
-                 -with-report report_${test}.html \
-                 -with-trace trace_${test}.txt \
-                 -with-timeline timeline_${test}.html \
-                 -with-dag dag_${test}.png \
                  --test_main_reads "${longFnqGzPair}"
         ;;
     "error_correction")
         nextflow run ${nfDir}/lv2/error_correction.nf ${args} \
-                 -with-report report_${test}.html \
-                 -with-trace trace_${test}.txt \
                  --test_error_correction_reads "${longFnqGzPair}"
         ;;
     "assembly")
         nextflow run ${nfDir}/lv2/assembly.nf ${args} \
-                 -with-report report_${test}.html \
-                 -with-trace trace_${test}.txt \
                  --test_assembly_l_thre 10 \
                  --test_assembly_reads "${longFnqGzPair}"
         ;;
     "pool_contigs")
         nextflow run ${nfDir}/lv2/pool_contigs.nf ${args} \
-                 -with-report report_${test}.html \
-                 -with-trace trace_${test}.txt \
                  --test_pool_contigs_l_thre 10 \
                  --test_pool_contigs_contigs "${longFnaPair}"
         ;;
     "circular_contigs")
         nextflow run ${nfDir}/lv2/circular_contigs.nf ${args} \
-                 -with-report report_${test}.html \
-                 -with-trace trace_${test}.txt \
                  --test_circular_contigs_contig "${longFnaGz1}"
         ;;
     "bbmap")
@@ -138,8 +126,6 @@ case ${test} in
         ;;
     "cdhit")
         nextflow run ${nfDir}/lv1/cdhit.nf ${args} \
-                 -with-report report_${test}.html \
-                 -with-trace trace_${test}.txt \
                  --test_cdhit_read "${shortFnaX2Gz1}"
         ;;
     "cutadapt")

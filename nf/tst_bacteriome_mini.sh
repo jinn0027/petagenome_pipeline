@@ -53,13 +53,19 @@ args="\
 #    --mmseqs2_mmseqs2_cluster_threads 100 \
 #    "
 
-nextflow clean -f
-nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf ${args} \
-         -with-trace trace_bacteriome_pipeline.${date}.txt \
-         --test_bacteriome_pipeline_lthre "${lthre}" \
-         --test_bacteriome_pipeline_reads "${inPairs}"
+args_dbg="\
+    -with-trace trace_bacteriome_pipeline.${date}.txt \
+    -with-report report_bacteriome_pipeline.${date}.html \
+    -with-timeline timeline_bacteriome_pipeline.${date}.html \
+    -with-dag dag_bacteriome_pipeline.${date}.png \
+    "
 
-#         -with-report report_bacteriome_pipeline.${date}.html \
+nextflow clean -f
+nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf \
+     ${args} \
+     ${args_dbg} \
+     --test_bacteriome_pipeline_lthre "${lthre}" \
+     --test_bacteriome_pipeline_reads "${inPairs}"
 
 #rm -rf nfwork/*
 

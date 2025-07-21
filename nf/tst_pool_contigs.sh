@@ -52,12 +52,18 @@ args+="\
     --mmseqs2_mmseqs2_cluster_threads 100 \
     "
 
-nextflow run ${nfDir}/lv2/pool_contigs.nf ${args} \
-         -with-report report_pool_contigs.${date}.html \
-         -with-trace trace_pool_contigs.${date}.txt \
-         -with-timeline timeline_pool_contigs.${date}.html \
-         -with-dag dag_pool_contigs.${date}.png \
-         --test_pool_contigs_l_thre ${lthre} \
-         --test_pool_contigs_contigs "${inContigs}"
+args_dbg="\
+    -with-report report_pool_contigs.${date}.html \
+    -with-trace trace_pool_contigs.${date}.txt \
+    -with-timeline timeline_pool_contigs.${date}.html \
+    -with-dag dag_pool_contigs.${date}.png \
+    "
 
-rm -rf nfwork/*
+nextflow clean -f
+nextflow run ${nfDir}/lv2/pool_contigs.nf \
+    ${args} \
+    ${args_dbg} \
+    --test_pool_contigs_l_thre ${lthre} \
+    --test_pool_contigs_contigs "${inContigs}"
+
+#rm -rf nfwork/*

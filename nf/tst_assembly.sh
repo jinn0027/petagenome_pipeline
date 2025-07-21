@@ -52,13 +52,19 @@ args+="\
     --mmseqs2_mmseqs2_cluster_threads 100 \
     "
 
-nextflow run ${nfDir}/lv2/assembly.nf ${args} \
-         -with-report report_assembly.${date}.html \
-         -with-trace trace_assembly.${date}.txt \
-         -with-timeline timeline_assembly.${date}.html \
-         -with-dag dag_assembly.${date}.png \
-         --test_assembly_l_thre ${lthre} \
-         --test_assembly_reads "${inPairs}"
+args_dbg="\
+    -with-report report_assembly.${date}.html \
+    -with-trace trace_assembly.${date}.txt \
+    -with-timeline timeline_assembly.${date}.html \
+    -with-dag dag_assembly.${date}.png \
+    "
+
+nextflow clean -f
+nextflow run ${nfDir}/lv2/assembly.nf \
+    ${args} \
+    ${args_dbg} \
+    --test_assembly_l_thre ${lthre} \
+    --test_assembly_reads "${inPairs}"
 
 #rm -rf nfwork/*
 

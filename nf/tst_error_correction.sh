@@ -50,11 +50,17 @@ args+="\
     --mmseqs2_mmseqs2_cluster_threads 100 \
     "
 
-nextflow run ${nfDir}/lv2/error_correction.nf ${args} \
-         -with-report report_error_correction.${date}.html \
-         -with-trace trace_error_correction.${date}.txt \
-         -with-timeline timeline_error_correction.${date}.html \
-         -with-dag dag_error_correction.${date}.png \
-         --test_error_correction_reads "${inPairs}"
+args_dbg="\
+    -with-report report_error_correction.${date}.html \
+    -with-trace trace_error_correction.${date}.txt \
+    -with-timeline timeline_error_correction.${date}.html \
+    -with-dag dag_error_correction.${date}.png \
+    "
+
+nextflow clean -f
+nextflow run ${nfDir}/lv2/error_correction.nf \
+    ${args} \
+    ${args_dbg} \
+    --test_error_correction_reads "${inPairs}"
 
 #rm -rf nfwork/*
