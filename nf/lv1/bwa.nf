@@ -7,6 +7,8 @@ params.bwa_bwa_makerefdb_threads = params.threads
 params.bwa_bwa_mem_memory = params.memory
 params.bwa_bwa_mem_threads = params.threads
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process bwa_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
@@ -52,11 +54,8 @@ process bwa_mem {
 }
 
 workflow {
-    ref = channel.fromPath(params.test_bwa_ref, checkIfExists: true)
-        .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
-
-    qry = channel.fromPath(params.test_bwa_qry, checkIfExists: true)
-        .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
+    ref = createSeqsChannel(params.test_bwa_ref)
+    qry = createSeqsChannel(params.test_bwa_qry)
  
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }

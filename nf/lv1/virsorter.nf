@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.virsorter_virsorter_memory = params.memory
 params.virsorter_virsorter_threads = params.threads
 
@@ -51,8 +53,7 @@ process virsorter {
 }
 
 workflow {
-    read = channel.fromPath(params.test_virsorter_read, checkIfExists: true)
-        .map { read_path -> tuple(read_path.simpleName, read_path) }
+    read = createSeqsChannel(params.test_virsorter_read)
     //read.view { i -> "$i" }
     out = virsorter(read)
     out.view { i -> "$i" }

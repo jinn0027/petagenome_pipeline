@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.mmseqs2_mmseqs2_makerefdb_memory = params.memory
 params.mmseqs2_mmseqs2_makerefdb_threads = params.threads
 
@@ -216,18 +218,14 @@ process mmseqs2_search {
 }
 
 workflow {
-    ref = channel.fromPath(params.test_mmseqs2_ref, checkIfExists: true)
-        .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
+    ref = createSeqsChannel(params.test_mmseqs2_ref)
     //ref.view { i -> "$i" }
 
     ref_db = mmseqs2_makerefdb(ref)
     //ref_db.view { i -> "$i" }
 
     if (params.test_mmseqs2_module == "search") {
-
-        qry = channel.fromPath(params.test_mmseqs2_qry, checkIfExists: true)
-            .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
-
+        qry = createSeqsChannel(params.test_mmseqs2_qry)
         //qry.view { i -> "$i" }
 
         qry_db = mmseqs2_makeqrydb(qry)
@@ -238,12 +236,9 @@ workflow {
 
         out = mmseqs2_search(in)
         //out.view { i -> "$i" }
-
     } else if (params.test_mmseqs2_module == "cluster") {
-
         out = mmseqs2_cluster(ref_db)
         //out.view { i -> "$i" }
-
     }
 }
 

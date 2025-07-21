@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.spades_spades_error_correction_memory = params.memory
 params.spades_spades_error_correction_threads = params.threads
 
@@ -127,15 +129,15 @@ process spades_e2e {
 }
 
 workflow {
-   reads = channel.fromFilePairs(params.test_spades_reads, checkIfExists: true)
-   if (params.test_spades_e2e) {
-       out = spades_e2e(reads)
-       out.view { i -> "$i" }
-   } else {
-       ec = spades_error_correction_gzip_output(reads)
-           .map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }
-       ec.view { i -> "$i" }
-       out = spades_assembler(ec)
-       out.view { i -> "$i" }
-   }
+    reads = createPairsChannel(params.test_spades_reads)
+    if (params.test_spades_e2e) {
+        out = spades_e2e(reads)
+        out.view { i -> "$i" }
+    } else {
+        ec = spades_error_correction_gzip_output(reads)
+                .map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }
+        ec.view { i -> "$i" }
+        out = spades_assembler(ec)
+        out.view { i -> "$i" }
+    }
 }

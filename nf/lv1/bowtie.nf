@@ -7,6 +7,8 @@ params.bowtie_bowtie_makerefdb_threads = params.threads
 params.bowtie_bowtie_memory = params.memory
 params.bowtie_bowtie_threads = params.threads
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process bowtie_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bowtie/bowtie.sif"
@@ -55,12 +57,9 @@ process bowtie {
 }
 
 workflow {
-    ref = channel.fromPath(params.test_bowtie_ref, checkIfExists: true)
-        .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
+    ref = createSeqsChannel(params.test_bowtie_ref)
+    qry = createSeqsChannel(params.test_bowtie_qry)
 
-    qry = channel.fromPath(params.test_bowtie_qry, checkIfExists: true)
-        .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
-   
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 

@@ -16,6 +16,8 @@ params.minimap2_pairlen = 1500
 
 params.test_minimap2_e2e = false
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process minimap2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
@@ -84,11 +86,8 @@ process minimap2_e2e {
 }
 
 workflow {
-    ref = channel.fromPath(params.test_minimap2_ref, checkIfExists: true)
-        .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
-
-    qry = channel.fromPath(params.test_minimap2_qry, checkIfExists: true)
-        .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
+    ref = createSeqsChannel(params.test_minimap2_ref)
+    qry = createSeqsChannel(params.test_minimap2_qry)
 
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }

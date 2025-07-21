@@ -8,6 +8,8 @@ params.metaphlan_input_type = "fastq"
 //fastq,fasta,bowtie2out,sam
 params.metaphlan_db = "/dev/shm/petagenome_pipeline/external/metaphlan_db"
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process metaphlan {
     tag "${read_id}"
     def local_db = "/opt/db"
@@ -36,8 +38,7 @@ process metaphlan {
 }
 
 workflow {
-    read = channel.fromPath(params.test_metaphlan_read, checkIfExists: true)
-        .map { read_path -> tuple(read_path.simpleName, read_path) }
+    read = createSeqsChannel(params.test_metaphlan_read)
     //read.view { i -> "${i}" }
     out = metaphlan(read)
     out.view { i -> "${i}" }

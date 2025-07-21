@@ -14,6 +14,8 @@ params.blast_perc_identity = "95"
 params.blast_evalue = "1e-20"
 params.blast_outfmt = 6
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process blast_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
@@ -70,12 +72,9 @@ process blastn {
 }
 
 workflow {
-    ref = channel.fromPath(params.test_blast_ref, checkIfExists: true)
-        .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
+    ref = createSeqsChannel(params.test_blast_ref)
+    qry = createSeqsChannel(params.test_blast_qry)
 
-    qry = channel.fromPath(params.test_blast_qry, checkIfExists: true)
-        .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
-   
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 

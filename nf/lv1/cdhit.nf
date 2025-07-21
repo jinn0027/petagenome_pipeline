@@ -10,6 +10,8 @@ params.cdhit_description_length = 150
 params.cdhit_word_length = 5
 params.cdhit_mask = "NX"
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process cdhit_est {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
@@ -38,8 +40,7 @@ process cdhit_est {
 }
 
 workflow {
-    read = channel.fromPath(params.test_cdhit_read, checkIfExists: true)
-        .map { read_path -> tuple(read_path.simpleName, read_path) }
+    read = createSeqsChannel(params.test_cdhit_read)
     out = cdhit_est(read)
     out.view { i -> "$i" }
 }

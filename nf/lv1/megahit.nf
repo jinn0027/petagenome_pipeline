@@ -4,6 +4,8 @@ nextflow.enable.dsl=2
 params.megahit_megahit_memory = params.memory
 params.megahit_megahit_threads = params.threads
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process megahit {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/megahit/megahit.sif"
@@ -28,7 +30,7 @@ process megahit {
 }
 
 workflow {
-    reads = channel.fromFilePairs(params.test_megahit_reads, checkIfExists: true)
+    reads = createPairsChannel(params.test_megahit_reads)
     out = megahit(reads)
     out.view { i -> "$i" }
 }

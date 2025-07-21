@@ -4,6 +4,8 @@ nextflow.enable.dsl=2
 params.fastqc_fastqc_memory = params.memory
 params.fastqc_fastqc_threads = params.threads
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process fastqc {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastqc/fastqc.sif"
@@ -29,7 +31,7 @@ process fastqc {
 }
 
 workflow {
-    reads = channel.fromFilePairs(params.test_fastqc_reads, checkIfExists: true)
+    reads = createPairsChannel(params.test_fastqc_reads)
     out = fastqc(reads)
     out.view { i -> "$i" }
 }

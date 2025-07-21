@@ -4,6 +4,8 @@ nextflow.enable.dsl=2
 params.falco_falco_memory = params.memory
 params.falco_falco_threads = params.threads
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process falco {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/falco/falco.sif"
@@ -27,7 +29,7 @@ process falco {
 }
 
 workflow {
-    reads = channel.fromFilePairs(params.test_falco_reads, checkIfExists: true)
+    reads = createPairsChannel(params.test_falco_reads)
     out = falco(reads)
     out.view { i -> "$i" }
 }

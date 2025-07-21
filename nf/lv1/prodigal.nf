@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.prodigal_prodigal_memory = params.memory
 params.prodigal_prodigal_threads = params.threads
 
@@ -44,8 +46,7 @@ process prodigal {
 }
 
 workflow {
-    read = channel.fromPath(params.test_prodigal_read, checkIfExists: true)
-        .map { read_path -> tuple(read_path.simpleName, read_path) }
+    read = createSeqsChannel(params.test_prodigal_read)
     out = prodigal(read)
     out.view { i -> "${i}" }
 }

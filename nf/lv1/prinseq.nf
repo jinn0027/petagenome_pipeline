@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 params.prinseq_prinseq_memory = params.memory
 params.prinseq_prinseq_threads = params.threads
 
@@ -62,7 +64,7 @@ process prinseq {
 }
 
 workflow {
-    reads = channel.fromFilePairs(params.test_prinseq_reads, checkIfExists: true)
+    reads = createPairsChannel(params.test_prinseq_reads)
     out = prinseq(reads)
     out.view { i -> "${i}" }
 }

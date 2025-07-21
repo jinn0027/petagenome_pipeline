@@ -13,6 +13,8 @@ params.diamond_perc_identity = "95"
 params.diamond_evalue = "1e-20"
 params.diamond_outfmt = 6
 
+include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process diamond_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
@@ -60,11 +62,9 @@ process diamond_blastp {
 }
 
 workflow {
-    ref = channel.fromPath(params.test_diamond_ref, checkIfExists: true)
-        .map { ref_path -> tuple(ref_path.simpleName, ref_path) }
-    qry = channel.fromPath(params.test_diamond_qry, checkIfExists: true)
-        .map { qry_path -> tuple(qry_path.simpleName, qry_path) }
-   
+    ref = createSeqsChannel(params.test_diamond_ref)
+    qry = createSeqsChannel(params.test_diamond_qry)
+
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 

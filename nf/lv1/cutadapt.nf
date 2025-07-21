@@ -8,6 +8,8 @@ params.cutadapt_fwd = "AATGATACGGCGACCACCGAGAUCTACAC"
 params.cutadapt_rev = "CAAGCAGAAGACGGCATACGAGAT"
 params.cutadapt_minimum_length = 50
 
+include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+
 process cutadapt {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/cutadapt/cutadapt.sif"
@@ -34,7 +36,7 @@ process cutadapt {
 }
 
 workflow {
-   reads = channel.fromFilePairs(params.test_cutadapt_reads, checkIfExists: true)
-   out = cutadapt(reads)
-   //out.view { i -> "$i" }
+    reads = createPairsChannel(params.test_cutadapt_reads)
+    out = cutadapt(reads)
+    //out.view { i -> "$i" }
 }
