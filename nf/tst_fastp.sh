@@ -27,8 +27,8 @@ memory=10
 
 nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
 outDir=out
-#inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
-inPairs="${PETAGENOME_PIPELINE_DIR}/modules/test/ecoli_1K_{1,2}.fq.gz;${PETAGENOME_PIPELINE_DIR}/modules/test/s_6_{1,2}.fastq.gz"
+inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+#inPairs="${PETAGENOME_PIPELINE_DIR}/modules/test/ecoli_1K_{1,2}.fq.gz;${PETAGENOME_PIPELINE_DIR}/modules/test/s_6_{1,2}.fastq.gz"
 
 args="\
     --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \

@@ -15,8 +15,9 @@ def createPairsChannel(path) {
         ch -> pairs_mixed = pairs_mixed.mix(ch)
     }
 
-    def index = 0
+    def index_counter = new java.util.concurrent.atomic.AtomicInteger(0)
     def pairs = pairs_mixed.map { id, pair ->
+        def index = index_counter.getAndIncrement()
         def new_id = "${String.format('%02d', index)}_${id}"
         index += 1
         return tuple(new_id, pair)
@@ -45,10 +46,10 @@ def createSeqsChannel(path) {
         ch -> seqs_mixed = seqs_mixed.mix(ch)
     }
 
-    index = 0
+    def index_counter = new java.util.concurrent.atomic.AtomicInteger(0)
     def seqs = seqs_mixed.map { id, seqs ->
+        def index = index_counter.getAndIncrement()
         def new_id = "${String.format('%02d', index)}_${id}"
-        index += 1
         return tuple(new_id, seqs)
     }
 

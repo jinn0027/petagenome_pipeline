@@ -25,8 +25,7 @@ cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
 memory=10
 
-#lthre=5000
-lthre=0
+lthre=5000
 
 nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
 outDir=out
