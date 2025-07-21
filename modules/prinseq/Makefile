@@ -1,5 +1,7 @@
 MOD=prinseq
 
+BUILD_DEP_DIRS=../common
+
 include ../common/common.mk
 
 .PHONY : help

@@ -1,5 +1,7 @@
 MOD=fastqc
 
+BUILD_DEP_DIRS=../common
+
 include ../common/common.mk
 
 .PHONY : help

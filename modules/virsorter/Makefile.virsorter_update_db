@@ -1,5 +1,7 @@
 MOD=virsorter_update_db
 
+BUILD_DEP_DIRS=../common
+
 include ../common/common.mk
 
 UNREMOVABLE_DIRS+=" /opt/VirSorter"

@@ -11,6 +11,7 @@ SIF=${MOD}.sif
 OVL=${MOD}.ovl
 
 BUILD_DEP?=
+BUILD_DEP_DIRS?=
 
 .PHONY : all
 all : ${SIF}
@@ -32,6 +33,9 @@ clean :
 	@rm -rf ${SBX} ${SIF} ${OVL} build-temp-* *~
 
 ${SIF} : ${DEF} ${BUILD_DEP}
+	@for i in ${BUILD_DEP_DIRS} ; do \
+	    pushd $${i}; make; popd; \
+	done
 	${SINGULARITY} build --fakeroot --fix-perms ${SIF} ${DEF}
 
 ${SBX} : ${SIF} ${BUILD_DEP}

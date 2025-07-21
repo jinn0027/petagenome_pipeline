@@ -1,5 +1,7 @@
 MOD=bowtie2
 
+BUILD_DEP_DIRS=../common
+
 include ../common/common.mk
 
 .PHONY : help
