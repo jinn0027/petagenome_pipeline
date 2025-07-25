@@ -29,7 +29,7 @@ params.circular_contigs_explore_circular_contigs_threads = params.threads
 process explore_circular_contigs {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     memory "${params.circular_contigs_explore_circular_contigs_memory} GB"
     cpus "${params.circular_contigs_explore_circular_contigs_threads}"

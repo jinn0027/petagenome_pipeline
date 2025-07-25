@@ -16,7 +16,8 @@ process virsorter {
     def local_db = "/opt/VirSorter/virsorter-data"
     def local_mga = "/opt/VirSorter/mga_linux_ia64"
     container = "${params.petagenomeDir}/modules/virsorter/virsorter.sif"
-    containerOptions "-B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
+    containerOptions "${params.apptainerRunOptions} -B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
+    //containerOptions "--no-home -B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.virsorter_virsorter_memory} GB"
     cpus "${params.virsorter_virsorter_threads}"

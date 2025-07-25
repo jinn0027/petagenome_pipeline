@@ -6,7 +6,7 @@ include ../common/common.mk
 
 .PHONY : help
 help : ${SIF}
-	${SINGULARITY} exec --pwd /opt ${SBX} wrapper_phage_contigs_sorter_iPlant.pl --help
+	${SINGULARITY} exec --pwd /opt ${SIF} wrapper_phage_contigs_sorter_iPlant.pl --help
 
 .PHONY : version
 version : ${SIF}

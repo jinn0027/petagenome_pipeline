@@ -27,7 +27,7 @@ params.pool_contigs_clustering_process = "mmseqs2"
 process merge_contigs {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_mergs_contigs_memory} GB"
     cpus "${params.pool_contigs_mergs_contigs_threads}"
@@ -59,7 +59,7 @@ process merge_contigs {
 process filter_and_rename {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_filter_and_rename_memory} GB"
     cpus "${params.pool_contigs_filter_and_rename_threads}"
@@ -79,7 +79,7 @@ process filter_and_rename {
 process summarize_name {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_summarize_name_memory} GB"
     cpus "${params.pool_contigs_summarize_name_threads}"
@@ -114,7 +114,7 @@ process summarize_name {
 process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_get_length_memory} GB"
     cpus "${params.pool_contigs_get_length_threads}"
@@ -139,7 +139,7 @@ process get_length {
 process get_stats {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_get_stats_memory} GB"
     cpus "${params.pool_contigs_get_stats_threads}"

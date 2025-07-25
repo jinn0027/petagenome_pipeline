@@ -17,7 +17,7 @@ params.assembly_get_stats_threads = params.threads
 process filter_and_rename {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_filter_and_rename_memory} GB"
     cpus "${params.assembly_filter_and_rename_threads}"

@@ -10,8 +10,8 @@ process virsorter2 {
     tag "${read_id}"
     def local_db = "/opt/VirSorter2/db"
     container = "${params.petagenomeDir}/modules/virsorter2/virsorter2.sif"
-    containerOptions "-B ${params.virsorter2_db}:${local_db} -B /tmp:/home"
-    //containerOptions "-B ${params.virsorter2_db}:${local_db} --writable-tmpfs"
+    containerOptions "${params.apptainerRunOptions} -B ${params.virsorter2_db}:${local_db} -B /tmp:/home"
+    //containerOptions "${params.apptainerRunOptions} -B ${params.virsorter2_db}:${local_db} --writable-tmpfs"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.virsorter2_virsorter2_memory} GB"
     cpus "${params.virsorter2_virsorter2_threads}"

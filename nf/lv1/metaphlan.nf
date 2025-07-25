@@ -14,7 +14,7 @@ process metaphlan {
     tag "${read_id}"
     def local_db = "/opt/db"
     container = "${params.petagenomeDir}/modules/metaphlan/metaphlan.sif"
-    containerOptions "-B ${params.metaphlan_db}:${local_db} -B /tmp:/home"
+    containerOptions "${params.apptainerRunOptions} -B ${params.metaphlan_db}:${local_db} -B /tmp:/home"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.metaphlan_metaphlan_memory} GB"
     cpus "${params.metaphlan_metaphlan_threads}"

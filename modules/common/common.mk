@@ -21,13 +21,21 @@ clean :
 	@if [ -d ${SBX} ] ; then \
 		if [ -d ${OVL} ] ; then \
 	        for i in ${UNREMOVABLE_DIRS} ; do \
-	            ${SINGULARITY} exec --pwd /opt --fakeroot --overlay ${OVL} ${SBX} sh -c \
-	                 "if [ -e $${i} ] ; then chmod -R 777 $${i} ; fi"; \
+	            ${SINGULARITY} exec --no-home \
+                                    --pwd /opt \
+                                    --fakeroot \
+                                    --overlay ${OVL} \
+                                    ${SBX} \
+                                    sh -c "if [ -e $${i} ] ; then chmod -R 777 $${i} ; fi"; \
 	        done \
 	    fi ; \
 	    for i in ${UNREMOVABLE_DIRS} ; do \
-	        ${SINGULARITY} exec --pwd /opt --fakeroot --writable ${SBX} sh -c \
-	             "if [ -e $${i} ] ; then chmod -R 777 $${i} ; fi"; \
+	        ${SINGULARITY} exec --no-home \
+                                --pwd /opt \
+                                --fakeroot \
+                                --writable \
+                                ${SBX} \
+                                sh -c "if [ -e $${i} ] ; then chmod -R 777 $${i} ; fi"; \
 	    done \
 	fi
 	@rm -rf ${SBX} ${SIF} ${OVL} build-temp-* *~
@@ -44,4 +52,9 @@ ${SBX} : ${SIF} ${BUILD_DEP}
 .PHONY : shell
 shell : ${SBX}
 	@mkdir -p ${OVL}
-	${SINGULARITY} shell --pwd /opt --fakeroot --overlay ${OVL} --shell /bin/bash ${SBX}
+	${SINGULARITY} shell --no-home \
+                         --pwd /opt \
+                         --fakeroot \
+                         --overlay ${OVL} \
+                         --shell /bin/bash \
+                         ${SBX}

@@ -11,7 +11,7 @@ params.error_correction_error_correction_threads = params.threads
 process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.error_correction_error_correction_memory} GB"
     cpus "${params.error_correction_error_correction_threads}"

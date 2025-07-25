@@ -44,6 +44,10 @@ From: almalinux:9
             biopython=1.78
     popd
 
+    /opt/miniconda3/bin/conda init bash
+    echo "source /opt/miniconda3/etc/profile.d/conda.sh" >> $APPTAINER_ENVIRONMENT
+    /opt/miniconda3/bin/conda clean -y --all
+
     echo "alias ll=\"ls -l\"" >> /etc/bashrc
     echo "alias dnf=\"LD_LIBRARY_PATH=/usr/local/lib dnf\"" >> /etc/bashrc
 
