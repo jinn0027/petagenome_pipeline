@@ -6,8 +6,14 @@ include ../common/common.mk
 
 .PHONY : help
 help : ${SIF}
-	${SINGULARITY} exec --pwd /opt ${SIF} megahit --help
+	${SINGULARITY} exec --no-home \
+                        --pwd /opt \
+                        ${SIF} \
+                        megahit --help
 
 .PHONY : version
 version : ${SIF}
-	${SINGULARITY} exec --pwd /opt ${SIF} megahit --version
+	${SINGULARITY} exec --no-home \
+                        --pwd /opt \
+                        ${SIF} \
+                        megahit --version

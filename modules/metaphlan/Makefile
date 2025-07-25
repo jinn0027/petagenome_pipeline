@@ -6,9 +6,15 @@ include ../common/common.mk
 
 .PHONY : help
 help : ${SIF}
-	${SINGULARITY} exec --pwd /opt ${SIF} metaphlan --help
+	${SINGULARITY} exec --no-home \
+                        --pwd /opt \
+                        ${SIF} \
+                        metaphlan --help
 
 .PHONY : version
 version : ${SIF}
-	${SINGULARITY} exec --pwd /opt ${SIF} metaphlan --version
+	${SINGULARITY} exec --no-home \
+                        --pwd /opt \
+                        ${SIF} \
+                        metaphlan --version
 

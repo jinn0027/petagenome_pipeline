@@ -6,8 +6,14 @@ include ../common/common.mk
 
 .PHONY : help
 help : ${SIF}
-	${SINGULARITY} exec --pwd /opt ${SIF} samtools --help
+	${SINGULARITY} exec --no-home \
+                        --pwd /opt \
+                        ${SIF} \
+                        samtools --help
 
 .PHONY : version
 version : ${SIF}
-	${SINGULARITY} exec --pwd /opt ${SIF} samtools version
+	${SINGULARITY} exec --no-home \
+                        --pwd /opt \
+                        ${SIF} \
+                        samtools version

@@ -10,7 +10,10 @@ DB_UPDATED=virsorter-data-v2.updated.tar.gz
 EXTERNAL_DB_UPDATED=../../external/${DB_UPDATED}
 
 ${EXTERNAL_DB_UPDATED} : ${SBX}
-	${SINGULARITY} run --fakeroot --writable ${SBX}
+	${SINGULARITY} run --no-home \
+                       --fakeroot \
+                       --writable \
+                       ${SBX}
 	@mv -f ${SBX}/opt/VirSorter/${DB_UPDATED} ${EXTERNAL_DB_UPDATED}
 
 .PHONY : db_updated
