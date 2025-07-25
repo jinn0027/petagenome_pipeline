@@ -7,7 +7,7 @@ process helloruby {
     publishDir "${params.output}/helloruby/${pair_id}", mode: 'copy'
     // 当面は以下のように実行時にスクリプトパスを指定する。
     // 将来的にはel9.sifコンテナのビルド時にこのディレクトリごとバインドしてしまえばいいと思う。
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     input:
         tuple val(pair_id), path(reads, arity: '2')
 
