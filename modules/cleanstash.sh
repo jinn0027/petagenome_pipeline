@@ -6,6 +6,6 @@ do
         continue
     fi
     if [ -d $i ] ; then
-        rm -f *.stash
+        rm -f $i/*.stash
     fi
 done
