@@ -40,3 +40,8 @@ rename.tsv
 ./diamond/src/test/2.faa
 ./diamond/src/test/3.faa
 ./diamond/src/test/4.faa
+
+# test for virsorter2
+wget https://raw.githubusercontent.com/jiarong/VirSorter2/master/test/8seq.fa
+
+
