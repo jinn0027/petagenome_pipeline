@@ -1,0 +1,9 @@
+blast
+cdhit
+cutadapt
+fastp
+fastqc
+megahit
+mmseqs2
+spades
+
