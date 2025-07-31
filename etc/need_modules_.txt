@@ -1,3 +1,4 @@
+common
 blast
 cdhit
 cutadapt
