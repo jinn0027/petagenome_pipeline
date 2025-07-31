@@ -15,6 +15,8 @@ echo "PETAGENOME_PIPELINE_DIR : ${PETAGENOME_PIPELINE_DIR}"
 #export TMPDIR=/dev/shm/${USER}/tmp
 export TMPDIR=$(pwd)/tmp
 
+mkdir -p ${TMPDIR}
+
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
