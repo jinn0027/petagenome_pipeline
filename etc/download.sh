@@ -24,6 +24,9 @@ function need_make () {
         return 0
     fi
     while read line ; do
+        if [ "${line}" = "" ] ; then
+            continue
+        fi
         dir=${DIR_MODULES}/${line}
         if [ -d ${dir} ] ; then
             for def in $(ls ${dir}/*.def) ; do
