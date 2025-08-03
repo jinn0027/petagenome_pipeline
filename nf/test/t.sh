@@ -20,6 +20,8 @@ mkdir -p ${TMPDIR}
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
+date=$(date +"%Y%m%d%H%M%S")
+
 threads=16
 #threads=$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)

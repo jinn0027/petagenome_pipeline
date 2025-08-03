@@ -23,6 +23,7 @@ process fastp {
         tuple val(pair_id), path("${pair_id}/out_{1,2}.fastq", arity: '2')
     script:
         """
+        echo "### ${task.process} \$(hostname)"
         mkdir -p ${pair_id}
         fastp \\
             -w ${params.fastp_fastp_threads} \\
