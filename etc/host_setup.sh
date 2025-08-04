@@ -14,7 +14,6 @@ if groups | grep -q wheel ; then
         fakeroot \
         cryptsetup \
         squashfuse \
-        libsubid-dev \
         pigz \
         bzip2 \
         pbzip2
