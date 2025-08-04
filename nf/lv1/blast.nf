@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.blast_blast_makerefdb_memory = params.memory
 params.blast_blast_makerefdb_threads = params.threads
@@ -28,6 +28,7 @@ process blast_makerefdb {
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
+        printProcessProfile(task)
         """
         ref_=${ref}
         echo ${ref} | grep -e ".gz\$" >& /dev/null && :
@@ -56,6 +57,7 @@ process blastn {
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.tsv", arity: '1')
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${qry_id}
         blastn \\

@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.bowtie2_bowtie2_makerefdb_memory = params.memory
 params.bowtie2_bowtie2_makerefdb_threads = params.threads
@@ -21,6 +21,7 @@ process bowtie2_makerefdb {
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${ref_id}
         bowtie2-build \\
@@ -43,6 +44,7 @@ process bowtie2 {
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${qry_id}
         bowtie2 \\

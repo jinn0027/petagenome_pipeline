@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.prinseq_prinseq_memory = params.memory
 params.prinseq_prinseq_threads = params.threads
@@ -30,6 +30,7 @@ process prinseq {
     output:
         tuple val(pair_id), path("${pair_id}")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${pair_id}
 

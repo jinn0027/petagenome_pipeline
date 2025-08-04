@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.megahit_megahit_memory = params.memory
 params.megahit_megahit_threads = params.threads
@@ -18,6 +18,7 @@ process megahit {
     output:
         tuple val(pair_id), path("${pair_id}/out.contigs.fa", arity: '1')
     script:
+        printProcessProfile(task)
         """
         megahit \\
             -m "${params.megahit_megahit_memory}000000000" \\

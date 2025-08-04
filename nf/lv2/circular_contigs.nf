@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { printProcessProfile } from "${params.petagenomeDir}/nf/common/utils"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
 params.circular_contigs_explore_circular_contigs_memory = params.memory
@@ -41,6 +42,7 @@ process explore_circular_contigs {
     output:
         tuple val(id), path("out/*")
     script:
+        printProcessProfile(task)
         """
         mkdir -p out
         """

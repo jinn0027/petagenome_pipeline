@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { spades_error_correction } from "${params.petagenomeDir}/nf/lv1/spades"
 include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
 
@@ -21,6 +21,7 @@ process get_length {
     output:
         tuple val(id), path("${id}/*.length.txt")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${id}
         reads_=( ${reads} )

@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.prodigal_prodigal_memory = params.memory
 params.prodigal_prodigal_threads = params.threads
@@ -27,6 +27,7 @@ process prodigal {
               path("${read_id}/out.fna", arity: '1'), \
               path("${read_id}/out.${params.prodigal_outfmt}", arity: '1')
     script:
+        printProcessProfile(task)
         """
         read_=${read}
         echo ${read} | grep -e ".gz\$" >& /dev/null && :

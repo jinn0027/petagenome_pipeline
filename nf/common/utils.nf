@@ -1,6 +1,11 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+def printProcessProfile(task) {
+     def hostname = java.net.InetAddress.getLocalHost().getHostName()
+    println "### process:${task.process}  hostname:${hostname}"
+}
+
 def createPairsChannel(path) {
     def pairs_list = path.split(';')
 

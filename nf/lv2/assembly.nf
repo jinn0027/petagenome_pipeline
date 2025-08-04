@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
@@ -27,6 +27,7 @@ process filter_and_rename {
     output:
         tuple val(id), path("${id}/contig.${l_thre}.fa", arity: '0..*'), path("${id}/contig.name.txt")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${id}
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
@@ -53,6 +54,7 @@ process get_length {
     output:
         tuple val(id), path("${id}/*.length.txt", arity: '0..*')
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${id}
         reads_=( ${reads} )
@@ -78,6 +80,7 @@ process get_stats {
     output:
         tuple val(id), path("${id}/*.stats.txt")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${id}
         lengths_=( ${lengths} )

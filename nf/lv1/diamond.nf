@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.diamond_diamond_makerefdb_memory = params.memory
 params.diamond_diamond_makerefdb_threads = params.threads
@@ -24,10 +24,10 @@ process diamond_makerefdb {
 
     input:
         tuple val(ref_id), path(ref, arity: '1')
-
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${ref_id}
         diamond \\
@@ -50,6 +50,7 @@ process diamond_blastp {
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.tsv", arity: '1')
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${qry_id}
         diamond \\

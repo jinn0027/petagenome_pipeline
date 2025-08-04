@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createPairsChannel; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createPairsChannel; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.bbmap_bbmap_makerefdb_memory = params.memory
 params.bbmap_bbmap_makerefdb_threads = params.threads
@@ -25,6 +25,7 @@ process bbmap_makerefdb {
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
+        printProcessProfile(task)
         """
         bbmap.sh \\
             -Xmx${params.bbmap_bbmap_makerefdb_memory}g \\
@@ -46,6 +47,7 @@ process bbmap {
     output:
         tuple val(ref_id), val(pair_id), path("${pair_id}/out.sam", arity: '1')
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${pair_id}
         bbmap.sh \\

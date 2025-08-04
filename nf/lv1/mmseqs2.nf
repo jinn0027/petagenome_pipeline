@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.mmseqs2_mmseqs2_makerefdb_memory = params.memory
 params.mmseqs2_mmseqs2_makerefdb_threads = params.threads
@@ -84,6 +84,7 @@ process mmseqs2_makerefdb {
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${ref_id}
         mmseqs createdb \\
@@ -105,6 +106,7 @@ process mmseqs2_makeqrydb {
     output:
         tuple val(qry_id), path("${qry_id}")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${qry_id}
         mmseqs createdb \\
@@ -126,6 +128,7 @@ process mmseqs2_cluster {
     output:
         tuple val(ref_id), path("${ref_id}/out.fasta"), path("${ref_id}/out.tsv")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${ref_id} tmp
         if [ "${params.mmseqs2_cluster_mode}" == "cluster" ] ; then
@@ -191,6 +194,7 @@ process mmseqs2_search {
     output:
         tuple val(ref_id), path("${qry_id}/out.*")
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${qry_id} tmp
         args="\\

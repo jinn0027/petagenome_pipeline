@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.spades_spades_error_correction_memory = params.memory
 params.spades_spades_error_correction_threads = params.threads
@@ -33,6 +33,7 @@ process spades_error_correction {
               path("${pair_id}/corrected/paired/*.cor.fastq", arity: '0..2'), \
               path("${pair_id}/corrected/unpaired/*.cor.fastq", arity: '0..*')
     script:
+        printProcessProfile(task)
         """
         mkdir ${pair_id}
         spades.py \\
@@ -63,6 +64,7 @@ process spades_error_correction_gzip_output {
               path("${pair_id}/corrected/paired/*.cor.fastq.gz", arity: '0..2'), \
               path("${pair_id}/corrected/unpaired/*.cor.fastq.gz", arity: '0..*')
     script:
+        printProcessProfile(task)
         """
         mkdir ${pair_id}
         spades.py \\
@@ -92,6 +94,7 @@ process spades_assembler {
               path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
               path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${pair_id}
         spades.py \\
@@ -116,6 +119,7 @@ process spades_e2e {
               path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
               path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
+        printProcessProfile(task)
         """
         mkdir -p ${pair_id}
         spades.py \\
