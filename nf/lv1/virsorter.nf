@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.virsorter_virsorter_memory = params.memory
 params.virsorter_virsorter_threads = params.threads
@@ -21,14 +21,13 @@ process virsorter {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.virsorter_virsorter_memory} GB"
     cpus "${params.virsorter_virsorter_threads}"
-
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
         tuple val(read_id), path("${params.virsorter_aligner}/${read_id}/VIRSorter_global-phage-signal.csv", arity: '1')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         read_=${read}
         echo ${read} | grep -e ".gz\$" >& /dev/null && :
         if [ \$? -eq 0 ] ; then

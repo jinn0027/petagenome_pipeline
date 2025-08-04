@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createPairsChannel; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createPairsChannel; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.bbmap_bbmap_makerefdb_memory = params.memory
 params.bbmap_bbmap_makerefdb_threads = params.threads
@@ -19,14 +19,13 @@ process bbmap_makerefdb {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.bbmap_bbmap_makerefdb_memory} GB"
     cpus "${params.bbmap_bbmap_makerefdb_threads}"
-
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         bbmap.sh \\
             -Xmx${params.bbmap_bbmap_makerefdb_memory}g \\
             threads=${params.bbmap_bbmap_threads} \\
@@ -41,14 +40,13 @@ process bbmap {
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     memory "${params.bbmap_bbmap_memory} GB"
     cpus "${params.bbmap_bbmap_threads}"
-
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(ref_id), val(pair_id), path("${pair_id}/out.sam", arity: '1')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${pair_id}
         bbmap.sh \\
             -Xmx${params.bbmap_bbmap_memory}g \\

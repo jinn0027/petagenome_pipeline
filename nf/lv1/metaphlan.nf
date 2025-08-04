@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.metaphlan_metaphlan_memory = params.memory
 params.metaphlan_metaphlan_threads = params.threads
@@ -18,7 +18,6 @@ process metaphlan {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.metaphlan_metaphlan_memory} GB"
     cpus "${params.metaphlan_metaphlan_threads}"
-
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
@@ -26,8 +25,8 @@ process metaphlan {
               path("${read_id}/out.sam", arity: '1'), \
               path("${read_id}/out.prof", arity: '1')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${read_id}
         metaphlan \\
             --nproc ${params.metaphlan_metaphlan_threads} \\

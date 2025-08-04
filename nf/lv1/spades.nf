@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.spades_spades_error_correction_memory = params.memory
 params.spades_spades_error_correction_threads = params.threads
@@ -25,7 +25,6 @@ process spades_error_correction {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.spades_spades_error_correction_memory} GB"
     cpus "${params.spades_spades_error_correction_threads}"
-
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -33,8 +32,8 @@ process spades_error_correction {
               path("${pair_id}/corrected/paired/*.cor.fastq", arity: '0..2'), \
               path("${pair_id}/corrected/unpaired/*.cor.fastq", arity: '0..*')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir ${pair_id}
         spades.py \\
             --memory ${params.spades_spades_error_correction_memory} \\
@@ -56,7 +55,6 @@ process spades_error_correction_gzip_output {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.spades_spades_error_correction_gzip_output_memory} GB"
     cpus "${params.spades_spades_error_correction_gzip_output_threads}"
-
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -64,8 +62,8 @@ process spades_error_correction_gzip_output {
               path("${pair_id}/corrected/paired/*.cor.fastq.gz", arity: '0..2'), \
               path("${pair_id}/corrected/unpaired/*.cor.fastq.gz", arity: '0..*')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir ${pair_id}
         spades.py \\
             --memory ${params.spades_spades_error_correction_gzip_output_memory} \\
@@ -86,7 +84,6 @@ process spades_assembler {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.spades_spades_assembler_memory} GB"
     cpus "${params.spades_spades_assembler_threads}"
-
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -94,8 +91,8 @@ process spades_assembler {
               path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
               path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${pair_id}
         spades.py \\
             --memory ${params.spades_spades_assembler_memory} \\
@@ -119,8 +116,8 @@ process spades_e2e {
               path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
               path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${pair_id}
         spades.py \\
             --memory ${params.spades_spades_e2e_memory} \\

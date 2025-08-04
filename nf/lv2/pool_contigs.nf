@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { cdhit_est } from "${params.petagenomeDir}/nf/lv1/cdhit"
 include { mmseqs2_makerefdb; mmseqs2_cluster } from "${params.petagenomeDir}/nf/lv1/mmseqs2"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
@@ -31,13 +31,13 @@ process merge_contigs {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_mergs_contigs_memory} GB"
     cpus "${params.pool_contigs_mergs_contigs_threads}"
-
     input:
         tuple val(id), path(contigs, arity: '1..*', stageAs: "?/*")
     output:
         tuple val(id), path("${id}/merged_contig.fa"), path("${id}/contig_list.txt")
     script:
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         touch ${id}/merged_contig.fa
         touch ${id}/contig_list.txt
@@ -63,13 +63,13 @@ process filter_and_rename {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_filter_and_rename_memory} GB"
     cpus "${params.pool_contigs_filter_and_rename_threads}"
-
     input:
         tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
         tuple val(id), path("${id}/contig.${l_thre}.fa"), path("${id}/contig.name.txt")
     script:
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
              --min ${l_thre} --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.${l_thre}.fa
@@ -83,7 +83,6 @@ process summarize_name {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_summarize_name_memory} GB"
     cpus "${params.pool_contigs_summarize_name_threads}"
-
     input:
         tuple val(id), path(name, arity: '1')
         tuple val(id), path(clstr, arity: '1')
@@ -91,6 +90,7 @@ process summarize_name {
         tuple val(id), path("${id}/${id}.name.txt"), path("${id}/*")
     script:
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         if [ "${params.pool_contigs_clustering_process}" = "mmseqs2" ] ; then
             cp -f ${clstr} ${id}/${id}.name_
@@ -118,13 +118,13 @@ process get_length {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_get_length_memory} GB"
     cpus "${params.pool_contigs_get_length_threads}"
-
     input:
         tuple val(id), path(reads, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.length.txt")
     script:
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         reads_=( ${reads} )
         for i in \${reads_[@]}
@@ -143,13 +143,13 @@ process get_stats {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.pool_contigs_get_stats_memory} GB"
     cpus "${params.pool_contigs_get_stats_threads}"
-
     input:
         tuple val(id), path(lengths, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.stats.txt")
     script:
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         lengths_=( ${lengths} )
         for i in \${lengths_[@]}

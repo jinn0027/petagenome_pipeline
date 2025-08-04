@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.cdhit_cdhit_est_memory = params.memory
 params.cdhit_cdhit_est_threads = params.threads
@@ -18,14 +18,13 @@ process cdhit_est {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.cdhit_cdhit_est_memory} GB"
     cpus "${params.cdhit_cdhit_est_threads}"
-
     input:
         tuple val(id), path(read, arity: '1')
     output:
         tuple val(id), path("${id}/out.fasta"), path("${id}/out.fasta.clstr")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         cd-hit-est \\
             -M "${params.cdhit_cdhit_est_memory}000" \\

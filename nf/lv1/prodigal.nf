@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.prodigal_prodigal_memory = params.memory
 params.prodigal_prodigal_threads = params.threads
@@ -18,7 +18,6 @@ process prodigal {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.prodigal_prodigal_memory} GB"
     cpus "${params.prodigal_prodigal_threads}"
-
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
@@ -27,8 +26,8 @@ process prodigal {
               path("${read_id}/out.fna", arity: '1'), \
               path("${read_id}/out.${params.prodigal_outfmt}", arity: '1')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         read_=${read}
         echo ${read} | grep -e ".gz\$" >& /dev/null && :
         if [ \$? -eq 0 ] ; then

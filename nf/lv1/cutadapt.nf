@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile;
+include { processProfile;
 createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.cutadapt_cutadapt_memory = params.memory
@@ -17,14 +17,13 @@ process cutadapt {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.cutadapt_cutadapt_memory} GB"
     cpus "${params.cutadapt_cutadapt_threads}"
-
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), path("${pair_id}/out_{1,2}.fastq", arity: '2')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${pair_id}
         cutadapt \\
             -a ${params.cutadapt_fwd} \\

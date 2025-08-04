@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.virsorter2_virsorter2_memory = params.memory
 params.virsorter2_virsorter2_threads = params.threads
@@ -21,8 +21,8 @@ process virsorter2 {
     output:
         tuple val(read_id), path("${read_id}/final-viral-boundary.tsv"), path("${read_id}/final-viral-score.tsv")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         virsorter \\
             config \\
             --init-source \\

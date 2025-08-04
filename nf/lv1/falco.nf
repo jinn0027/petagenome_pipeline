@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.falco_falco_memory = params.memory
 params.falco_falco_threads = params.threads
@@ -18,8 +18,8 @@ process falco {
     output:
         tuple val(pair_id), path("${pair_id}")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${pair_id}
         falco \\
             -t ${params.falco_falco_threads} \\

@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.fastqc_fastqc_memory = params.memory
 params.fastqc_fastqc_threads = params.threads
@@ -18,8 +18,8 @@ process fastqc {
     output:
         tuple val(pair_id), path("${pair_id}")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         export XDG_CACHE_HOME=\$(pwd)/.cache
         mkdir -p .cache
         mkdir -p ${pair_id}

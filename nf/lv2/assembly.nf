@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
@@ -21,14 +21,13 @@ process filter_and_rename {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_filter_and_rename_memory} GB"
     cpus "${params.assembly_filter_and_rename_threads}"
-
     input:
         tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
         tuple val(id), path("${id}/contig.${l_thre}.fa", arity: '0..*'), path("${id}/contig.name.txt")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
              --min ${l_thre} --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.${l_thre}.fa
@@ -48,14 +47,13 @@ process get_length {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_get_length_memory} GB"
     cpus "${params.assembly_get_length_threads}"
-
     input:
         tuple val(id), path(reads, arity: '0..*')
     output:
         tuple val(id), path("${id}/*.length.txt", arity: '0..*')
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         reads_=( ${reads} )
         for i in \${reads_[@]}
@@ -74,14 +72,13 @@ process get_stats {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_get_stats_memory} GB"
     cpus "${params.assembly_get_stats_threads}"
-
     input:
         tuple val(id), path(lengths, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.stats.txt")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         lengths_=( ${lengths} )
         for i in \${lengths_[@]}

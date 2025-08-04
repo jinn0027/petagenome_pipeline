@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.mmseqs2_mmseqs2_makerefdb_memory = params.memory
 params.mmseqs2_mmseqs2_makerefdb_threads = params.threads
@@ -78,14 +78,13 @@ process mmseqs2_makerefdb {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_makerefdb_memory} GB"
     cpus "${params.mmseqs2_mmseqs2_makerefdb_threads}"
-
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${ref_id}
         mmseqs createdb \\
             --dbtype ${params.mmseqs2_ref_type} \\
@@ -100,14 +99,13 @@ process mmseqs2_makeqrydb {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_makeqrydb_memory} GB"
     cpus "${params.mmseqs2_mmseqs2_makeqrydb_threads}"
-
     input:
         tuple val(qry_id), path(qry, arity: '1')
     output:
         tuple val(qry_id), path("${qry_id}")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${qry_id}
         mmseqs createdb \\
             --dbtype ${params.mmseqs2_qry_type} \\
@@ -122,14 +120,13 @@ process mmseqs2_cluster {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_cluster_memory} GB"
     cpus "${params.mmseqs2_mmseqs2_cluster_threads}"
-
     input:
         tuple val(ref_id), path(ref_db)
     output:
         tuple val(ref_id), path("${ref_id}/out.fasta"), path("${ref_id}/out.tsv")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${ref_id} tmp
         if [ "${params.mmseqs2_cluster_mode}" == "cluster" ] ; then
             args="\\
@@ -188,14 +185,13 @@ process mmseqs2_search {
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_search_memory} GB"
     cpus "${params.mmseqs2_mmseqs2_search_threads}"
-
     input:
         tuple val(ref_id), path(ref_db), val(qry_id), path(qry_db)
     output:
         tuple val(ref_id), path("${qry_id}/out.*")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${qry_id} tmp
         args="\\
              --search-type ${params.mmseqs2_search_type} \\

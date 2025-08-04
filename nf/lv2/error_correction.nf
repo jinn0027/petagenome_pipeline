@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { printProcessProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { spades_error_correction } from "${params.petagenomeDir}/nf/lv1/spades"
 include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
 
@@ -15,14 +15,13 @@ process get_length {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.error_correction_error_correction_memory} GB"
     cpus "${params.error_correction_error_correction_threads}"
-
     input:
         tuple val(id), path(reads, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.length.txt")
     script:
-        printProcessProfile(task)
         """
+        echo "${processProfile(task)}"
         mkdir -p ${id}
         reads_=( ${reads} )
         for i in \${reads_[@]}
