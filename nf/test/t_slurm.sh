@@ -67,10 +67,10 @@ args+=" --publish_output true"
 args+=" -profile slurm"
 
 args_dbg="\
-    -with-trace trace_bacteriome_pipeline.${date}.txt \
-    -with-report report_bacteriome_pipeline.${date}.html \
-    -with-timeline timeline_bacteriome_pipeline.${date}.html \
-    -with-dag dag_bacteriome_pipeline.${date}.png \
+    -with-trace trace.${date}.txt \
+    -with-report report.${date}.html \
+    -with-timeline timeline.${date}.html \
+    -with-dag dag.${date}.png \
     "
 
 args+=" ${args_dbg}"
@@ -227,5 +227,39 @@ case ${test} in
         ;;
     "*")
 esac
+
+if [ -f trace.${date}.txt ] ; then
+    nfWorkDir="nfwork"
+    workDir="${nfWorkDir}/work"
+
+    while read line
+    do
+	hash=$(echo $line | awk '{print($2)}')
+	if [ "${hash}" = "hash" ] ; then
+	    echo "hostname" > _
+	    continue
+	fi
+	hostname=$(head -n 1 ${workDir}/${hash}*/.command.log | awk '{print($5)}')
+	echo ${hostname} >> _
+    done<trace.${date}.txt
+
+    paste _ trace.${date}.txt > __
+    mv -f __ trace.${date}.txt
+    rm -f _
+
+    mv -f trace.${date}.txt trace_${test}.${date}.txt
+fi
+
+if [ -f report.${date}.html ] ; then
+    mv -f report.${date}.html report_${test}.${date}.html
+fi
+    
+if [ -f timeline.${date}.html ] ; then
+    mv -f timeline.${date}.html timeline_${test}.${date}.html
+fi
+
+if [ -f dag.${date}.png ] ; then
+    mv -f dag.${date}.png dag_${test}.${date}.png
+fi
 
 #rm -rf /dev/shm/${USER}

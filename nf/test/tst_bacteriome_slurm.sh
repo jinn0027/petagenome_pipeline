@@ -74,5 +74,25 @@ nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf \
     --test_bacteriome_pipeline_lthre "${lthre}" \
     --test_bacteriome_pipeline_reads "${inPairs}"
 
+if [ -f trace_bacteriome_pipeline.${date}.txt ] ; then
+    nfWorkDir="nfwork"
+    workDir="${nfWorkDir}/work"
+
+    while read line
+    do
+	hash=$(echo $line | awk '{print($2)}')
+	if [ "${hash}" = "hash" ] ; then
+	    echo "hostname" > _
+	    continue
+	fi
+	hostname=$(head -n 1 ${workDir}/${hash}*/.command.log | awk '{print($5)}')
+	echo ${hostname} >> _
+    done<trace_bacteriome_pipeline.${date}.txt
+
+    paste _ trace_bacteriome_pipeline.${date}.txt > __
+    mv -f __ trace_bacteriome_pipeline.${date}.txt
+    rm -f _
+fi
+
 #rm -rf nfwork/*
 
