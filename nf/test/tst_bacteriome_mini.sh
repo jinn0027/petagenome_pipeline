@@ -46,6 +46,10 @@ args="\
     --publish_output true \
     "
 
+args+="\
+    -profile slurm
+    "
+
 #args+="\
 #    --spades_spades_error_correction_memory 80 \
 #    --spades_spades_error_correction_threads 30 \
