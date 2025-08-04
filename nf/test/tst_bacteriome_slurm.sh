@@ -30,8 +30,8 @@ memory=10
 lthre=5000
 
 nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
-inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
-#inPairs="~/data/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+#inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+inPairs="/home/ishikawa/data/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
 
 outDir=out
 
@@ -43,6 +43,10 @@ args="\
     --cpus ${cpus} \
     --random_seed ${random_seed} \
     --publish_output true \
+    "
+
+args+="\
+    -profile slurm
     "
 
 args+="\
