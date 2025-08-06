@@ -23,8 +23,9 @@ process spades_error_correction {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.spades_spades_error_correction_memory} GB"
+    def gb = "${params.spades_spades_error_correction_memory}"
     def threads = "${params.spades_spades_error_correction_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -55,8 +56,9 @@ process spades_error_correction_gzip_output {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.spades_spades_error_correction_gzip_output_memory} GB"
+    def gb = "${params.spades_spades_error_correction_gzip_output_memory}"
     def threads = "${threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -86,8 +88,9 @@ process spades_assembler {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.spades_spades_assembler_memory} GB"
+    def gb = "${params.spades_spades_assembler_memory}"
     def threads = "${params.spades_spades_assembler_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -115,8 +118,9 @@ process spades_e2e {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy'
-    memory "${params.spades_spades_e2e_memory} GB"
+    def gb = "${params.spades_spades_e2e_memory}"
     def threads = "${params.spades_spades_e2e_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

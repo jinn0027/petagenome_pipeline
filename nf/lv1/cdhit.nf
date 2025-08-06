@@ -16,8 +16,9 @@ process cdhit_est {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.cdhit_cdhit_est_memory} GB"
+    def gb = "${params.cdhit_cdhit_est_memory}"
     def threads = "${params.cdhit_cdhit_est_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

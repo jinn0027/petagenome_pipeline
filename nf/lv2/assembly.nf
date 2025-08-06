@@ -19,8 +19,9 @@ process filter_and_rename {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.assembly_filter_and_rename_memory} GB"
+    def gb = "${params.assembly_filter_and_rename_memory}"
     def threads = "${params.assembly_filter_and_rename_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -47,8 +48,9 @@ process get_length {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.assembly_get_length_memory} GB"
+    def gb = "${params.assembly_get_length_memory}"
     def threads = "${params.assembly_get_length_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -74,8 +76,9 @@ process get_stats {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.assembly_get_stats_memory} GB"
+    def gb = "${params.assembly_get_stats_memory}"
     def threads = "${params.assembly_get_stats_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

@@ -32,9 +32,10 @@ process explore_circular_contigs {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
-    memory "${params.circular_contigs_explore_circular_contigs_memory} GB"
+    def gb = "${params.circular_contigs_explore_circular_contigs_memory}"
     def threads = circular_contigs_explore_circular_contigs_threads
-    params.executor=="sge" ? null : threads
+    memory "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(id), path(contig, arity: '1')

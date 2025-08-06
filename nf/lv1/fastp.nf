@@ -13,8 +13,9 @@ process fastp {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastp/fastp.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.fastp_fastp_memory} GB"
+    def gb = "${params.fastp_fastp_memory}"
     def threads = "${params.fastp_fastp_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

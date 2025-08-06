@@ -16,8 +16,11 @@ process metaphlan {
     container = "${params.petagenomeDir}/modules/metaphlan/metaphlan.sif"
     containerOptions "${params.apptainerRunOptions} -B ${params.metaphlan_db}:${local_db} -B /tmp:/home"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.metaphlan_metaphlan_memory} GB"
+    def gb = "${params.metaphlan_metaphlan_memory}"
     def threads = "${params.metaphlan_metaphlan_threads}"
+    memory "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

@@ -19,8 +19,9 @@ process virsorter {
     containerOptions "${params.apptainerRunOptions} -B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
     //containerOptions "--no-home -B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.virsorter_virsorter_memory} GB"
+    def gb = "${params.virsorter_virsorter_memory}"
     def threads = "${params.virsorter_virsorter_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

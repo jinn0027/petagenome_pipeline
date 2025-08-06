@@ -10,8 +10,11 @@ process megahit {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/megahit/megahit.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.megahit_megahit_memory} GB"
+    def gb = "${params.megahit_megahit_memory}"
     def threads = "${params.megahit_megahit_threads}"
+    memory "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

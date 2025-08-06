@@ -16,8 +16,11 @@ process prodigal {
     tag "${read_id}"
     container = "${params.petagenomeDir}/modules/prodigal/prodigal.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.prodigal_prodigal_memory} GB"
+    def gb = "${params.prodigal_prodigal_memory}"
     def threads = "${params.prodigal_prodigal_threads}"
+    memory "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

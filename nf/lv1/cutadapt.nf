@@ -14,8 +14,9 @@ process cutadapt {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/cutadapt/cutadapt.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.cutadapt_cutadapt_memory} GB"
+    def gb = "${params.cutadapt_cutadapt_memory}"
     def threads = "${params.cutadapt_cutadapt_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

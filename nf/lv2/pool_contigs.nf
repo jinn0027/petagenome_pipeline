@@ -29,8 +29,9 @@ process merge_contigs {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.pool_contigs_mergs_contigs_memory} GB"
+    def gb = "${params.pool_contigs_mergs_contigs_memory}"
     def threads = "${params.pool_contigs_mergs_contigs_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -63,8 +64,9 @@ process filter_and_rename {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.pool_contigs_filter_and_rename_memory} GB"
+    def gb = "${params.pool_contigs_filter_and_rename_memory}"
     def threads = "${params.pool_contigs_filter_and_rename_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -85,8 +87,9 @@ process summarize_name {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.pool_contigs_summarize_name_memory} GB"
+    def gb = "${params.pool_contigs_summarize_name_memory}"
     def threads = "${params.pool_contigs_summarize_name_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -122,8 +125,9 @@ process get_length {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.pool_contigs_get_length_memory} GB"
+    def gb = "${params.pool_contigs_get_length_memory}"
     def threads = "${params.pool_contigs_get_length_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -149,8 +153,9 @@ process get_stats {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.pool_contigs_get_stats_memory} GB"
+    def gb = "${params.pool_contigs_get_stats_memory}"
     def threads = "${params.pool_contigs_get_stats_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

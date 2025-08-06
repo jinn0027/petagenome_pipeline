@@ -13,8 +13,9 @@ process bowtie_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bowtie/bowtie.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.bowtie_bowtie_makerefdb_memory} GB"
+    def gb = "${params.bowtie_bowtie_makerefdb_memory}"
     def threads = "${params.bowtie_bowtie_makerefdb_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -37,8 +38,9 @@ process bowtie {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bowtie/bowtie.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
-    memory "${params.bowtie_bowtie_memory} GB"
+    def gb = "${params.bowtie_bowtie_memory}"
     def threads = "${params.bowtie_bowtie_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

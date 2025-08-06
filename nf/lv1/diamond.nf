@@ -19,8 +19,9 @@ process diamond_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.diamond_diamond_makerefdb_memory} GB"
+    def gb = "${params.diamond_diamond_makerefdb_memory}"
     def threads = "${params.diamond_diamond_makerefdb_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -43,8 +44,9 @@ process diamond_blastp {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
-    memory "${params.diamond_diamond_blastp_memory} GB"
+    def gb = "${params.diamond_diamond_blastp_memory}"
     def threads = "${params.diamond_diamond_blastp_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

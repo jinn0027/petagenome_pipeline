@@ -22,8 +22,11 @@ process prinseq {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/prinseq/prinseq.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.prinseq_prinseq_memory} GB"
+    def gb = "${params.prinseq_prinseq_memory}"
     def threads = "${params.prinseq_prinseq_threads}"
+    memory "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

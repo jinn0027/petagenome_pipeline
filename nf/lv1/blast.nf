@@ -20,8 +20,9 @@ process blast_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    memory "${params.blast_blast_makerefdb_memory} GB"
+    def gb = "${params.blast_blast_makerefdb_memory}"
     def threads = "${params.blast_blast_makerefdb_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -50,8 +51,9 @@ process blastn {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
-    memory "${params.blast_blastn_memory} GB"
+    def gb = "${params.blast_blastn_memory}"
     def threads = "${params.blast_blastn_threads}"
+    memory "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
