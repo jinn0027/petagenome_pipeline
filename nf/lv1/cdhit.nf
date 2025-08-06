@@ -30,7 +30,7 @@ process cdhit_est {
         echo "${processProfile(task)}"
         mkdir -p ${id}
         cd-hit-est \\
-            -M "${params.cdhit_cdhit_est_memory}000" \\
+            -M "${gb}000" \\
             -T ${threads} \\
             -c ${params.cdhit_identity_threshold} \\
             -G ${params.cdhit_global_sequence_identity} \\

@@ -39,7 +39,7 @@ process spades_error_correction {
         echo "${processProfile(task)}"
         mkdir ${pair_id}
         spades.py \\
-            --memory ${params.spades_spades_error_correction_memory} \\
+            --memory ${gb} \\
             --threads ${threads} \\
             --only-error-correction \\
             --disable-gzip-output \\
@@ -72,7 +72,7 @@ process spades_error_correction_gzip_output {
         echo "${processProfile(task)}"
         mkdir ${pair_id}
         spades.py \\
-            --memory ${params.spades_spades_error_correction_gzip_output_memory} \\
+            --memory ${gb} \\
             --threads ${threads} \\
             --only-error-correction \\
             --pe1-1 ${reads[0]} \\
@@ -104,7 +104,7 @@ process spades_assembler {
         echo "${processProfile(task)}"
         mkdir -p ${pair_id}
         spades.py \\
-            --memory ${params.spades_spades_assembler_memory} \\
+            --memory ${gb} \\
             --threads ${threads} \\
             --only-assembler \\
             --meta \\

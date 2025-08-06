@@ -30,7 +30,7 @@ process bbmap_makerefdb {
         """
         echo "${processProfile(task)}"
         bbmap.sh \\
-            -Xmx${params.bbmap_bbmap_makerefdb_memory}g \\
+            -Xmx${gb}g \\
             threads=${threads} \\
             ref=${ref} \\
             path=${ref_id}
@@ -55,7 +55,7 @@ process bbmap {
         echo "${processProfile(task)}"
         mkdir -p ${pair_id}
         bbmap.sh \\
-            -Xmx${params.bbmap_bbmap_memory}g \\
+            -Xmx${gb}g \\
             threads=${threads} \\
             ambiguous=${params.bbmap_ambiguous} \\
             minid=${params.bbmap_minid} \\

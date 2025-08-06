@@ -23,7 +23,7 @@ process megahit {
         """
         echo "${processProfile(task)}"
         megahit \\
-            -m "${params.megahit_megahit_memory}000000000" \\
+            -m "${gb}000000000" \\
             -t ${threads} \\
             -1 ${reads[0]} \\
             -2 ${reads[1]} \\
