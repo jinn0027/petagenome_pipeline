@@ -12,7 +12,7 @@ def clusterOptions(executor, threads, label) {
 	    }
 	    break
 	case "sge" :
-	    ret += " -S /bin/bash -cwd -pe def_slot ${threads}"
+	    ret += " -S /bin/bash -cwd -pe def_slot ${threads} -v PATH,LD_LIBRARY_PATH,PETAGENOME_PIPELINE_DIR"
 	    if ("sc" in label) {
 	        ret +=" -l exclusive"
 	    }
