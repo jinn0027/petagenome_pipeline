@@ -3,7 +3,7 @@ nextflow.enable.dsl=2
 
 def clusterOptions(executor, cpus, label) {
     ret = ""
-    switch ("$executor") {
+    switch ("${executor}") {
         case "local" :
 	    break
 	case "slurm" :
