@@ -11,7 +11,7 @@ process fastqc {
     container = "${params.petagenomeDir}/modules/fastqc/fastqc.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.fastqc_fastqc_memory} GB"
-    threads = "${params.fastqc_fastqc_threads}"
+    def threads = "${params.fastqc_fastqc_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -25,7 +25,7 @@ process fastqc {
         mkdir -p .cache
         mkdir -p ${pair_id}
         fastqc \\
-            -t ${params.fastqc_fastqc_threads} \\
+            -t ${threads} \\
             -o ${pair_id} \\
             ${reads[0]} \\
             ${reads[1]}

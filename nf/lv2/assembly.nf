@@ -20,7 +20,7 @@ process filter_and_rename {
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_filter_and_rename_memory} GB"
-    threads = "${params.assembly_filter_and_rename_threads}"
+    def threads = "${params.assembly_filter_and_rename_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -48,7 +48,7 @@ process get_length {
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_get_length_memory} GB"
-    threads = "${params.assembly_get_length_threads}"
+    def threads = "${params.assembly_get_length_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -75,7 +75,7 @@ process get_stats {
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_get_stats_memory} GB"
-    threads = "${params.assembly_get_stats_threads}"
+    def threads = "${params.assembly_get_stats_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

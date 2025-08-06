@@ -14,7 +14,7 @@ process get_length {
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.error_correction_get_length_memory} GB"
-    threads = "${params.error_correction_get_length_threads}"
+    def threads = "${params.error_correction_get_length_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

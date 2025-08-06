@@ -13,6 +13,9 @@ def clusterOptions(executor, threads, label) {
 	    break
 	case "sge" :
 	    ret += " -S /bin/bash -cwd -pe def_slot ${threads}"
+	    if ("sc" in label) {
+	        ret +=" -l exclusive"
+	    }
 	    break
 	default :
 	    break

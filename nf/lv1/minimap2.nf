@@ -23,7 +23,7 @@ process minimap2_makerefdb {
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.minimap2_minimap2_makerefdb_memory} GB"
-    threads = "${params.minimap2_minimap2_makerefdb_threads}"
+    def threads = "${params.minimap2_minimap2_makerefdb_threads}"
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -33,7 +33,7 @@ process minimap2_makerefdb {
         echo "${processProfile(task)}"
         mkdir -p ${ref_id}
         minimap2 \\
-            -t ${params.minimap2_minimap2_makerefdb_threads} \\
+            -t ${threads} \\
             -a ${ref} \\
             -d ${ref_id}/ref.idx
         """
@@ -44,7 +44,7 @@ process minimap2 {
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy'
     memory "${params.minimap2_minimap2_memory} GB"
-    threads = "${params.minimap2_minimap2_threads}"
+    def threads = "${params.minimap2_minimap2_threads}"
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
@@ -54,7 +54,7 @@ process minimap2 {
         echo "${processProfile(task)}"
         mkdir -p ${qry_id}
         minimap2 \\
-            -t ${params.minimap2_minimap2_threads} \\
+            -t ${threads} \\
             -a ${ref_db}/ref.idx \\
             ${qry} \\
             > ${qry_id}/out.sam
@@ -66,7 +66,7 @@ process minimap2_e2e {
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy'
     memory "${params.minimap2_minimap2_e2e_memory} GB"
-    threads = "${params.minimap2_minimap2_e2e_threads}"
+    def threads = "${params.minimap2_minimap2_e2e_threads}"
     input:
         tuple val(ref_id), path(ref, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
@@ -76,7 +76,7 @@ process minimap2_e2e {
         echo "${processProfile(task)}"
         mkdir -p ${qry_id}
         minimap2 \\
-            -t ${params.minimap2_minimap2_e2e_threads} \\
+            -t ${threads} \\
             -a ${ref} \\
             ${qry} \\
             > ${qry_id}/out.sam

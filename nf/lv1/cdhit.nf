@@ -17,7 +17,7 @@ process cdhit_est {
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.cdhit_cdhit_est_memory} GB"
-    threads = "${params.cdhit_cdhit_est_threads}"
+    def threads = "${params.cdhit_cdhit_est_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -30,7 +30,7 @@ process cdhit_est {
         mkdir -p ${id}
         cd-hit-est \\
             -M "${params.cdhit_cdhit_est_memory}000" \\
-            -T ${params.cdhit_cdhit_est_threads} \\
+            -T ${threads} \\
             -c ${params.cdhit_identity_threshold} \\
             -G ${params.cdhit_global_sequence_identity} \\
             -d ${params.cdhit_description_length} \\

@@ -17,7 +17,7 @@ process metaphlan {
     containerOptions "${params.apptainerRunOptions} -B ${params.metaphlan_db}:${local_db} -B /tmp:/home"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.metaphlan_metaphlan_memory} GB"
-    threads = "${params.metaphlan_metaphlan_threads}"
+    def threads = "${params.metaphlan_metaphlan_threads}"
     input:
         tuple val(read_id), path(read, arity: '1')
     output:
@@ -29,7 +29,7 @@ process metaphlan {
         echo "${processProfile(task)}"
         mkdir -p ${read_id}
         metaphlan \\
-            --nproc ${params.metaphlan_metaphlan_threads} \\
+            --nproc ${threads} \\
             --bowtie2db ${local_db} \\
             --input_type ${params.metaphlan_input_type} \\
             --bowtie2out ${read_id}/out.sam \\

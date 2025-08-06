@@ -11,7 +11,7 @@ process falco {
     container = "${params.petagenomeDir}/modules/falco/falco.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.falco_falco_memory} GB"
-    threads = "${params.falco_falco_threads}"
+    def threads = "${params.falco_falco_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -23,7 +23,7 @@ process falco {
         echo "${processProfile(task)}"
         mkdir -p ${pair_id}
         falco \\
-            -t ${params.falco_falco_threads} \\
+            -t ${threads} \\
             -o ${pair_id} \\
             ${reads[0]} \\
             ${reads[1]}

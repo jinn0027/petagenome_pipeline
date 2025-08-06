@@ -33,7 +33,7 @@ process explore_circular_contigs {
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     memory "${params.circular_contigs_explore_circular_contigs_memory} GB"
-    threads = circular_contigs_explore_circular_contigs_threads
+    def threads = circular_contigs_explore_circular_contigs_threads
     params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:

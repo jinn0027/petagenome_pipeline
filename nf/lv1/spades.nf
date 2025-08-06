@@ -24,7 +24,7 @@ process spades_error_correction {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.spades_spades_error_correction_memory} GB"
-    threads = "${params.spades_spades_error_correction_threads}"
+    def threads = "${params.spades_spades_error_correction_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -39,7 +39,7 @@ process spades_error_correction {
         mkdir ${pair_id}
         spades.py \\
             --memory ${params.spades_spades_error_correction_memory} \\
-            --threads ${params.spades_spades_error_correction_threads} \\
+            --threads ${threads} \\
             --only-error-correction \\
             --disable-gzip-output \\
             --pe1-1 ${reads[0]} \\
@@ -56,7 +56,7 @@ process spades_error_correction_gzip_output {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.spades_spades_error_correction_gzip_output_memory} GB"
-    threads = "${params.spades_spades_error_correction_gzip_output_threads}"
+    def threads = "${threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -71,7 +71,7 @@ process spades_error_correction_gzip_output {
         mkdir ${pair_id}
         spades.py \\
             --memory ${params.spades_spades_error_correction_gzip_output_memory} \\
-            --threads ${params.spades_spades_error_correction_gzip_output_threads} \\
+            --threads ${threads} \\
             --only-error-correction \\
             --pe1-1 ${reads[0]} \\
             --pe1-2 ${reads[1]} \\
@@ -87,7 +87,7 @@ process spades_assembler {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.spades_spades_assembler_memory} GB"
-    threads = "${params.spades_spades_assembler_threads}"
+    def threads = "${params.spades_spades_assembler_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -102,7 +102,7 @@ process spades_assembler {
         mkdir -p ${pair_id}
         spades.py \\
             --memory ${params.spades_spades_assembler_memory} \\
-            --threads ${params.spades_spades_assembler_threads} \\
+            --threads ${threads} \\
             --only-assembler \\
             --meta \\
             --pe1-1 ${reads[0]} \\
@@ -116,7 +116,7 @@ process spades_e2e {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy'
     memory "${params.spades_spades_e2e_memory} GB"
-    threads = "${params.spades_spades_e2e_threads}"
+    def threads = "${params.spades_spades_e2e_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -131,7 +131,7 @@ process spades_e2e {
         mkdir -p ${pair_id}
         spades.py \\
             --memory ${params.spades_spades_e2e_memory} \\
-            --threads ${params.spades_spades_e2e_threads} \\
+            --threads ${threads} \\
             --meta \\
             --pe1-1 ${reads[0]} \\
             --pe1-2 ${reads[1]} \\

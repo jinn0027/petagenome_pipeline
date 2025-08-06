@@ -20,7 +20,7 @@ process virsorter {
     //containerOptions "--no-home -B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.virsorter_virsorter_memory} GB"
-    threads = "${params.virsorter_virsorter_threads}"
+    def threads = "${params.virsorter_virsorter_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -46,7 +46,7 @@ process virsorter {
             --db \${db_type} \\
             --wdir ${params.virsorter_aligner}/${read_id} \\
             --data-dir ${local_db} \\
-            --ncpu ${params.virsorter_virsorter_threads} \\
+            --ncpu ${threads} \\
             --fna \${read_}"
         if [ "${params.virsorter_aligner}" = "diamond" ] ; then
             args+=" --diamond"

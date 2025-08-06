@@ -77,7 +77,7 @@ process mmseqs2_makerefdb {
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_makerefdb_memory} GB"
-    threads = "${params.mmseqs2_mmseqs2_makerefdb_threads}"
+    def threads = "${params.mmseqs2_mmseqs2_makerefdb_threads}"
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -98,7 +98,7 @@ process mmseqs2_makeqrydb {
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_makeqrydb_memory} GB"
-    threads = "${params.mmseqs2_mmseqs2_makeqrydb_threads}"
+    def threads = "${params.mmseqs2_mmseqs2_makeqrydb_threads}"
     input:
         tuple val(qry_id), path(qry, arity: '1')
     output:
@@ -119,7 +119,7 @@ process mmseqs2_cluster {
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_cluster_memory} GB"
-    threads = "${params.mmseqs2_mmseqs2_cluster_threads}"
+    def threads = "${params.mmseqs2_mmseqs2_cluster_threads}"
     input:
         tuple val(ref_id), path(ref_db)
     output:
@@ -154,19 +154,19 @@ process mmseqs2_cluster {
                  "
         fi
         mmseqs ${params.mmseqs2_cluster_mode} \\
-            --threads ${params.mmseqs2_mmseqs2_cluster_threads} \\
+            --threads ${threads} \\
             \${args} \\
             ${ref_db}/ref \\
             ${ref_id}/clu \\
             tmp
         mmseqs createtsv \\
-            --threads ${params.mmseqs2_mmseqs2_cluster_threads} \\
+            --threads ${threads} \\
             ${ref_db}/ref \\
             ${ref_db}/ref \\
             ${ref_id}/clu \\
             ${ref_id}/out.tsv
         mmseqs result2repseq \\
-            --threads ${params.mmseqs2_mmseqs2_cluster_threads} \\
+            --threads ${threads} \\
             ${ref_db}/ref \\
             ${ref_id}/clu \\
             ${ref_id}/clu_rep
@@ -184,7 +184,7 @@ process mmseqs2_search {
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_search_memory} GB"
-    threads = "${params.mmseqs2_mmseqs2_search_threads}"
+    def threads = "${params.mmseqs2_mmseqs2_search_threads}"
     input:
         tuple val(ref_id), path(ref_db), val(qry_id), path(qry_db)
     output:
@@ -208,7 +208,7 @@ process mmseqs2_search {
              --split-memory-limit ${params.mmseqs2_cluster_split_memory_limit} \\
                  "
         mmseqs search \\
-            --threads ${params.mmseqs2_mmseqs2_search_threads} \\
+            --threads ${threads} \\
             \${args} \\
             ${qry_db}/qry \\
             ${ref_db}/ref \\

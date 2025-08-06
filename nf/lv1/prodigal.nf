@@ -17,7 +17,7 @@ process prodigal {
     container = "${params.petagenomeDir}/modules/prodigal/prodigal.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.prodigal_prodigal_memory} GB"
-    threads = "${params.prodigal_prodigal_threads}"
+    def threads = "${params.prodigal_prodigal_threads}"
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

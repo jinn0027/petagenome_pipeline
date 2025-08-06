@@ -14,7 +14,7 @@ process bowtie2_makerefdb {
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.bowtie2_bowtie2_makerefdb_memory} GB"
-    threads = "${params.bowtie2_bowtie2_makerefdb_threads}"
+    def threads = "${params.bowtie2_bowtie2_makerefdb_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -26,7 +26,7 @@ process bowtie2_makerefdb {
         echo "${processProfile(task)}"
         mkdir -p ${ref_id}
         bowtie2-build \\
-            --threads ${params.bowtie2_bowtie2_makerefdb_threads} \\
+            --threads ${threads} \\
             --seed ${params.random_seed} \\
             ${ref} \\
             ${ref_id}/ref
@@ -38,7 +38,7 @@ process bowtie2 {
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     memory "${params.bowtie2_bowtie2_memory} GB"
-    threads = "${params.bowtie2_bowtie2_threads}"
+    def threads = "${params.bowtie2_bowtie2_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -50,7 +50,7 @@ process bowtie2 {
         echo "${processProfile(task)}"
         mkdir -p ${qry_id}
         bowtie2 \\
-            -p ${params.bowtie2_bowtie2_threads} \\
+            -p ${threads} \\
             --seed ${params.random_seed} \\
             -f \\
             -x ${ref_db}/ref \\

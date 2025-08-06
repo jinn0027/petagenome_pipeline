@@ -14,7 +14,7 @@ process virsorter2 {
     //containerOptions "${params.apptainerRunOptions} -B ${params.virsorter2_db}:${local_db} --writable-tmpfs"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.virsorter2_virsorter2_memory} GB"
-    threads = "${params.virsorter2_virsorter2_threads}"
+    def threads = "${params.virsorter2_virsorter2_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -30,7 +30,7 @@ process virsorter2 {
             --db-dir=${local_db}
         virsorter \\
             run \\
-            -j ${params.virsorter2_virsorter2_threads} \\
+            -j ${threads} \\
             -w ${read_id} \\
             -i ${read}
         """

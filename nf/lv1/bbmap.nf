@@ -18,7 +18,7 @@ process bbmap_makerefdb {
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.bbmap_bbmap_makerefdb_memory} GB"
-    threads = "${params.bbmap_bbmap_makerefdb_threads}"
+    def threads = "${params.bbmap_bbmap_makerefdb_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -30,7 +30,7 @@ process bbmap_makerefdb {
         echo "${processProfile(task)}"
         bbmap.sh \\
             -Xmx${params.bbmap_bbmap_makerefdb_memory}g \\
-            threads=${params.bbmap_bbmap_threads} \\
+            threads=${threads} \\
             ref=${ref} \\
             path=${ref_id}
         """
@@ -41,7 +41,7 @@ process bbmap {
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     memory "${params.bbmap_bbmap_memory} GB"
-    threads = "${params.bbmap_bbmap_threads}"
+    def threads = "${params.bbmap_bbmap_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -54,7 +54,7 @@ process bbmap {
         mkdir -p ${pair_id}
         bbmap.sh \\
             -Xmx${params.bbmap_bbmap_memory}g \\
-            threads=${params.bbmap_bbmap_threads} \\
+            threads=${threads} \\
             ambiguous=${params.bbmap_ambiguous} \\
             minid=${params.bbmap_minid} \\
             pairlen=${params.bbmap_pairlen} \\

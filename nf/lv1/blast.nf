@@ -21,7 +21,7 @@ process blast_makerefdb {
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.blast_blast_makerefdb_memory} GB"
-    threads = "${params.blast_blast_makerefdb_threads}"
+    def threads = "${params.blast_blast_makerefdb_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -51,7 +51,7 @@ process blastn {
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     memory "${params.blast_blastn_memory} GB"
-    threads = "${params.blast_blastn_threads}"
+    def threads = "${params.blast_blastn_threads}"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
@@ -64,7 +64,7 @@ process blastn {
         mkdir -p ${qry_id}
         blastn \\
             -task ${params.blast_task} \\
-            -num_threads ${params.blast_blastn_threads} \\
+            -num_threads ${threads} \\
             -query ${qry} \\
             -db ${ref_db}/ref \\
             -perc_identity ${params.blast_perc_identity} \\

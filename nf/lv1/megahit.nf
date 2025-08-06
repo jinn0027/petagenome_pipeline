@@ -11,7 +11,7 @@ process megahit {
     container = "${params.petagenomeDir}/modules/megahit/megahit.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.megahit_megahit_memory} GB"
-    threads = "${params.megahit_megahit_threads}"
+    def threads = "${params.megahit_megahit_threads}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -21,7 +21,7 @@ process megahit {
         echo "${processProfile(task)}"
         megahit \\
             -m "${params.megahit_megahit_memory}000000000" \\
-            -t ${params.megahit_megahit_threads} \\
+            -t ${threads} \\
             -1 ${reads[0]} \\
             -2 ${reads[1]} \\
             -o ${pair_id} \\
