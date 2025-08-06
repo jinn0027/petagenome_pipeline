@@ -3,16 +3,18 @@ nextflow.enable.dsl=2
 
 def clusterOptions(executor, threads, label) {
     ret = ""
+    envs = "PATH,LD_LIBRARY_PATH,PETAGENOME_PIPELINE_DIR"
     switch ("${executor}") {
         case "local" :
 	    break
 	case "slurm" :
-	    if ("sc" in label) {
+            ret += " --export=${envs}"
+            if ("sc" in label) {
 	        ret +=" --exclusive"
 	    }
 	    break
 	case "sge" :
-	    ret += " -S /bin/bash -cwd -pe def_slot ${threads} -v PATH,LD_LIBRARY_PATH,PETAGENOME_PIPELINE_DIR"
+	    ret += " -S /bin/bash -cwd -pe def_slot ${threads} -v ${envs}"
 	    if ("sc" in label) {
 	        ret +=" -l exclusive"
 	    }
