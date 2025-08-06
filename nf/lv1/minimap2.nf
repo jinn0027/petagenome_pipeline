@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.minimap2_minimap2_makerefdb_memory = params.memory
 params.minimap2_minimap2_makerefdb_threads = params.threads
@@ -23,10 +23,9 @@ process minimap2_makerefdb {
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.minimap2_minimap2_makerefdb_memory} GB"
-    cpus "${params.minimap2_minimap2_makerefdb_threads}"
+    threads = "${params.minimap2_minimap2_makerefdb_threads}"
     input:
         tuple val(ref_id), path(ref, arity: '1')
-
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
@@ -45,10 +44,9 @@ process minimap2 {
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy'
     memory "${params.minimap2_minimap2_memory} GB"
-    cpus "${params.minimap2_minimap2_threads}"
+    threads = "${params.minimap2_minimap2_threads}"
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
-
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
     script:
@@ -68,7 +66,7 @@ process minimap2_e2e {
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy'
     memory "${params.minimap2_minimap2_e2e_memory} GB"
-    cpus "${params.minimap2_minimap2_e2e_threads}"
+    threads = "${params.minimap2_minimap2_e2e_threads}"
     input:
         tuple val(ref_id), path(ref, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:

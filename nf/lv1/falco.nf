@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.falco_falco_memory = params.memory
 params.falco_falco_threads = params.threads
@@ -11,8 +11,9 @@ process falco {
     container = "${params.petagenomeDir}/modules/falco/falco.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.falco_falco_memory} GB"
-    cpus "${params.falco_falco_threads}"
-
+    threads = "${params.falco_falco_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

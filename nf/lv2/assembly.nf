@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
@@ -20,7 +20,9 @@ process filter_and_rename {
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_filter_and_rename_memory} GB"
-    cpus "${params.assembly_filter_and_rename_threads}"
+    threads = "${params.assembly_filter_and_rename_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
@@ -46,7 +48,9 @@ process get_length {
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_get_length_memory} GB"
-    cpus "${params.assembly_get_length_threads}"
+    threads = "${params.assembly_get_length_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(id), path(reads, arity: '0..*')
     output:
@@ -71,7 +75,9 @@ process get_stats {
     containerOptions = "--bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.assembly_get_stats_memory} GB"
-    cpus "${params.assembly_get_stats_threads}"
+    threads = "${params.assembly_get_stats_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(id), path(lengths, arity: '1..*')
     output:

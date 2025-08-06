@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.spades_spades_error_correction_memory = params.memory
 params.spades_spades_error_correction_threads = params.threads
@@ -24,7 +24,9 @@ process spades_error_correction {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.spades_spades_error_correction_memory} GB"
-    cpus "${params.spades_spades_error_correction_threads}"
+    threads = "${params.spades_spades_error_correction_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -54,7 +56,9 @@ process spades_error_correction_gzip_output {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.spades_spades_error_correction_gzip_output_memory} GB"
-    cpus "${params.spades_spades_error_correction_gzip_output_threads}"
+    threads = "${params.spades_spades_error_correction_gzip_output_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -83,7 +87,9 @@ process spades_assembler {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.spades_spades_assembler_memory} GB"
-    cpus "${params.spades_spades_assembler_threads}"
+    threads = "${params.spades_spades_assembler_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -109,6 +115,10 @@ process spades_e2e {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy'
+    memory "${params.spades_spades_e2e_memory} GB"
+    threads = "${params.spades_spades_e2e_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

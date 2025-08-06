@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.metaphlan_metaphlan_memory = params.memory
 params.metaphlan_metaphlan_threads = params.threads
@@ -17,7 +17,7 @@ process metaphlan {
     containerOptions "${params.apptainerRunOptions} -B ${params.metaphlan_db}:${local_db} -B /tmp:/home"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.metaphlan_metaphlan_memory} GB"
-    cpus "${params.metaphlan_metaphlan_threads}"
+    threads = "${params.metaphlan_metaphlan_threads}"
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

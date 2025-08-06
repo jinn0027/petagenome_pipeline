@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.fastqc_fastqc_memory = params.memory
 params.fastqc_fastqc_threads = params.threads
@@ -11,8 +11,9 @@ process fastqc {
     container = "${params.petagenomeDir}/modules/fastqc/fastqc.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.fastqc_fastqc_memory} GB"
-    cpus "${params.fastqc_fastqc_threads}"
-
+    threads = "${params.fastqc_fastqc_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

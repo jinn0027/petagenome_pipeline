@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile } from "${params.petagenomeDir}/nf/common/utils"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 
 params.circular_contigs_explore_circular_contigs_memory = params.memory
@@ -33,10 +33,9 @@ process explore_circular_contigs {
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     memory "${params.circular_contigs_explore_circular_contigs_memory} GB"
-    cpus "${params.circular_contigs_explore_circular_contigs_threads}"
-
-    def 
-
+    threads = circular_contigs_explore_circular_contigs_threads
+    params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(id), path(contig, arity: '1')
     output:

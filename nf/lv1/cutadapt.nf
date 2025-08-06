@@ -1,8 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile;
-createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.cutadapt_cutadapt_memory = params.memory
 params.cutadapt_cutadapt_threads = params.threads
@@ -16,7 +15,9 @@ process cutadapt {
     container = "${params.petagenomeDir}/modules/cutadapt/cutadapt.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.cutadapt_cutadapt_memory} GB"
-    cpus "${params.cutadapt_cutadapt_threads}"
+    threads = "${params.cutadapt_cutadapt_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

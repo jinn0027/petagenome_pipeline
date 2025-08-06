@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.cdhit_cdhit_est_memory = params.memory
 params.cdhit_cdhit_est_threads = params.threads
@@ -17,7 +17,9 @@ process cdhit_est {
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.cdhit_cdhit_est_memory} GB"
-    cpus "${params.cdhit_cdhit_est_threads}"
+    threads = "${params.cdhit_cdhit_est_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(id), path(read, arity: '1')
     output:

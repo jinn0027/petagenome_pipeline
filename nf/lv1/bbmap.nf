@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createPairsChannel; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createPairsChannel; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.bbmap_bbmap_makerefdb_memory = params.memory
 params.bbmap_bbmap_makerefdb_threads = params.threads
@@ -18,7 +18,9 @@ process bbmap_makerefdb {
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.bbmap_bbmap_makerefdb_memory} GB"
-    cpus "${params.bbmap_bbmap_makerefdb_threads}"
+    threads = "${params.bbmap_bbmap_makerefdb_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -39,7 +41,9 @@ process bbmap {
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     memory "${params.bbmap_bbmap_memory} GB"
-    cpus "${params.bbmap_bbmap_threads}"
+    threads = "${params.bbmap_bbmap_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(pair_id), path(reads, arity: '2')
     output:

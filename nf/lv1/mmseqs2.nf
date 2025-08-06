@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.mmseqs2_mmseqs2_makerefdb_memory = params.memory
 params.mmseqs2_mmseqs2_makerefdb_threads = params.threads
@@ -77,7 +77,7 @@ process mmseqs2_makerefdb {
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_makerefdb_memory} GB"
-    cpus "${params.mmseqs2_mmseqs2_makerefdb_threads}"
+    threads = "${params.mmseqs2_mmseqs2_makerefdb_threads}"
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -98,7 +98,7 @@ process mmseqs2_makeqrydb {
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_makeqrydb_memory} GB"
-    cpus "${params.mmseqs2_mmseqs2_makeqrydb_threads}"
+    threads = "${params.mmseqs2_mmseqs2_makeqrydb_threads}"
     input:
         tuple val(qry_id), path(qry, arity: '1')
     output:
@@ -119,7 +119,7 @@ process mmseqs2_cluster {
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_cluster_memory} GB"
-    cpus "${params.mmseqs2_mmseqs2_cluster_threads}"
+    threads = "${params.mmseqs2_mmseqs2_cluster_threads}"
     input:
         tuple val(ref_id), path(ref_db)
     output:
@@ -184,7 +184,7 @@ process mmseqs2_search {
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     memory "${params.mmseqs2_mmseqs2_search_memory} GB"
-    cpus "${params.mmseqs2_mmseqs2_search_threads}"
+    threads = "${params.mmseqs2_mmseqs2_search_threads}"
     input:
         tuple val(ref_id), path(ref_db), val(qry_id), path(qry_db)
     output:

@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.virsorter_virsorter_memory = params.memory
 params.virsorter_virsorter_threads = params.threads
@@ -20,7 +20,9 @@ process virsorter {
     //containerOptions "--no-home -B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.virsorter_virsorter_memory} GB"
-    cpus "${params.virsorter_virsorter_threads}"
+    threads = "${params.virsorter_virsorter_threads}"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, threads, label)}"
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

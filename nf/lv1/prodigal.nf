@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.prodigal_prodigal_memory = params.memory
 params.prodigal_prodigal_threads = params.threads
@@ -17,7 +17,7 @@ process prodigal {
     container = "${params.petagenomeDir}/modules/prodigal/prodigal.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.prodigal_prodigal_memory} GB"
-    cpus "${params.prodigal_prodigal_threads}"
+    threads = "${params.prodigal_prodigal_threads}"
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

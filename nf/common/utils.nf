@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-def clusterOptions(executor, cpus, label) {
+def clusterOptions(executor, threads, label) {
     ret = ""
     switch ("${executor}") {
         case "local" :
@@ -12,7 +12,7 @@ def clusterOptions(executor, cpus, label) {
 	    }
 	    break
 	case "sge" :
-	    ret += " -S /bin/bash -cwd -pe def_slot ${cpus}"
+	    ret += " -S /bin/bash -cwd -pe def_slot ${threads}"
 	    break
 	default :
 	    break
