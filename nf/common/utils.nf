@@ -1,6 +1,26 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+def clusterOptions(executor, cpus, label) {
+    ret = ""
+    switch ("$executor") {
+        case "local" :
+	    break
+	case "slurm" :
+	    if ("sc" in label) {
+	        ret +=" --exclusive"
+	    }
+	    break
+	case "sge" :
+	    ret += " -S /bin/bash -cwd -pe def_slot ${cpus}"
+	    break
+	default :
+	    break
+    }
+
+    return ret
+}
+
 def processProfile(task) {
     return "### ${task.process} ${task.tag} on \${HOSTNAME}"
 }

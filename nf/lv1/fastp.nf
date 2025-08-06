@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
+include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
 
 params.fastp_fastp_memory = params.memory
 params.fastp_fastp_threads = params.threads
@@ -10,11 +10,13 @@ params.fastp_cut_mean_quality = 15
 params.fastp_reads_minlength = 15
 
 process fastp {
+    label "sc"
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastp/fastp.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     memory "${params.fastp_fastp_memory} GB"
-    cpus "${params.fastp_fastp_threads}"
+    cpus params.executor=="sge" ? null : params.fastp_fastp_threads
+    clusterOptions "${clusterOptions(params.executor, params.fastp_fastp_threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
