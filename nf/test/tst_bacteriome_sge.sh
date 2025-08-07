@@ -31,7 +31,7 @@ lthre=5000
 
 nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
 #inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
-inPairs="/home/jinn/share/data/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+inPairs="/home/jinn/share/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
 
 outDir=out
 
