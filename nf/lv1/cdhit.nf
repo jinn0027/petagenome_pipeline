@@ -18,9 +18,9 @@ process cdhit_est {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.cdhit_cdhit_est_memory}"
     def threads = "${params.cdhit_cdhit_est_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(id), path(read, arity: '1')
     output:

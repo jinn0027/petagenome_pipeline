@@ -22,10 +22,10 @@ MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
 date=$(date +"%Y%m%d%H%M%S")
 
-threads=16 #$(nproc)
+threads=10 #$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
-memory=10
+memory=20
 
 lthre=5000
 
@@ -46,7 +46,11 @@ args="\
     "
 
 args+="\
-    --fastp_fastp_memory 10 \
+    -profile local
+    "
+
+args+="\
+    --fastp_fastp_memory 30 \
     --fastp_fastp_threads 30 \
     --spades_spades_error_correction_memory 80 \
     --spades_spades_error_correction_threads 30 \

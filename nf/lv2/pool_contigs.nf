@@ -31,9 +31,9 @@ process merge_contigs {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.pool_contigs_mergs_contigs_memory}"
     def threads = "${params.pool_contigs_mergs_contigs_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(id), path(contigs, arity: '1..*', stageAs: "?/*")
     output:
@@ -66,9 +66,9 @@ process filter_and_rename {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.pool_contigs_filter_and_rename_memory}"
     def threads = "${params.pool_contigs_filter_and_rename_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
@@ -89,9 +89,9 @@ process summarize_name {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.pool_contigs_summarize_name_memory}"
     def threads = "${params.pool_contigs_summarize_name_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(id), path(name, arity: '1')
         tuple val(id), path(clstr, arity: '1')
@@ -127,9 +127,9 @@ process get_length {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.pool_contigs_get_length_memory}"
     def threads = "${params.pool_contigs_get_length_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(id), path(reads, arity: '1..*')
     output:
@@ -155,9 +155,9 @@ process get_stats {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.pool_contigs_get_stats_memory}"
     def threads = "${params.pool_contigs_get_stats_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(id), path(lengths, arity: '1..*')
     output:

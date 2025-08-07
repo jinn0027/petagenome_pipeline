@@ -21,9 +21,9 @@ process diamond_makerefdb {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.diamond_diamond_makerefdb_memory}"
     def threads = "${params.diamond_diamond_makerefdb_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(ref_id), path(ref, arity: '1')
     output:
@@ -46,9 +46,9 @@ process diamond_blastp {
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.diamond_diamond_blastp_memory}"
     def threads = "${params.diamond_diamond_blastp_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:

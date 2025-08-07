@@ -18,9 +18,9 @@ process metaphlan {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.metaphlan_metaphlan_memory}"
     def threads = "${params.metaphlan_metaphlan_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(read_id), path(read, arity: '1')
     output:

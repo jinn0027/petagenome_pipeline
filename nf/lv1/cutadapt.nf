@@ -16,9 +16,9 @@ process cutadapt {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.cutadapt_cutadapt_memory}"
     def threads = "${params.cutadapt_cutadapt_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

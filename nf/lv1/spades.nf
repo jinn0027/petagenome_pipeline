@@ -25,9 +25,9 @@ process spades_error_correction {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.spades_spades_error_correction_memory}"
     def threads = "${params.spades_spades_error_correction_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -58,9 +58,9 @@ process spades_error_correction_gzip_output {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.spades_spades_error_correction_gzip_output_memory}"
     def threads = "${threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -90,9 +90,9 @@ process spades_assembler {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.spades_spades_assembler_memory}"
     def threads = "${params.spades_spades_assembler_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:
@@ -120,9 +120,9 @@ process spades_e2e {
     publishDir "${params.output}/${task.process}", mode: 'copy'
     def gb = "${params.spades_spades_e2e_memory}"
     def threads = "${params.spades_spades_e2e_threads}"
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(pair_id), path(reads, arity: '2')
     output:

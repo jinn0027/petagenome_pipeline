@@ -25,7 +25,7 @@ date=$(date +"%Y%m%d%H%M%S")
 threads=10 #$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
-memory=10
+memory=20
 
 #lthre=5000
 lthre=0
@@ -50,14 +50,16 @@ args+="\
     -profile sge
     "
 
-#args+="\
-#    --spades_spades_error_correction_memory 80 \
-#    --spades_spades_error_correction_threads 30 \
-#    --spades_spades_assembler_memory 100 \
-#    --spades_spades_assembler_threads 30 \
-#    --mmseqs2_mmseqs2_cluster_memory 100 \
-#    --mmseqs2_mmseqs2_cluster_threads 100 \
-#    "
+args+="\
+    --fastp_fastp_memory 30 \
+    --fastp_fastp_threads 30 \
+    --spades_spades_error_correction_memory 80 \
+    --spades_spades_error_correction_threads 30 \
+    --spades_spades_assembler_memory 100 \
+    --spades_spades_assembler_threads 30 \
+    --mmseqs2_mmseqs2_cluster_memory 100 \
+    --mmseqs2_mmseqs2_cluster_threads 100 \
+    "
 
 args_dbg="\
     -with-trace trace_bacteriome_pipeline.${date}.txt \

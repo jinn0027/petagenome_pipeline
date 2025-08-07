@@ -34,9 +34,9 @@ process explore_circular_contigs {
     publishDir "${params.output}/${task.process}/${id}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.circular_contigs_explore_circular_contigs_memory}"
     def threads = circular_contigs_explore_circular_contigs_threads
-    memory "${gb} GB"
+    memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, threads, label)}"
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(id), path(contig, arity: '1')
     output:

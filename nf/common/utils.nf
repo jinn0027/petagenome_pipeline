@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-def clusterOptions(executor, threads, label) {
+def clusterOptions(executor, gb, threads, label) {
     ret = ""
     envs = "PATH,LD_LIBRARY_PATH,PETAGENOME_PIPELINE_DIR"
     switch ("${executor}") {
@@ -14,7 +14,8 @@ def clusterOptions(executor, threads, label) {
 	    }
 	    break
 	case "sge" :
-	    ret += " -S /bin/bash -cwd -pe def_slot ${threads} -v ${envs}"
+        s_vmem = gb.toFloat() / threads.toFloat()
+	    ret += " -S /bin/bash -cwd -pe def_slot ${threads} -l s_vmem=${s_vmem}G -v ${envs}"
 	    if ("sc" in label) {
 	        ret +=" -l exclusive"
 	    }
