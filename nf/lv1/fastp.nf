@@ -15,7 +15,6 @@ process fastp {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.fastp_fastp_memory}"
     def threads = "${params.fastp_fastp_threads}"
-    //memory params.executor=="sge" ? null : "${gb} GB"
     memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
