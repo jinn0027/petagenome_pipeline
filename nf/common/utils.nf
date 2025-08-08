@@ -6,24 +6,20 @@ def clusterOptions(executor, gb, threads, label) {
     envs = "PATH,LD_LIBRARY_PATH,PETAGENOME_PIPELINE_DIR"
     switch ("${executor}") {
         case "local" :
-	    break
-	case "slurm" :
-            ret += " --export=${envs}"
-            if ("sc" in label) {
-	        ret +=" --exclusive"
-	    }
-	    break
-	case "sge" :
+        break
+    case "slurm" :
+        ret += " --export=${envs}"
+        if ("sc" in label) {
+            ret +=" --exclusive"
+        }
+        break
+    case "sge" :
         s_vmem = gb.toFloat() / threads.toFloat()
-	    ret += " -S /bin/bash -cwd -pe def_slot ${threads} -l s_vmem=${s_vmem}G -v ${envs}"
-	    if ("sc" in label) {
-	        ret +=" -l exclusive"
-	    }
-	    break
-	default :
-	    break
+        ret += " -S /bin/bash -cwd -pe def_slot ${threads} -l s_vmem=${s_vmem}G -v ${envs}"
+        break
+    default :
+        break
     }
-
     return ret
 }
 
