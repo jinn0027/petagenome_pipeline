@@ -1,0 +1,34 @@
+Bootstrap: localimage
+From: ../common/java.sif
+
+%setup
+
+%files
+    ../../external/openjfx-24.0.2_linux-aarch64_bin-sdk.zip  /Users/huson/lib/
+    ../../external/jloda.tar.gz /opt
+    ../../external/megan-ce.tar.gz /opt
+
+%post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
+    pushd /Users/huson/lib
+        unzip openjfx-24.0.2_linux-aarch64_bin-sdk.zip
+        mv javafx-sdk-24.0.2 javafx
+    popd
+    pushd /opt
+        # install megan-ce
+        echo "############ openjfx ###############"
+        echo "############ jloda ###############"
+        tar -I pigz -xvf jloda.tar.gz
+        chown -R $(whoami) jloda
+        echo "############ megan-ce ###############"
+        tar -I pigz -xvf megan-ce.tar.gz
+        chown -R $(whoami) megan-ce
+        pushd megan-ce/antbuild
+            ant
+        popd
+    popd
+
+%environment
+    export PATH=/opt/megan-ce:$PATH
+
+%runscript

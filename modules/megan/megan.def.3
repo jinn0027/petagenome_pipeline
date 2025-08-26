@@ -1,0 +1,18 @@
+Bootstrap: localimage
+From: ../common/el9.sif
+
+%setup
+
+%files
+
+%post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
+    pushd /opt
+        # install megan
+        echo "############ install megan ###############"
+        /opt/miniconda3/bin/conda install -y -q megan=6.25
+    popd
+
+%environment
+
+%runscript

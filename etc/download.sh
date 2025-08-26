@@ -169,10 +169,30 @@ if need_make htslib.tar.gz ; then
     rm -rf htslib
 fi
 
+if need_make jloda.tar.gz ; then
+    git clone https://github.com/husonlab/jloda --recursive
+    git checkout 27ec9d8
+    tar -I pigz -cvf jloda.tar.gz jloda
+    rm -rf jloda
+fi
+
 if need_make megahit.tar.gz ; then
     git clone https://github.com/voutcn/megahit -b v1.2.9 --recursive
     tar -I pigz -cvf megahit.tar.gz megahit
     rm -rf megahit
+fi
+
+if need_make megan-ce.tar.gz ; then
+    git clone https://github.com/husonlab/megan-ce --recursive
+    pushd megan-ce
+      git checkout 9b36523
+      popd
+    tar -I pigz -cvf megan-ce.tar.gz megan-ce
+    rm -rf megan-ce
+fi
+
+if need_make MEGAN_Community_unix_6_25_10.sh ; then
+    wget https://software-ab.cs.uni-tuebingen.de/download/megan6/MEGAN_Community_unix_6_25_10.sh
 fi
 
 if need_make MetaPhlAn.tar.gz ; then
@@ -199,6 +219,10 @@ fi
 
 if need_make ncbi-blast-2.16.0+-x64-linux.tar.gz ; then
     wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.16.0/ncbi-blast-2.16.0+-x64-linux.tar.gz
+fi
+
+if need_make openjfx-24.0.2_linux-aarch64_bin-sdk.zip ; then
+    wget https://download2.gluonhq.com/openjfx/24.0.2/openjfx-24.0.2_linux-aarch64_bin-sdk.zip
 fi
 
 if need_make ncbi-vdb.tar.gz ; then

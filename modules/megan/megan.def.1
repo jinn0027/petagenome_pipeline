@@ -1,0 +1,19 @@
+Bootstrap: localimage
+From: ../common/java.sif
+
+%setup
+
+%files
+    ../../external/MEGAN_Community_unix_6_25_10.sh /opt
+
+%post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
+    pushd /opt
+        # install megan-ce
+        sh MEGAN_Community_unix_6_25_10.sh -q -c
+    popd
+
+%environment
+    export PATH=/opt/megan/tools:$PATH
+
+%runscript
