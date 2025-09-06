@@ -4,8 +4,8 @@ nextflow.enable.dsl=2
 include { clusterOptions; processProfile } from "${params.petagenomeDir}/nf/common/utils"
 include { blast_makerefdb; blastn } from "${params.petagenomeDir}/nf/lv1/blast"
 
-params.circular_contigs_explore_circular_contigs_memory = params.memory
-params.circular_contigs_explore_circular_contigs_threads = params.threads
+params.circular_contigs_select_selfhit_memory = params.memory
+params.circular_contigs_select_selfhit_threads = params.threads
 
 // E-value cutoff for circular formation
 params.circular_contigs_e_thre = "1e-10"
@@ -25,6 +25,28 @@ params.circular_contigs_len_c = "1500"
 params.test_circular_contigs_l_thre = 1000
 //params.test_circular_contigs_l_thre = 5000
 
+process select_selfhit {
+    tag "${ref_id}_@_${qry_id}"
+    container = "${params.petagenomeDir}/modules/common/el9.sif"
+    //containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    def gb = "${params.circular_contigs_select_selfhit_memory}"
+    def threads = "${params.circular_contigs_select_selfhit_threads}"
+    memory params.executor=="sge" ? null : "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+    input:
+        tuple val(ref_id), val(qry_id), path(in_tsv, arity: '1')
+    output:
+        tuple val(ref_id), val(qry_id), path("${qry_id}/selfhit.tsv", arity: '1')
+    script:
+        """
+        echo "${processProfile(task)}"
+        mkdir -p ${qry_id}
+        awk -F "\t" '{OFS="\t"}  { if (\$1 == \$2) print \$0 }' ${in_tsv} > ${qry_id}/selfhit.tsv
+        """
+}
+
 workflow circular_contigs {
   take:
     contig
@@ -32,11 +54,13 @@ workflow circular_contigs {
   main:
     ref = contig
     qry = contig
-    ref_db = blast_makerefdb(ref)
-    in = ref_db.combine(qry)
-    out = blastn(in)
+    blstdb = blast_makerefdb(ref)
+    blstin = blstdb.combine(qry)
+    blstn = blastn(blstin)
+    selfhit = select_selfhit(blstn)
   emit:
-    out
+    blstn
+    selfhit
 }
 
 workflow {
@@ -44,5 +68,6 @@ workflow {
       .map{ path -> tuple(path.simpleName, path) }
     contig.view { i -> "$i" }
     out = circular_contigs(contig, params.test_circular_contigs_l_thre)
-    out.out.view { i -> "$i" }
+    out.blstn.view { i -> "$i" }
+    out.selfhit.view { i -> "$i" }
 }
