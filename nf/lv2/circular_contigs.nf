@@ -1,9 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile } from "${params.petagenomeDir}/nf/common/utils"
-include { blast_makerefdb; blastn } from "${params.petagenomeDir}/nf/lv1/blast"
-
 params.circular_contigs_select_selfhit_memory = params.memory
 params.circular_contigs_select_selfhit_threads = params.threads
 
@@ -24,6 +21,10 @@ params.circular_contigs_len_c = "1500"
 
 params.test_circular_contigs_l_thre = 1000
 //params.test_circular_contigs_l_thre = 5000
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile } \
+    from "${params.petagenomeDir}/nf/common/utils"
+include { blast_makerefdb; blastn } from "${params.petagenomeDir}/nf/lv1/blast"
 
 process select_selfhit {
     tag "${ref_id}_@_${qry_id}"

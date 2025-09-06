@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.spades_spades_error_correction_memory = params.memory
 params.spades_spades_error_correction_threads = params.threads
 
@@ -18,6 +16,9 @@ params.spades_spades_e2e_threads = params.threads
 params.spades_error_correction_threads = params.threads
 params.spades_error_correction_memory = params.memory
 params.test_spades_e2e = false
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process spades_error_correction {
     tag "${pair_id}"

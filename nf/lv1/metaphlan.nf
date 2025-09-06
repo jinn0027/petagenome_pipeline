@@ -1,14 +1,15 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.metaphlan_metaphlan_memory = params.memory
 params.metaphlan_metaphlan_threads = params.threads
 
 params.metaphlan_input_type = "fastq"
 //fastq,fasta,bowtie2out,sam
 params.metaphlan_db = "/dev/shm/petagenome_pipeline/external/metaphlan_db"
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process metaphlan {
     tag "${read_id}"

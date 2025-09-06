@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.virsorter_virsorter_memory = params.memory
 params.virsorter_virsorter_threads = params.threads
 
@@ -10,6 +8,9 @@ params.virsorter_db_type = "refseq"
 //params.virsorter_db = "virome"
 params.virsorter_aligner = "blast"
 //params.virsorter_aligner = "diamond"
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process virsorter {
     tag "${read_id}"

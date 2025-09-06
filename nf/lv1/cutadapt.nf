@@ -1,14 +1,15 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.cutadapt_cutadapt_memory = params.memory
 params.cutadapt_cutadapt_threads = params.threads
 
 params.cutadapt_fwd = "AATGATACGGCGACCACCGAGAUCTACAC"
 params.cutadapt_rev = "CAAGCAGAAGACGGCATACGAGAT"
 params.cutadapt_minimum_length = 50
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process cutadapt {
     tag "${pair_id}"

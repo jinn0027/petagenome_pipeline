@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.cdhit_cdhit_est_memory = params.memory
 params.cdhit_cdhit_est_threads = params.threads
 
@@ -11,6 +9,9 @@ params.cdhit_global_sequence_identity = 1
 params.cdhit_description_length = 150
 params.cdhit_word_length = 5
 params.cdhit_mask = "NX"
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process cdhit_est {
     tag "${id}"

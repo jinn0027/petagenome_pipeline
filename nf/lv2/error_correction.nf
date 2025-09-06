@@ -1,12 +1,13 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
-include { spades_error_correction } from "${params.petagenomeDir}/nf/lv1/spades"
-include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
-
 params.error_correction_get_length_memory = params.memory
 params.error_correction_get_length_threads = params.threads
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
+include { spades_error_correction } from "${params.petagenomeDir}/nf/lv1/spades"
+include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
 
 process get_length {
     tag "${id}"

@@ -1,10 +1,11 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.virsorter2_virsorter2_memory = params.memory
 params.virsorter2_virsorter2_threads = params.threads
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process virsorter2 {
     tag "${read_id}"

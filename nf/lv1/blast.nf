@@ -27,8 +27,8 @@ process blast_makerefdb {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        tuple val(ref_id), path(ref, arity: '1')
         val(p)
+        tuple val(ref_id), path(ref, arity: '1')
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
@@ -59,8 +59,8 @@ process blastn {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
         val(p)
+        tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.tsv", arity: '1')
     script:
@@ -87,17 +87,18 @@ process blastn {
 }
 
 workflow {
+    p = createNullParamsChannel()
     ref = createSeqsChannel(params.test_blast_ref)
     qry = createSeqsChannel(params.test_blast_qry)
 
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 
-    ref_db = blast_makerefdb(ref, createNullParamsChannel())
+    ref_db = blast_makerefdb(p, ref)
     //ref_db.view { i -> "$i" }
     in = ref_db.combine(qry)
     //in.view { i -> "$i" }
-    out = blastn(in, createNullParamsChannel())
+    out = blastn(p, in)
     out.view { i -> "$i" }
 }
 

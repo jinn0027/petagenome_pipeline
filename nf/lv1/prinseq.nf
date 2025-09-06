@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createPairsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.prinseq_prinseq_memory = params.memory
 params.prinseq_prinseq_threads = params.threads
 
@@ -17,6 +15,9 @@ params.prinseq_lc_method = "dust"
 params.prinseq_lc_threshold = 7
 params.prinseq_trim_ns_right = 1
 params.prinseq_ns_max_n = 0
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process prinseq {
     tag "${pair_id}"

@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.prodigal_prodigal_memory = params.memory
 params.prodigal_prodigal_threads = params.threads
 
@@ -11,6 +9,9 @@ params.prodigal_procedure = "meta"
 params.prodigal_outfmt = "gbk"
 //params.prodigal_outfmt = "gff"
 //params.prodigal_outfmt = "sco"
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process prodigal {
     tag "${read_id}"

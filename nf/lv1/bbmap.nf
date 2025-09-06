@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createPairsChannel; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.bbmap_bbmap_makerefdb_memory = params.memory
 params.bbmap_bbmap_makerefdb_threads = params.threads
 
@@ -12,6 +10,9 @@ params.bbmap_bbmap_threads = params.threads
 params.bbmap_ambiguous = "random"
 params.bbmap_minid = 0.95
 params.bbmap_pairlen = 1500
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; createSeqsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process bbmap_makerefdb {
     tag "${ref_id}"

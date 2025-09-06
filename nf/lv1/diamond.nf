@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.diamond_diamond_makerefdb_memory = params.memory
 params.diamond_diamond_makerefdb_threads = params.threads
 
@@ -14,6 +12,9 @@ params.diamond_num_alignments = "1"
 params.diamond_perc_identity = "95"
 params.diamond_evalue = "1e-20"
 params.diamond_outfmt = 6
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
 
 process diamond_makerefdb {
     tag "${ref_id}"
