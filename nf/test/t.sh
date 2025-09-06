@@ -64,6 +64,7 @@ args="\
     "
 
 args+=" --publish_output true"
+args+=" -profile local"
 
 test=${1:-"main"}
 #test=${1:-"error_correction"}
@@ -83,13 +84,9 @@ case ${test} in
     "bacteriome_pipeline")
         args+="\
             --fastp_fastp_memory 30 \
-            --fastp_fastp_threads 30 \
             --spades_spades_error_correction_memory 80 \
-            --spades_spades_error_correction_threads 30 \
             --spades_spades_assembler_memory 100 \
-            --spades_spades_assembler_threads 30 \
             --mmseqs2_mmseqs2_cluster_memory 100 \
-            --mmseqs2_mmseqs2_cluster_threads 100 \
             "
         nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf ${args} \
                  --test_bacteriome_pipeline_lthre 0 \
@@ -213,13 +210,13 @@ case ${test} in
                  --virsorter_mga "${virsorterMga}" \
                  --virsorter_db_type refseq \
                  --virsorter_aligner blast \
-                 --test_virsorter_read "${longFnaX1}" \
+                 --test_virsorter_read "${longFnaX1}"
         nextflow run ${nfDir}/lv1/virsorter.nf ${args} \
                  --virsorter_db "${virsorterDb}" \
                  --virsorter_mga "${virsorterMga}" \
                  --virsorter_db_type virome \
                  --virsorter_aligner diamond \
-                 --test_virsorter_read "${longFnaX1}" \
+                 --test_virsorter_read "${longFnaX1}"
         ;;
     "virsorter2")
         nextflow run ${nfDir}/lv1/virsorter2.nf ${args} \
