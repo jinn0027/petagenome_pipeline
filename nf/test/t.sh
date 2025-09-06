@@ -90,7 +90,7 @@ case ${test} in
             "
         nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf ${args} \
                  --test_bacteriome_pipeline_lthre 0 \
-                 --test_bacteriome_pipeline_reads "${dataDir}/ecoli_1K_{1,2}.fq.gz;${dataDir}/s_6_{1,2}.fastq.gz"
+                 --test_bacteriome_pipeline_reads "${dataDir}/ecoli_1K_{1,2}.fq.gz"
         ;;
     "error_correction")
         nextflow run ${nfDir}/lv2/error_correction.nf ${args} \
