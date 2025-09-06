@@ -59,7 +59,7 @@ process spades_error_correction_gzip_output {
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.spades_spades_error_correction_gzip_output_memory}"
-    def threads = "${threads}"
+    def threads = "${params.spades_spades_error_correction_gzip_output_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"

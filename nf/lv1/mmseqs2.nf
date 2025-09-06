@@ -34,6 +34,7 @@ params.mmseqs2_search_split = 0 // Split input into N equally distributed chunks
 params.mmseqs2_search_split_mode = 2 // 0: split target db; 1: split query db; 2: auto, depending on main memory [2]
 params.mmseqs2_search_split_memory_limit = 0 // Set max memory per split. E.g. 800B, 5K, 10M, 1G. Default (0) to all available system memory [0]
 params.mmseqs2_search_max_seqs = 300 // Maximum results per query sequence allowed to pass the prefilter (affects sensitivity) [300]
+params.mmseqs2_search_sort_results = 0 // Sort results: 0: no sorting, 1: sort by E-value (Alignment) or seq.id. (Hamming) [0]
 
 //=== cluster params
 params.mmseqs2_cluster_mode = "cluster" // cluster or linclust
@@ -55,6 +56,7 @@ params.mmseqs2_cluster_split = 0 // Split input into N equally distributed chunk
 params.mmseqs2_cluster_split_mode = 2 // 0: split target db; 1: split query db; 2: auto, depending on main memory [2]
 params.mmseqs2_cluster_split_memory_limit = 0 // Set max memory per split. E.g. 800B, 5K, 10M, 1G. Default (0) to all available system memory [0]
 params.mmseqs2_cluster_max_seqs = 20 // Maximum results per query sequence allowed to pass the prefilter (affects sensitivity) [20]
+params.mmseqs2_cluster_sort_results = 0 // Sort results: 0: no sorting, 1: sort by E-value (Alignment) or seq.id. (Hamming) [0]
 
 //=== cluster [linclust]
 params.mmseqs2_linclust_k = 0 // k-mer length (0: automatically set to optimum) [0]
@@ -69,6 +71,7 @@ params.mmseqs2_linclust_cov_mode = 0 // 0: coverage of query and target
 params.mmseqs2_linclust_min_seq_id = 0.0 // List matches above this sequence identity (for clustering) (range 0.0-1.0) [0.900]
 params.mmseqs2_linclust_min_aln_len = 0 // Minimum alignment length (range 0-INT_MAX) [0]
 params.mmseqs2_linclust_split_memory_limit = 0 // Set max memory per split. E.g. 800B, 5K, 10M, 1G. Default (0) to all available system memory [0]
+params.mmseqs2_linclust_sort_results = 0 // Sort results: 0: no sorting, 1: sort by E-value (Alignment) or seq.id. (Hamming) [0]
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -154,6 +157,7 @@ process mmseqs2_cluster {
                  --split ${getParam(p, 'mmseqs2_cluster_split')} \\
                  --split-mode ${getParam(p, 'mmseqs2_cluster_split_mode')} \\
                  --split-memory-limit ${getParam(p, 'mmseqs2_cluster_split_memory_limit')} \\
+                 --sort-results ${getParam(p, 'mmseqs2_cluster_sort_results')} \\
                  "
         else
             args="\\
@@ -164,6 +168,7 @@ process mmseqs2_cluster {
                  --min-seq-id ${getParam(p, 'mmseqs2_linclust_min_seq_id')} \\
                  --min-aln-len ${getParam(p, 'mmseqs2_linclust_min_aln_len')} \\
                  --split-memory-limit ${getParam(p, 'mmseqs2_linclust_split_memory_limit')} \\
+                 --sort-results ${getParam(p, 'mmseqs2_linclust_sort_results')} \\
                  "
         fi
         mmseqs ${getParam(p, 'mmseqs2_cluster_mode')} \\
@@ -223,6 +228,7 @@ process mmseqs2_search {
              --split ${getParam(p, 'mmseqs2_cluster_split')} \\
              --split-mode ${getParam(p, 'mmseqs2_cluster_split_mode')} \\
              --split-memory-limit ${getParam(p, 'mmseqs2_cluster_split_memory_limit')} \\
+             --sort-results ${getParam(p, 'mmseqs2_search_sort_results')} \\
                  "
         mmseqs search \\
             --threads ${threads} \\

@@ -22,7 +22,7 @@ MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
 date=$(date +"%Y%m%d%H%M%S")
 
-threads=16
+threads=1
 #threads=$(nproc)
 cpus=$(grep physical.id /proc/cpuinfo | sort -u | wc -l)
 random_seed=0
