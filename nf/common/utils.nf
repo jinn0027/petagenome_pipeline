@@ -2,7 +2,7 @@
 nextflow.enable.dsl=2
 
 def createNullParamsChannel() {
-    return Channel.of([])
+    return Channel.of(['@':'@'])
 }
 
 def getParam(obj, member) {

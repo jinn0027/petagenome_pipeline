@@ -92,7 +92,7 @@ process mmseqs2_makerefdb {
         echo "${processProfile(task)}"
         mkdir -p ${ref_id}
         mmseqs createdb \\
-            --dbtype ${params.mmseqs2_ref_type} \\
+            --dbtype ${getParam(p, 'mmseqs2_ref_type')} \\
             ${ref} \\
             ${ref_id}/ref
         """
@@ -117,7 +117,7 @@ process mmseqs2_makeqrydb {
         echo "${processProfile(task)}"
         mkdir -p ${qry_id}
         mmseqs createdb \\
-            --dbtype ${params.mmseqs2_qry_type} \\
+            --dbtype ${getParam(p, 'mmseqs2_qry_type')} \\
             ${qry} \\
             ${qry_id}/qry
         """
@@ -141,32 +141,32 @@ process mmseqs2_cluster {
         """
         echo "${processProfile(task)}"
         mkdir -p ${ref_id} tmp
-        if [ "${params.mmseqs2_cluster_mode}" == "cluster" ] ; then
+        if [ "${getParam(p, 'mmseqs2_cluster_mode')}" == "cluster" ] ; then
             args="\\
-                 -s ${params.mmseqs2_cluster_s} \\
-                 -k ${params.mmseqs2_cluster_k} \\
-                 -e ${params.mmseqs2_cluster_e} \\
-                 -c ${params.mmseqs2_cluster_c} \\
-                 --cov-mode ${params.mmseqs2_cluster_cov_mode} \\
-                 --min-seq-id ${params.mmseqs2_cluster_min_seq_id} \\
-                 --min-aln-len ${params.mmseqs2_cluster_min_aln_len} \\
-                 --max-seqs ${params.mmseqs2_cluster_max_seqs} \\
-                 --split ${params.mmseqs2_cluster_split} \\
-                 --split-mode ${params.mmseqs2_cluster_split_mode} \\
-                 --split-memory-limit ${params.mmseqs2_cluster_split_memory_limit} \\
+                 -s ${getParam(p, 'mmseqs2_cluster_s')} \\
+                 -k ${getParam(p, 'mmseqs2_cluster_k')} \\
+                 -e ${getParam(p, 'mmseqs2_cluster_e')} \\
+                 -c ${getParam(p, 'mmseqs2_cluster_c')} \\
+                 --cov-mode ${getParam(p, 'mmseqs2_cluster_cov_mode')} \\
+                 --min-seq-id ${getParam(p, 'mmseqs2_cluster_min_seq_id')} \\
+                 --min-aln-len ${getParam(p, 'mmseqs2_cluster_min_aln_len')} \\
+                 --max-seqs ${getParam(p, 'mmseqs2_cluster_max_seqs')} \\
+                 --split ${getParam(p, 'mmseqs2_cluster_split')} \\
+                 --split-mode ${getParam(p, 'mmseqs2_cluster_split_mode')} \\
+                 --split-memory-limit ${getParam(p, 'mmseqs2_cluster_split_memory_limit')} \\
                  "
         else
             args="\\
-                 -k ${params.mmseqs2_linclust_k} \\
-                 -e ${params.mmseqs2_linclust_e} \\
-                 -c ${params.mmseqs2_linclust_c} \\
-                 --cov-mode ${params.mmseqs2_linclust_cov_mode} \\
-                 --min-seq-id ${params.mmseqs2_linclust_min_seq_id} \\
-                 --min-aln-len ${params.mmseqs2_linclust_min_aln_len} \\
-                 --split-memory-limit ${params.mmseqs2_linclust_split_memory_limit} \\
+                 -k ${getParam(p, 'mmseqs2_linclust_k')} \\
+                 -e ${getParam(p, 'mmseqs2_linclust_e')} \\
+                 -c ${getParam(p, 'mmseqs2_linclust_c')} \\
+                 --cov-mode ${getParam(p, 'mmseqs2_linclust_cov_mode')} \\
+                 --min-seq-id ${getParam(p, 'mmseqs2_linclust_min_seq_id')} \\
+                 --min-aln-len ${getParam(p, 'mmseqs2_linclust_min_aln_len')} \\
+                 --split-memory-limit ${getParam(p, 'mmseqs2_linclust_split_memory_limit')} \\
                  "
         fi
-        mmseqs ${params.mmseqs2_cluster_mode} \\
+        mmseqs ${getParam(p, 'mmseqs2_cluster_mode')} \\
             --threads ${threads} \\
             \${args} \\
             ${ref_db}/ref \\
@@ -211,18 +211,18 @@ process mmseqs2_search {
         echo "${processProfile(task)}"
         mkdir -p ${qry_id} tmp
         args="\\
-             --search-type ${params.mmseqs2_search_type} \\
-             -s ${params.mmseqs2_cluster_s} \\
-             -k ${params.mmseqs2_cluster_k} \\
-             -e ${params.mmseqs2_cluster_e} \\
-             -c ${params.mmseqs2_cluster_c} \\
-             --cov-mode ${params.mmseqs2_cluster_cov_mode} \\
-             --min-seq-id ${params.mmseqs2_cluster_min_seq_id} \\
-             --min-aln-len ${params.mmseqs2_cluster_min_aln_len} \\
-             --max-seqs ${params.mmseqs2_cluster_max_seqs} \\
-             --split ${params.mmseqs2_cluster_split} \\
-             --split-mode ${params.mmseqs2_cluster_split_mode} \\
-             --split-memory-limit ${params.mmseqs2_cluster_split_memory_limit} \\
+             --search-type ${getParam(p, 'mmseqs2_search_type')} \\
+             -s ${getParam(p, 'mmseqs2_cluster_s')} \\
+             -k ${getParam(p, 'mmseqs2_cluster_k')} \\
+             -e ${getParam(p, 'mmseqs2_cluster_e')} \\
+             -c ${getParam(p, 'mmseqs2_cluster_c')} \\
+             --cov-mode ${getParam(p, 'mmseqs2_cluster_cov_mode')} \\
+             --min-seq-id ${getParam(p, 'mmseqs2_cluster_min_seq_id')} \\
+             --min-aln-len ${getParam(p, 'mmseqs2_cluster_min_aln_len')} \\
+             --max-seqs ${getParam(p, 'mmseqs2_cluster_max_seqs')} \\
+             --split ${getParam(p, 'mmseqs2_cluster_split')} \\
+             --split-mode ${getParam(p, 'mmseqs2_cluster_split_mode')} \\
+             --split-memory-limit ${getParam(p, 'mmseqs2_cluster_split_memory_limit')} \\
                  "
         mmseqs search \\
             --threads ${threads} \\

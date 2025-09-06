@@ -36,7 +36,7 @@ process metaphlan {
         metaphlan \\
             --nproc ${threads} \\
             --bowtie2db ${local_db} \\
-            --input_type ${params.metaphlan_input_type} \\
+            --input_type ${getParam(p, 'metaphlan_input_type')} \\
             --bowtie2out ${read_id}/out.sam \\
             ${read} ${read_id}/out.prof
         """

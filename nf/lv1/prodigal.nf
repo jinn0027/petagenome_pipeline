@@ -41,12 +41,12 @@ process prodigal {
         fi
         mkdir -p ${read_id}
         prodigal \\
-            -p ${params.prodigal_procedure} \\
+            -p ${getParam(p, 'prodigal_procedure')} \\
             -i \${read_} \\
-            -f ${params.prodigal_outfmt} \\
+            -f ${getParam(p, 'prodigal_outfmt')} \\
             -a ${read_id}/out.faa \\
             -d ${read_id}/out.fna \\
-            -o ${read_id}/out.${params.prodigal_outfmt}
+            -o ${read_id}/out.${getParam(p, 'prodigal_outfmt')}
         """
 }
 

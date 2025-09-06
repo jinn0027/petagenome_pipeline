@@ -60,9 +60,9 @@ process bbmap {
         bbmap.sh \\
             -Xmx${gb}g \\
             threads=${threads} \\
-            ambiguous=${params.bbmap_ambiguous} \\
-            minid=${params.bbmap_minid} \\
-            pairlen=${params.bbmap_pairlen} \\
+            ambiguous=${getParam(p, 'bbmap_ambiguous')} \\
+            minid=${getParam(p, 'bbmap_minid')} \\
+            pairlen=${getParam(p, 'bbmap_pairlen')} \\
             path=${ref_db} \\
             in=${reads[0]} \\
             in2=${reads[1]} \\

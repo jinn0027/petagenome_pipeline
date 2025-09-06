@@ -105,7 +105,7 @@ process summarize_name {
         """
         echo "${processProfile(task)}"
         mkdir -p ${id}
-        if [ "${params.pool_contigs_clustering_process}" = "mmseqs2" ] ; then
+        if [ "${getParam(p, 'pool_contigs_clustering_process')}" = "mmseqs2" ] ; then
             cp -f ${clstr} ${id}/${id}.name_
         else
             ruby ${params.petagenomeDir}/scripts/Ruby/parse.cdhit_clstr.rb -i ${clstr} --include_rep > ${id}/${id}.name_
