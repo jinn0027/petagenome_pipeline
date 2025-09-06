@@ -42,12 +42,11 @@ do
         fi
         if [ $? -ne 0 ] ; then
             echo $i
-            exit 1
             fail=$(( fail + 1 ))
         fi
     done
     if [ ${fail} -eq 0 ] ; then
-        echo "$dir PASS"
+        #echo "$dir PASS"
         num_pass=$(( num_pass + 1 ))
     else
         echo "$dir FAIL"

@@ -37,6 +37,7 @@ process select_selfhit {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), val(qry_id), path(in_tsv, arity: '1')
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/selfhit.tsv", arity: '1')
@@ -50,18 +51,19 @@ process select_selfhit {
 
 workflow circular_contigs {
   take:
+    p
     contig
     l_thre
   main:
     ref = contig
     qry = contig
-    blstdb = blast_makerefdb(ref)
+    blstdb = blast_makerefdb(p, ref)
     blstin = blstdb.combine(qry)
 
     //${BLASTN_} -task #{task} -num_threads #{n_threads} -query #{in_contig_} \
     //           -db #{in_contig} -evalue #{e_thre} -perc_identity #{pi_self} -outfmt 6 -num_alignments 5 -out #{out_blast_all_}
-    blstn = blastn(blstin)
-    selfhit = select_selfhit(blstn)
+    blstn = blastn(p, blstin)
+    selfhit = select_selfhit(p, blstn)
   emit:
     blstn
     selfhit
@@ -72,7 +74,7 @@ workflow {
     contig = channel.fromPath(params.test_circular_contigs_contig, checkIfExists: true)
       .map{ path -> tuple(path.simpleName, path) }
     contig.view { i -> "$i" }
-    out = circular_contigs(contig, params.test_circular_contigs_l_thre)
+    out = circular_contigs(p, contig, params.test_circular_contigs_l_thre)
     out.blstn.view { i -> "$i" }
     out.selfhit.view { i -> "$i" }
 }

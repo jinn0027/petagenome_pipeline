@@ -1,0 +1,6 @@
+#mpa_vJun23_CHOCOPhlAnSGB_202403
+#/opt/miniconda3/bin/metaphlan --nproc 1 --bowtie2db /opt/db --input_type fastq --bowtie2out 00_s/out.sam s_6_1.fastq.gz 00_s/out.prof
+#251 reads processed
+#SampleID	Metaphlan_Analysis
+#clade_name	NCBI_tax_id	relative_abundance	additional_species
+UNCLASSIFIED	-1	100.0	
