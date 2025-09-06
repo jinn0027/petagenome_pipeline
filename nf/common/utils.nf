@@ -1,6 +1,14 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+def createNullParamsChannel() {
+    return Channel.of([])
+}
+
+def getParam(obj, member) {
+    return obj?.getAt(member) ?: params.getAt(member)
+}
+
 def clusterOptions(executor, gb, threads, label) {
     ret = ""
     envs = "PATH,LD_LIBRARY_PATH,PETAGENOME_PIPELINE_DIR"

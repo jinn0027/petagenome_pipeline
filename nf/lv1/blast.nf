@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { clusterOptions; processProfile; createSeqsChannel } from "${params.petagenomeDir}/nf/common/utils"
-
 params.blast_blast_makerefdb_memory = params.memory
 params.blast_blast_makerefdb_threads = params.threads
 
@@ -16,6 +14,9 @@ params.blast_perc_identity = "95"
 params.blast_evalue = "1e-20"
 params.blast_outfmt = 6
 
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
+
 process blast_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
@@ -27,6 +28,7 @@ process blast_makerefdb {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(ref_id), path(ref, arity: '1')
+        val(p)
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
@@ -42,7 +44,7 @@ process blast_makerefdb {
         makeblastdb \\
             -in \${ref_} \\
             -out ${ref_id}/ref \\
-            -dbtype ${params.blast_dbtype} \\
+            -dbtype ${getParam(p, 'blast_dbtype')} \\
             -parse_seqids
         """
 }
@@ -58,6 +60,7 @@ process blastn {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
+        val(p)
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.tsv", arity: '1')
     script:
@@ -75,10 +78,10 @@ process blastn {
             -num_threads ${threads} \\
             -query \${qry_} \\
             -db ${ref_db}/ref \\
-            -perc_identity ${params.blast_perc_identity} \\
-            -evalue ${params.blast_evalue} \\
-            -outfmt ${params.blast_outfmt} \\
-            -num_alignments ${params.blast_num_alignments} \\
+            -perc_identity ${getParam(p, 'blast_perc_identity')} \\
+            -evalue ${getParam(p, 'blast_evalue')} \\
+            -outfmt ${getParam(p, 'blast_outfmt')} \\
+            -num_alignments ${getParam(p, 'blast_num_alignments')} \\
             -out ${qry_id}/out.tsv
         """
 }
@@ -90,11 +93,11 @@ workflow {
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 
-    ref_db = blast_makerefdb(ref)
+    ref_db = blast_makerefdb(ref, createNullParamsChannel())
     //ref_db.view { i -> "$i" }
     in = ref_db.combine(qry)
     //in.view { i -> "$i" }
-    out = blastn(in)
+    out = blastn(in, createNullParamsChannel())
     out.view { i -> "$i" }
 }
 
