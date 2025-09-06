@@ -33,6 +33,7 @@ process falco {
 }
 
 workflow {
+    p = createNullParamsChannel()
     reads = createPairsChannel(params.test_falco_reads)
     out = falco(reads)
     out.view { i -> "$i" }

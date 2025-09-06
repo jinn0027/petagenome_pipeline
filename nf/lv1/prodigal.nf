@@ -50,6 +50,7 @@ process prodigal {
 }
 
 workflow {
+    p = createNullParamsChannel()
     read = createSeqsChannel(params.test_prodigal_read)
     out = prodigal(read)
     out.view { i -> "${i}" }

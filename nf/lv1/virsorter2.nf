@@ -39,6 +39,7 @@ process virsorter2 {
 }
 
 workflow {
+    p = createNullParamsChannel()
     read = createSeqsChannel(params.test_virsorter2_read)
     read.view { i -> "$i" }
     out = virsorter2(read)

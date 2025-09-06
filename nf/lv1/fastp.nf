@@ -41,6 +41,7 @@ process fastp {
 }
 
 workflow {
+    p = createNullParamsChannel()
     reads = createPairsChannel(params.test_fastp_reads)
     out = fastp(reads)
     out.view { i -> "$i" }

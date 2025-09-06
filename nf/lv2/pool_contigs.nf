@@ -224,6 +224,7 @@ workflow pool_contigs {
 }
 
 workflow {
+    p = createNullParamsChannel()
     def contigs = createSeqsChannel(params.test_pool_contigs_contigs)
     contigs.view{ i -> "$i" }
     out = pool_contigs(contigs, params.test_pool_contigs_l_thre)

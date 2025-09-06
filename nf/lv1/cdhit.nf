@@ -44,6 +44,7 @@ process cdhit_est {
 }
 
 workflow {
+    p = createNullParamsChannel()
     read = createSeqsChannel(params.test_cdhit_read)
     out = cdhit_est(read)
     out.view { i -> "$i" }

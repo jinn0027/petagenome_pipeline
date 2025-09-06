@@ -61,9 +61,10 @@ process bwa_mem {
 }
 
 workflow {
+    p = createNullParamsChannel()
     ref = createSeqsChannel(params.test_bwa_ref)
     qry = createSeqsChannel(params.test_bwa_qry)
- 
+
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 

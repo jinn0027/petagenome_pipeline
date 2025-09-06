@@ -69,6 +69,7 @@ process bbmap {
 }
 
 workflow {
+    p = createNullParamsChannel()
     ref = createSeqsChannel(params.test_bbmap_ref)
     reads = createPairsChannel(params.test_bbmap_reads)
 

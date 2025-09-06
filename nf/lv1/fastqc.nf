@@ -35,6 +35,7 @@ process fastqc {
 }
 
 workflow {
+    p = createNullParamsChannel()
     reads = createPairsChannel(params.test_fastqc_reads)
     out = fastqc(reads)
     out.view { i -> "$i" }

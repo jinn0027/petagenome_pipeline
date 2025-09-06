@@ -34,6 +34,7 @@ process megahit {
 }
 
 workflow {
+    p = createNullParamsChannel()
     reads = createPairsChannel(params.test_megahit_reads)
     out = megahit(reads)
     out.view { i -> "$i" }

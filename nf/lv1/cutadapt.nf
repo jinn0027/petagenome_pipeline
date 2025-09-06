@@ -40,6 +40,7 @@ process cutadapt {
 }
 
 workflow {
+    p = createNullParamsChannel()
     reads = createPairsChannel(params.test_cutadapt_reads)
     out = cutadapt(reads)
     //out.view { i -> "$i" }

@@ -231,6 +231,7 @@ process mmseqs2_search {
 }
 
 workflow {
+    p = createNullParamsChannel()
     ref = createSeqsChannel(params.test_mmseqs2_ref)
     //ref.view { i -> "$i" }
 

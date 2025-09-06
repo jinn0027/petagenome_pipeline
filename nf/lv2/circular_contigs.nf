@@ -68,6 +68,7 @@ workflow circular_contigs {
 }
 
 workflow {
+    p = createNullParamsChannel()
     contig = channel.fromPath(params.test_circular_contigs_contig, checkIfExists: true)
       .map{ path -> tuple(path.simpleName, path) }
     contig.view { i -> "$i" }

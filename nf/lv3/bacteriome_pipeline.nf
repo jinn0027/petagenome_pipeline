@@ -53,6 +53,7 @@ workflow bacteriome_pipeline {
 }
 
 workflow {
+    p = createNullParamsChannel()
     def reads_list = params.test_bacteriome_pipeline_reads.split(';')
 
     def individual_channels = []

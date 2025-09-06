@@ -42,6 +42,7 @@ process metaphlan {
 }
 
 workflow {
+    p = createNullParamsChannel()
     read = createSeqsChannel(params.test_metaphlan_read)
     //read.view { i -> "${i}" }
     out = metaphlan(read)

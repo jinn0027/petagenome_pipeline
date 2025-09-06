@@ -51,6 +51,7 @@ workflow error_correction {
 }
 
 workflow {
+    p = createNullParamsChannel()
     reads = createPairsChannel(params.test_error_correction_reads)
     out = error_correction(reads)
     out.ec.view{ i -> "$i" }

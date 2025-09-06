@@ -64,6 +64,7 @@ process bowtie {
 }
 
 workflow {
+    p = createNullParamsChannel()
     ref = createSeqsChannel(params.test_bowtie_ref)
     qry = createSeqsChannel(params.test_bowtie_qry)
 

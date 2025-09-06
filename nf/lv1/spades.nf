@@ -145,6 +145,7 @@ process spades_e2e {
 }
 
 workflow {
+    p = createNullParamsChannel()
     reads = createPairsChannel(params.test_spades_reads)
     if (params.test_spades_e2e) {
         out = spades_e2e(reads)

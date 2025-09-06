@@ -68,6 +68,7 @@ process prinseq {
 }
 
 workflow {
+    p = createNullParamsChannel()
     reads = createPairsChannel(params.test_prinseq_reads)
     out = prinseq(reads)
     out.view { i -> "${i}" }

@@ -68,6 +68,7 @@ process diamond_blastp {
 }
 
 workflow {
+    p = createNullParamsChannel()
     ref = createSeqsChannel(params.test_diamond_ref)
     qry = createSeqsChannel(params.test_diamond_qry)
 

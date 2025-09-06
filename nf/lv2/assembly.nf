@@ -137,6 +137,7 @@ workflow assembly {
 }
 
 workflow {
+    p = createNullParamsChannel()
     reads = createPairsChannel(params.test_assembly_reads)
     out = assembly(reads, params.test_assembly_l_thre)
     out.asm.view{ i -> "$i" }

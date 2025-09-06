@@ -94,6 +94,7 @@ process minimap2_e2e {
 }
 
 workflow {
+    p = createNullParamsChannel()
     ref = createSeqsChannel(params.test_minimap2_ref)
     qry = createSeqsChannel(params.test_minimap2_qry)
 
