@@ -63,11 +63,17 @@ process blastn {
     script:
         """
         echo "${processProfile(task)}"
+        qry_=${qry}
+        echo ${qry} | grep -e ".gz\$" >& /dev/null && :
+        if [ \$? -eq 0 ] ; then
+            qry_=\${qry_%%.gz}
+            unpigz -c ${qry} > \${qry_}
+        fi
         mkdir -p ${qry_id}
         blastn \\
             -task ${params.blast_task} \\
             -num_threads ${threads} \\
-            -query ${qry} \\
+            -query \${qry_} \\
             -db ${ref_db}/ref \\
             -perc_identity ${params.blast_perc_identity} \\
             -evalue ${params.blast_evalue} \\
