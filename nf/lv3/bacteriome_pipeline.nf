@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include { createNullParamsChannel; getParam } from "${params.petagenomeDir}/nf/common/utils"
 include { fastp } from "${params.petagenomeDir}/nf/lv1/fastp"
 include { error_correction } from "${params.petagenomeDir}/nf/lv2/error_correction"
 include { assembly } from "${params.petagenomeDir}/nf/lv2/assembly"
@@ -8,13 +9,13 @@ include { pool_contigs } from "${params.petagenomeDir}/nf/lv2/pool_contigs"
 
 workflow bacteriome_pipeline {
   take:
+    p
     reads
     l_thre
-
   main:
-    fp = fastp(reads)
-    ec = error_correction(fp)
-    as = assembly(ec.ec.map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }, l_thre)
+    fp = fastp(p, reads)
+    ec = error_correction(p, fp)
+    as = assembly(p, ec.ec.map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }, l_thre)
 
     def flt_all
 
@@ -32,7 +33,7 @@ workflow bacteriome_pipeline {
         flt_all = as.flt.groupTuple()
     }
 
-    pc = pool_contigs(flt_all, l_thre)
+    pc = pool_contigs(p, flt_all, l_thre)
 
   emit:
     fp
@@ -74,5 +75,5 @@ workflow {
         return tuple(new_id, pair)
     }
 
-    out = bacteriome_pipeline(reads, params.test_bacteriome_pipeline_lthre)
+    out = bacteriome_pipeline(p, reads, params.test_bacteriome_pipeline_lthre)
 }

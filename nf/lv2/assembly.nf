@@ -26,6 +26,7 @@ process filter_and_rename {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
         tuple val(id), path("${id}/contig.${l_thre}.fa", arity: '0..*'), path("${id}/contig.name.txt")
@@ -55,6 +56,7 @@ process get_length {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(id), path(reads, arity: '0..*')
     output:
         tuple val(id), path("${id}/*.length.txt", arity: '0..*')
@@ -83,6 +85,7 @@ process get_stats {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(id), path(lengths, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.stats.txt")
@@ -107,15 +110,16 @@ process get_stats {
 
 workflow assembly {
   take:
+    p
     reads
     l_thre
   main:
-    asm = spades_assembler(reads)
+    asm = spades_assembler(p, reads)
     asm = asm.map { id, scaffolds, contigs ->
         tuple(id, 0 < scaffolds.size() ? scaffolds : contigs)
     }
 
-    flt = filter_and_rename(asm.map { id, contigs -> tuple(id, contigs, l_thre) } )
+    flt = filter_and_rename(p, asm.map { id, contigs -> tuple(id, contigs, l_thre) } )
     flt = flt.flatMap { id, contigs, name ->
         contigs.collect { c ->
 	    if (c.size() != 0) {
@@ -124,9 +128,9 @@ workflow assembly {
         }.findAll{ it != null }
     }
 
-    len = get_length(flt)
-    sts = get_stats(len)
-    blstdb = blast_makerefdb(flt)
+    len = get_length(p, flt)
+    sts = get_stats(p, len)
+    blstdb = blast_makerefdb(p, flt)
 
   emit:
     asm
@@ -139,7 +143,7 @@ workflow assembly {
 workflow {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.test_assembly_reads)
-    out = assembly(reads, params.test_assembly_l_thre)
+    out = assembly(p, reads, params.test_assembly_l_thre)
     out.asm.view{ i -> "$i" }
     out.flt.view{ i -> "$i" }
     out.len.view{ i -> "$i" }

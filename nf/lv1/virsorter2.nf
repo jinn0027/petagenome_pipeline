@@ -20,6 +20,7 @@ process virsorter2 {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(read_id), path(read, arity: '1')
     output:
         tuple val(read_id), path("${read_id}/final-viral-boundary.tsv"), path("${read_id}/final-viral-score.tsv")
@@ -42,7 +43,7 @@ workflow {
     p = createNullParamsChannel()
     read = createSeqsChannel(params.test_virsorter2_read)
     read.view { i -> "$i" }
-    out = virsorter2(read)
+    out = virsorter2(p, read)
     out.view { i -> "$i" }
 }
 

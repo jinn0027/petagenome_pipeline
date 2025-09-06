@@ -17,6 +17,7 @@ process megahit {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), path("${pair_id}/out.contigs.fa", arity: '1')
@@ -36,6 +37,6 @@ process megahit {
 workflow {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.test_megahit_reads)
-    out = megahit(reads)
+    out = megahit(p, reads)
     out.view { i -> "$i" }
 }

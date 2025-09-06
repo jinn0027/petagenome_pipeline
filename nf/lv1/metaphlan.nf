@@ -23,6 +23,7 @@ process metaphlan {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(read_id), path(read, arity: '1')
     output:
         tuple val(read_id), \
@@ -45,6 +46,6 @@ workflow {
     p = createNullParamsChannel()
     read = createSeqsChannel(params.test_metaphlan_read)
     //read.view { i -> "${i}" }
-    out = metaphlan(read)
+    out = metaphlan(p, read)
     out.view { i -> "${i}" }
 }

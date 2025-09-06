@@ -21,6 +21,7 @@ process cutadapt {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), path("${pair_id}/out_{1,2}.fastq", arity: '2')
@@ -42,6 +43,6 @@ process cutadapt {
 workflow {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.test_cutadapt_reads)
-    out = cutadapt(reads)
+    out = cutadapt(p, reads)
     //out.view { i -> "$i" }
 }

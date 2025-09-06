@@ -26,6 +26,7 @@ process virsorter {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(read_id), path(read, arity: '1')
     output:
         tuple val(read_id), path("${params.virsorter_aligner}/${read_id}/VIRSorter_global-phage-signal.csv", arity: '1')
@@ -61,7 +62,7 @@ workflow {
     p = createNullParamsChannel()
     read = createSeqsChannel(params.test_virsorter_read)
     //read.view { i -> "$i" }
-    out = virsorter(read)
+    out = virsorter(p, read)
     out.view { i -> "$i" }
 }
 

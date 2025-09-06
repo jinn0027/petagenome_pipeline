@@ -24,6 +24,7 @@ process bbmap_makerefdb {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref, arity: '1')
     output:
         tuple val(ref_id), path("${ref_id}")
@@ -48,6 +49,7 @@ process bbmap {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref_db, arity: '1'), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(ref_id), val(pair_id), path("${pair_id}/out.sam", arity: '1')
@@ -76,11 +78,11 @@ workflow {
     //ref.view { i -> "$i" }
     //reads.view { i -> "$i" }
 
-    ref_db = bbmap_makerefdb(ref)
+    ref_db = bbmap_makerefdb(p, ref)
     //ref_db.view { i -> "$i" }
     in = ref_db.combine(reads)
     //in.view { i -> "$i" }
-    out = bbmap(in)
+    out = bbmap(p, in)
     out.view { i -> "$i" }
 }
 

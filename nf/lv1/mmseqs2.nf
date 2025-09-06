@@ -83,6 +83,7 @@ process mmseqs2_makerefdb {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref, arity: '1')
     output:
         tuple val(ref_id), path("${ref_id}")
@@ -107,6 +108,7 @@ process mmseqs2_makeqrydb {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(qry_id), path(qry, arity: '1')
     output:
         tuple val(qry_id), path("${qry_id}")
@@ -131,6 +133,7 @@ process mmseqs2_cluster {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref_db)
     output:
         tuple val(ref_id), path("${ref_id}/out.fasta"), path("${ref_id}/out.tsv")
@@ -199,6 +202,7 @@ process mmseqs2_search {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref_db), val(qry_id), path(qry_db)
     output:
         tuple val(ref_id), path("${qry_id}/out.*")
@@ -235,23 +239,23 @@ workflow {
     ref = createSeqsChannel(params.test_mmseqs2_ref)
     //ref.view { i -> "$i" }
 
-    ref_db = mmseqs2_makerefdb(ref)
+    ref_db = mmseqs2_makerefdb(p, ref)
     //ref_db.view { i -> "$i" }
 
     if (params.test_mmseqs2_module == "search") {
         qry = createSeqsChannel(params.test_mmseqs2_qry)
         //qry.view { i -> "$i" }
 
-        qry_db = mmseqs2_makeqrydb(qry)
+        qry_db = mmseqs2_makeqrydb(p, qry)
         //qry_db.view { i -> "$i" }
 
         in = ref_db.combine(qry_db)
         //in.view { i -> "$i" }
 
-        out = mmseqs2_search(in)
+        out = mmseqs2_search(p, in)
         //out.view { i -> "$i" }
     } else if (params.test_mmseqs2_module == "cluster") {
-        out = mmseqs2_cluster(ref_db)
+        out = mmseqs2_cluster(p, ref_db)
         //out.view { i -> "$i" }
     }
 }

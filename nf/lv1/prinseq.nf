@@ -29,6 +29,7 @@ process prinseq {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), path("${pair_id}")
@@ -70,6 +71,6 @@ process prinseq {
 workflow {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.test_prinseq_reads)
-    out = prinseq(reads)
+    out = prinseq(p, reads)
     out.view { i -> "${i}" }
 }

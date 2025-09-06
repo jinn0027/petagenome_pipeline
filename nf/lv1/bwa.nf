@@ -20,6 +20,7 @@ process bwa_makerefdb {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref, arity: '1')
     output:
         tuple val(ref_id), path("${ref_id}")
@@ -44,6 +45,7 @@ process bwa_mem {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
@@ -68,11 +70,11 @@ workflow {
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 
-    ref_db = bwa_makerefdb(ref)
+    ref_db = bwa_makerefdb(p, ref)
     //ref_db.view { i -> "$i" }
     in = ref_db.combine(qry)
     //in.view { i -> "$i" }
-    out = bwa_mem(in)
+    out = bwa_mem(p, in)
     out.view { i -> "$i" }
 }
 

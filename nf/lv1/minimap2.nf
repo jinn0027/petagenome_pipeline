@@ -29,6 +29,7 @@ process minimap2_makerefdb {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref, arity: '1')
     output:
         tuple val(ref_id), path("${ref_id}")
@@ -53,6 +54,7 @@ process minimap2 {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
@@ -78,6 +80,7 @@ process minimap2_e2e {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
+        val(p)
         tuple val(ref_id), path(ref, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
@@ -103,14 +106,14 @@ workflow {
 
     if (params.test_minimap2_e2e) {
         in = ref.combine(qry)
-        out = minimap2_e2e(in)
+        out = minimap2_e2e(p, in)
         out.view { i -> "$i" }
     } else {
-        ref_db = minimap2_makerefdb(ref)
+        ref_db = minimap2_makerefdb(p, ref)
         //ref_db.view { i -> "$i" }
         in = ref_db.combine(qry)
         //in.view { i -> "$i" }
-        out = minimap2(in)
+        out = minimap2(p, in)
         out.view { i -> "$i" }
     }
 }
