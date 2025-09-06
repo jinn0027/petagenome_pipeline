@@ -28,8 +28,6 @@ process fastp {
         """
         echo "${processProfile(task)}"
         mkdir -p ${pair_id}
-        echo "${getParam(p, 'fastp_cut_mean_quality')}" > a
-        echo "${getParam(p, 'fastp_reads_minlength')}" >> a
         fastp \\
             -w ${threads} \\
             --low_complexity_filter \\
