@@ -1,5 +1,11 @@
 [05_circular_contigs.rb]
 
+#SCRIPT_LENGTH_=get_sequence_length.py
+SCRIPT_REDUNDANCY_=extract_contig_redundancy.3.rb
+SCRIPT_FILTER_FA_=filter_fasta_by_id.py
+#SCRIPT_RENAME_=filter_contig.rename.py
+
+
 # parameter
 
 # E-value cutoff for circular formation
@@ -19,6 +25,11 @@ len_l = "5000"
 # minimum length for circular contigs
 len_c = "1500"
 
+# % identity for circular formation
+pi_self = 100
+# alignment length for circular formation
+al_self = 50
+
 ---
 
 # input
@@ -26,6 +37,35 @@ query_fa_ = "#{dir_in_}/contig.#{query_label}.#{l_thre}.fa"
 
 # output
 out = "#{dir_out_}/contig.updated.#{query_label}.#{len_l}.c_#{len_c}"
+
+##################
+
+	# main script for exploring circular contigs
+	f_qsub.puts "ruby ${SCRIPT_SELF_}  -d #{dir_out_}  -i #{query_fa_}  -n #{n_threads}  --len_l #{len_l} --len_c #{len_c} --pi_rd #{pi_thre_rd} --qc_rd #{qc_thre_rd} "
+
+##################
+
+h_params = ARGV.getopts('', 'dir_out_:', 'in_contig_:', 'n_threads:1', 'pi_self:100', 'al_self:50', 'pi_rd:98', 'qc_rd:98', 'len_l:5000', 'len_c:1500')
+
+wdir_out_ = h_params["dir_out_"] # directory for outputs
+in_contig_ = h_params["in_contig_"] # fasta file of contigs
+n_threads = h_params["n_threads"] # number of threads used in blast search
+# parameters for circular contig formation
+pi_self = h_params["pi_self"] # % identity for circular formation
+al_self = h_params["al_self"] # alignment length for circular formation
+len_l = h_params["len_l"] # minimum length of linear contigs
+len_c = h_params["len_c"] # minimum length of circular contigs
+# parameters for redundant contig detection
+pi_rd = h_params["pi_rd"] # % identity for removal of redundancy
+qc_rd = h_params["qc_rd"] # % query coverage for removal of redundancy
+
+###
+
+
+pi_rd=pi_thre_rd
+qc_rd=qc_thre_rd
+
+###
 
 # shori
 (1) ruby ${SCRIPT_SELF_}  -d #{dir_out_} -i #{query_fa_}  -n #{n_threads} \
@@ -117,6 +157,81 @@ out_updated = "#{dir_out_}/contig.updated"
     fi
     rm #{query_each_}
 
+(1-6)
+# concatenate circular contigs
+cat  #{dir_out_circular_}/*.cut.fa > #{out_circular}.c_#{len_c}.all.fa
+cat  #{dir_out_circular_}/*.extended.fa > #{out_circular}.c_#{len_c}.all.extended.fa
+
+(1-7)
+# get linear contigs
+python ${SCRIPT_LENGTH_} #{out_circular}.c_#{len_c}.all.fa > #{out_circular}.c_#{len_c}.all.length.txt
+wait
+python ${SCRIPT_FILTER_FA_} -f #{out_circular}.c_#{len_c}.all.length.txt #{in_contig_} > #{out_linear}.all.fa
+
+(1-8)
+#------------------------------
+# rename contigs:  circular:c  linear:l
+#------------------------------
+wait
+cat #{dir_out_circular_}/*.cut.fa | perl -pe "s/n(\.\d+)$/c\1/" > #{out_circular}.c_#{len_c}.all.fa
+cat  #{dir_out_circular_}/*.extended.fa | perl -pe "s/n(\.\d+)$/c\1/" > #{out_circular}.c_#{len_c}.all.extended.fa
+python ${SCRIPT_FILTER_FA_} -f #{out_circular}.c_#{len_c}.all.length.txt #{in_contig_} | perl -pe "s/n(\.\d+)$/l\1/" > #{out_linear}.all.fa
+
+(1-9)
+# get length of contigs
+python ${SCRIPT_LENGTH_} #{out_circular}.c_#{len_c}.all.fa > #{out_circular}.c_#{len_c}.all.length.txt
+python ${SCRIPT_LENGTH_} #{out_circular}.c_#{len_c}.all.extended.fa > #{out_circular}.c_#{len_c}.all.extended.length.txt
+python ${SCRIPT_LENGTH_} #{out_linear}.all.fa > #{out_linear}.all.length.txt"
+
+(1-10)
+# updated contigs
+cat  #{out_circular}.c_#{len_c}.all.fa  #{out_linear}.all.fa > #{out_updated}.c_#{len_c}.all.fa
+python ${SCRIPT_LENGTH_} #{out_updated}.c_#{len_c}.all.fa > #{out_updated}.c_#{len_c}.all.length.txt
+
+(1-11)
+#------------------------------
+# removal of redundancy in contigs
+#------------------------------
+out_blast_rd = "#{dir_out_}/#{task}.redundancy.updated.c_#{len_c}.#{e_thre}.pi_#{pi_rd}
+out_rd_info_ = "#{dir_out_}/info.redundancy.updated.c_#{len_c}.#{e_thre}.pi_#{pi_rd}.qc_#{qc_rd}.txt
+out_ex_contig_ = "#{dir_out_}/contig.redundant.c_#{len_c}.length.txt
+
+# blast search for extracting redundancy
+${MAKEBLASTDB_} -in #{out_updated}.c_#{len_c}.all.fa  -out #{out_updated}.c_#{len_c}.all  -dbtype nucl  -parse_seqids
+${BLASTN_} -task #{task} -num_threads #{n_threads} -query #{out_updated}.c_#{len_c}.all.fa -db #{out_updated}.c_#{len_c}.all -evalue #{e_thre} -perc_identity #{pi_rd} -outfmt 6 -num_alignments 50 -out #{out_blast_rd}.all.txt
+awk -F "\t" '{OFS="\t"}  { if ($1 != $2) print $0 }' #{out_blast_rd}.all.txt > #{out_blast_rd}.txt
+
+(1-12)
+# extract redundant contigs
+ruby ${SCRIPT_REDUNDANCY_}  -b #{out_blast_rd}.txt  -l #{out_updated}.c_#{len_c}.all.length.txt  -c #{qc_rd}  -d 6  -i #{out_rd_info_}  -o #{out_ex_contig_}
+
+(1-13)
+# get deduplicated contigs
+python ${SCRIPT_FILTER_FA_} -f #{out_ex_contig_} #{out_linear}.all.fa > #{out_linear}.fa
+python ${SCRIPT_FILTER_FA_} -f #{out_ex_contig_} #{out_circular}.c_#{len_c}.all.fa > #{out_circular}.c_#{len_c}.fa
+python ${SCRIPT_FILTER_FA_} -f #{out_ex_contig_} #{out_circular}.c_#{len_c}.all.extended.fa > #{out_circular}.c_#{len_c}.extended.fa
+python ${SCRIPT_FILTER_FA_} -f #{out_ex_contig_} #{out_updated}.c_#{len_c}.all.fa > #{out_updated}.c_#{len_c}.fa
+
+python ${SCRIPT_LENGTH_} #{out_linear}.fa > #{out_linear}.length.txt
+python ${SCRIPT_LENGTH_} #{out_circular}.c_#{len_c}.fa > #{out_circular}.c_#{len_c}.length.txt
+python ${SCRIPT_LENGTH_} #{out_circular}.c_#{len_c}.extended.fa > #{out_circular}.c_#{len_c}.extended.length.txt
+python ${SCRIPT_LENGTH_} #{out_updated}.c_#{len_c}.fa > #{out_updated}.c_#{len_c}.length.txt
+
+(1-14)
+#------------------------------
+# extract large contigs
+#------------------------------
+python ${SCRIPT_RENAME_} -min #{len_l} #{out_linear}.fa > #{out_linear}.#{len_l}.fa
+python ${SCRIPT_LENGTH_} #{out_linear}.#{len_l}.fa > #{out_linear}.#{len_l}.length.txt
+
+(1-15)
+# updated contigs
+cat  #{out_circular}.c_#{len_c}.fa  #{out_linear}.#{len_l}.fa > #{out_updated}.#{len_l}.c_#{len_c}.fa
+cat  #{out_circular}.c_#{len_c}.extended.fa  #{out_linear}.#{len_l}.fa > #{out_updated}.#{len_l}.c_#{len_c}.extended.fa
+cat  #{out_circular}.c_#{len_c}.length.txt  #{out_linear}.#{len_l}.length.txt | sort -k 1,1  > #{out_updated}.#{len_l}.c_#{len_c}.length.txt
+cat  #{out_circular}.c_#{len_c}.extended.length.txt  #{out_linear}.#{len_l}.length.txt | sort -k 1,1  > #{out_updated}.#{len_l}.c_#{len_c}.extended.length.txt
+
+
 ------
 
 
@@ -127,10 +242,12 @@ out_updated = "#{dir_out_}/contig.updated"
     cp  #{dir_out_}/contig.updated.#{len_l}.c_#{len_c}.length.txt  #{out}.length.txt
     cp  #{dir_out_}/contig.updated.#{len_l}.c_#{len_c}.extended.fa  #{out}.extended.fa
     cp  #{dir_out_}/contig.updated.#{len_l}.c_#{len_c}.extended.length.txt  #{out}.extended.length.txt
-    # blastdb
-    ${MAKEBLASTDB_} -in #{out}.fa -out #{out} -dbtype nucl -parse_seqids
 
-(3)
+(4)
+	# blastdb
+	f_qsub.puts "${MAKEBLASTDB_} -in #{out}.fa -out #{out} -dbtype nucl -parse_seqids"
+
+(5)
     # name information
     # updated (final) contigs
     cut -f 1 #{out}.length.txt > #{out}.txt
