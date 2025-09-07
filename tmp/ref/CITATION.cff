@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+authors:
+- family-names: "Kimura"
+  given-names: "Yasumasa"
+- family-names: "Yamamoto"
+  given-names: "Mako"
+- family-names: "Uematsu"
+  given-names: "Miho"
+- family-names: "Sato"
+  given-names: "Noriaki"
+- family-names: "Fujimoto"
+  given-names: "Kosuke"
+- family-names: "Uematsu"
+  given-names: "Satoshi"
+- family-names: "Imoto"
+  given-names: "Seiya"
+title: "Shotgun metagenomics processing pipeline"
+version: 1.0.0
+url: "https://github.com/noriakis/metagenome-pipeline"
