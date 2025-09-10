@@ -4,25 +4,15 @@ nextflow.enable.dsl=2
 params.circular_contigs_select_selfhit_memory = params.memory
 params.circular_contigs_select_selfhit_threads = params.threads
 
-// E-value cutoff for circular formation
-params.circular_contigs_e_thre = "1e-10"
-// % identity for circular formation
-params.circular_contigs_pi_thre = "100"
-// minimum alignment length for circular formation
-params.circular_contigs_al_thre = "50"
-// % identity for removal of redundancy
-params.circular_contigs_pi_thre_rd = "95"
-// % query coverage for removal of redundancy
-params.circular_contigs_qc_thre_rd = "95"
-// minimum length for linear contigs
-params.circular_contigs_len_l = "5000"
-// minimum length for circular contigs
-params.circular_contigs_len_c = "1500"
-// % identity for circular formation
-params.circular_contigs_pi_self = 100
-// alignment length for circular formation
-params.circular_contigs_al_self = 50
-
+params.circular_contigs_e_thre = "1e-10"        // E-value cutoff for circular formation
+params.circular_contigs_pi_thre = "100"         // identity for circular formation
+params.circular_contigs_al_thre = "50"          // minimum alignment length for circular formation
+params.circular_contigs_pi_thre_rd = "95"       // identity for removal of redundancy
+params.circular_contigs_qc_thre_rd = "95"       // query coverage for removal of redundancy
+params.circular_contigs_len_l = "5000"          // minimum length for linear contigs
+params.circular_contigs_len_c = "1500"          // minimum length for circular contigs
+params.circular_contigs_pi_self = 100           // identity for circular formation
+params.circular_contigs_al_self = 50            // alignment length for circular formation
 params.circular_contigs_blast_num_alignments=5
 params.test_circular_contigs_l_thre = 1000
 //params.test_circular_contigs_l_thre = 5000
