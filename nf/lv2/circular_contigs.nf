@@ -18,7 +18,12 @@ params.circular_contigs_qc_thre_rd = "95"
 params.circular_contigs_len_l = "5000"
 // minimum length for circular contigs
 params.circular_contigs_len_c = "1500"
+// % identity for circular formation
+params.circular_contigs_pi_self = 100
+// alignment length for circular formation
+params.circular_contigs_al_self = 50
 
+params.circular_contigs_blast_num_alignments=5
 params.test_circular_contigs_l_thre = 1000
 //params.test_circular_contigs_l_thre = 5000
 
@@ -59,10 +64,13 @@ workflow circular_contigs {
     qry = contig
     blstdb = blast_makerefdb(p, ref)
     blstin = blstdb.combine(qry)
-
-    //${BLASTN_} -task #{task} -num_threads #{n_threads} -query #{in_contig_} \
-    //           -db #{in_contig} -evalue #{e_thre} -perc_identity #{pi_self} -outfmt 6 -num_alignments 5 -out #{out_blast_all_}
-    blstn = blastn(p, blstin)
+    p_blastn = Channel.of(['blast_task':'megablast',
+                           'blast_perc_identity':params.circular_contigs_pi_self,
+                           'blast_evalue':params.circular_contigs_e_thre,
+                           'blast_outfmt':6,
+                           'blast_num_alignments':params.circular_contigs_blast_num_alignments
+                           ])
+    blstn = blastn(p_blastn, blstin)
     selfhit = select_selfhit(p, blstn)
   emit:
     blstn

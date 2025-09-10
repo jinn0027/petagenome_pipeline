@@ -74,7 +74,7 @@ process blastn {
         fi
         mkdir -p ${qry_id}
         blastn \\
-            -task ${params.blast_task} \\
+            -task ${getParam(p, 'blast_task')} \\
             -num_threads ${threads} \\
             -query \${qry_} \\
             -db ${ref_db}/ref \\
