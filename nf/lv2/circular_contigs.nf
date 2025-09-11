@@ -34,6 +34,7 @@ process select_selfhit {
     input:
         val(p)
         tuple val(ref_id), val(qry_id), path(in_tsv, arity: '1')
+        tuple val(qry_id), path(in_qry, arity: '1')
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/selfhit.tsv", arity: '1')
     script:
@@ -41,6 +42,7 @@ process select_selfhit {
         echo "${processProfile(task)}"
         mkdir -p ${qry_id}
         awk -F "\t" '{OFS="\t"}  { if (\$1 == \$2) print \$0 }' ${in_tsv} > ${qry_id}/selfhit.tsv
+        head ${in_qry} >> ${qry_id}/selfhit.tsv
         """
 }
 
@@ -61,7 +63,7 @@ workflow circular_contigs {
                            'blast_num_alignments':params.circular_contigs_blast_num_alignments
                            ])
     blstn = blastn(p_blastn, blstin)
-    selfhit = select_selfhit(p, blstn)
+    selfhit = select_selfhit(p, blstn, qry)
   emit:
     blstn
     selfhit
