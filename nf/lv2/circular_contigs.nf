@@ -3,6 +3,8 @@ nextflow.enable.dsl=2
 
 params.circular_contigs_classify_memory = params.memory
 params.circular_contigs_classify_threads = params.threads
+params.circular_contigs_deduplicate_memory = params.memory
+params.circular_contigs_deduplicate_threads = params.threads
 
 params.circular_contigs_e_thre = "1e-10"        // E-value cutoff for circular formation
 params.circular_contigs_pi_thre = "100"         // identity for circular formation
@@ -135,11 +137,12 @@ workflow circular_contigs {
         -> [id, cut, ext, circular, blst2_tsv]
     }
     ch_new.view{ i -> "${i}" }
-    //deduplicate()
+    dedupl = deduplicate(p, ch_new)
   emit:
     blstn1
     blstn2
     clsfy
+    dedupl
 }
 
 workflow {
