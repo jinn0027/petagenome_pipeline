@@ -36,13 +36,23 @@ process select_selfhit {
         tuple val(ref_id), val(qry_id), path(in_tsv, arity: '1')
         tuple val(qry_id), path(in_qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("${qry_id}/selfhit.tsv", arity: '1')
+        tuple val(ref_id), val(qry_id), path("${qry_id}/selfhit.tsv", arity: '1'), path("${qry_id}/*.fa", arity: '0..*')
     script:
         """
         echo "${processProfile(task)}"
         mkdir -p ${qry_id}
         awk -F "\t" '{OFS="\t"}  { if (\$1 == \$2) print \$0 }' ${in_tsv} > ${qry_id}/selfhit.tsv
-        seqkit stats -j 16 ${in_qry} >> ${qry_id}/selfhit.tsv
+        seqkit fx2tab -j 16 -n -i -l ${in_qry} | while read -r id len; do
+            pos_end=\$(awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} \\
+                '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}' \\
+                ${qry_id}/selfhit.tsv | sort -r | head -n 1)
+            if [ "\${pos_end}" != "" ] ; then
+                echo "-\${id} \${pos_end}-" >> ${qry_id}/out
+                seqkit grep -np \${id} ${in_qry} | seqkit subseq -r 1:\${pos_end} >> ${qry_id}/circular.fa
+            else
+                seqkit grep -np \${id} ${in_qry} >> ${qry_id}/linear.fa
+            fi
+        done
         """
 }
 
