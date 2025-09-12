@@ -86,17 +86,19 @@ process deduplicate {
               path("${id}/circular.cut.fa"),
               path("${id}/circular.extended.fa"),
               path("${id}/circular.fa"),
-              path("${id}/otherhit.tsv", arity: '1')
+              path("${id}/otherhit.tsv", arity: '1'),
+              path("${id}/*.txt", arity: '3')
     script:
         """
         echo "${processProfile(task)}"
         mkdir -p ${id}
         awk -F "\t" '{OFS="\t"}  { if (\$1 != \$2) print \$0 }' ${blst_out_tsv} > ${id}/otherhit.tsv
         python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py ${circular_cut} > ${id}/circular_cut.all.length.txt
-        ruby ${params.petagenomeDir}/scripts/Ruby/extract_contig_redundancy.3.rb -b ${id}/otherhit.tsv -l ${id}/circular_cut.all.length.txt -c ${params.circular_contigs_qc_thre_rd}  -d 6  -i ${id}/1.txt  -o ${id}/2.txt
-        cp ${circular_cut} ${id}/circular.cut.fa
-        cp ${circular_ext} ${id}/circular.extended.fa
-        cp ${circular} ${id}/circular.fa
+        ruby ${params.petagenomeDir}/scripts/Ruby/extract_contig_redundancy.3.rb -b ${id}/otherhit.tsv -l ${id}/circular_cut.all.length.txt -c ${params.circular_contigs_qc_thre_rd}  -d 6  -i ${id}/out_rd_info.txt  -o ${id}/out_ex_config.txt
+        touch ${id}/circular.cut.fa ${id}/circular.extended.fa ${id}/circular.fa
+        python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular_cut} > ${id}/circular.cut.fa
+        python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular_ext} > ${id}/circular.extended.fa
+        python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular} > ${id}/circular.fa
         """
 }
 
