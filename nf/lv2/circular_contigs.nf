@@ -47,8 +47,9 @@ process select_selfhit {
                 '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}' \\
                 ${qry_id}/selfhit.tsv | sort -r | head -n 1)
             if [ "\${pos_end}" != "" ] ; then
-                echo "-\${id} \${pos_end}-" >> ${qry_id}/out
                 seqkit grep -np \${id} ${in_qry} | seqkit subseq -r 1:\${pos_end} >> ${qry_id}/circular.fa
+                cp ${qry_id}/circular.fa ${qry_id}/circular.extended.fa
+                seqkit grep -np \${id} ${in_qry} | seqkit seq -s >> ${qry_id}/circular.extended.fa
             else
                 seqkit grep -np \${id} ${in_qry} >> ${qry_id}/linear.fa
             fi
