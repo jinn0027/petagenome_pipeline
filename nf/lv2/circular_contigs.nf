@@ -80,7 +80,7 @@ process deduplicate {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         val(p)
-        tuple val(id), path(circular_cut), path(circular_ext), path(circular), path(in_tsv, arity: '1')
+        tuple val(id), path(circular_cut), path(circular_ext), path(circular), path(blst_out_tsv, arity: '1')
     output:
         tuple val(id),
               path("${id}/circular.cut.fa"),
@@ -91,7 +91,9 @@ process deduplicate {
         """
         echo "${processProfile(task)}"
         mkdir -p ${id}
-        awk -F "\t" '{OFS="\t"}  { if (\$1 != \$2) print \$0 }' ${in_tsv} > ${id}/otherhit.tsv
+        awk -F "\t" '{OFS="\t"}  { if (\$1 != \$2) print \$0 }' ${blst_out_tsv} > ${id}/otherhit.tsv
+        python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py ${circular_cut} > ${id}/circular_cut.all.length.txt
+        ruby ${params.petagenomeDir}/scripts/Ruby/extract_contig_redundancy.3.rb -b ${id}/otherhit.tsv -l ${id}/circular_cut.all.length.txt -c ${params.circular_contigs_qc_thre_rd}  -d 6  -i ${id}/1.txt  -o ${id}/2.txt
         cp ${circular_cut} ${id}/circular.cut.fa
         cp ${circular_ext} ${id}/circular.extended.fa
         cp ${circular} ${id}/circular.fa
