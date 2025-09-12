@@ -26,7 +26,6 @@ include { blast_makerefdb as blast_makerefdb2; blastn as blastn2} from "${params
 process classify {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
-    //containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.circular_contigs_classify_memory}"
     def threads = "${params.circular_contigs_classify_threads}"
@@ -71,16 +70,15 @@ process classify {
 process deduplicate {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
-    //containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
-    def gb = "${params.circular_contigs_classify_memory}"
-    def threads = "${params.circular_contigs_classify_threads}"
+    def gb = "${params.circular_contigs_deduplicate_memory}"
+    def threads = "${params.circular_contigs_deduplicate_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         val(p)
-        tuple val(id), path(circulre_cut), path(circular_ext), path(circular), path(in_tsv, arity: '1')
+        tuple val(id), path(circular_cut), path(circular_ext), path(circular), path(in_tsv, arity: '1')
     output:
         tuple val(id),
               path("${id}/circular.cut.fa"),
@@ -91,7 +89,10 @@ process deduplicate {
         """
         echo "${processProfile(task)}"
         mkdir -p ${id}
-        awk -F "\t" '{OFS="\t"}  { if (\$1 != \$2) print \$0 }' ${in_tsv} > ${id}/selfhit.tsv
+        awk -F "\t" '{OFS="\t"}  { if (\$1 != \$2) print \$0 }' ${in_tsv} > ${id}/otherhit.tsv
+        cp ${circular_cut} ${id}/circular.cut.fa
+        cp ${circular_ext} ${id}/circular.extended.fa
+        cp ${circular} ${id}/circular.fa
         """
 }
 
@@ -116,8 +117,6 @@ workflow circular_contigs {
         [ id, circular_cut ]
     }
 
-    circular_cut.view{ i-> "$i" }
-
     blstdb2 = blast_makerefdb2(p, circular_cut)
     p_blastn2 = Channel.of(['blast_task':'megablast',
                             'blast_perc_identity':params.circular_contigs_pi_self,
@@ -127,6 +126,16 @@ workflow circular_contigs {
                             ])
     blstin2 = blstdb1.combine(circular_cut)
     blstn2 = blastn2(p_blastn2, blstin2)
+
+    blstn2.view{ i-> "$i" }
+    clsfy.view{ i-> "$i" }
+    ch_new = blstn2.merge(clsfy).map {
+        ref_id, qry_id, blst2_tsv,
+        id, cut, ext, circular, linear, selfhit_tsv
+        -> [id, cut, ext, circular, blst2_tsv]
+    }
+    ch_new.view{ i -> "${i}" }
+    //deduplicate()
   emit:
     blstn1
     blstn2
