@@ -119,7 +119,7 @@ case ${test} in
         ;;
     "circular_contigs")
         nextflow run ${nfDir}/lv2/circular_contigs.nf ${args} \
-                 --test_circular_contigs_contig "${longFnaGz1}"
+                 --test_circular_contigs_contig "${longFnaX8}"
         ;;
     "bbmap")
         nextflow run ${nfDir}/lv1/bbmap.nf ${args} \

@@ -35,7 +35,7 @@ process classify {
     input:
         val(p)
         tuple val(ref_id), val(qry_id), path(in_tsv, arity: '1')
-        tuple val(qry_id), path(in_qry, arity: '1')
+        tuple val(qry_id), path(qry, arity: '1')
     output:
         tuple val(ref_id),
               path("${qry_id}/circular.cut.fa"),
@@ -46,24 +46,34 @@ process classify {
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
+        qry_=${qry}
+        echo ${qry} | grep -e ".gz\$" >& /dev/null && :
+        if [ \$? -eq 0 ] ; then
+            qry_=\${qry_%%.gz}
+            unpigz -c ${qry} > \${qry_}
+        fi
         mkdir -p ${qry_id}
         awk -F "\t" '{OFS="\t"}  { if (\$1 == \$2) print \$0 }' ${in_tsv} > ${qry_id}/selfhit.tsv
-        touch ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa ${qry_id}/circular.fa ${qry_id}/linear.fa 
-        seqkit fx2tab -j ${params.circular_contigs_classify_threads} -n -i -l ${in_qry} | while read -r id len; do
+        touch ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa ${qry_id}/circular.fa ${qry_id}/linear.fa
+        seqkit split -i \${qry_} --by-id-prefix @ -O ${qry_id}
+        seqkit fx2tab -j ${params.circular_contigs_classify_threads} -n -i -l \${qry_} | while read -r id len; do
             pos_end=\$(awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} \\
                 '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}' \\
                 ${qry_id}/selfhit.tsv | sort -r | head -n 1)
-            seqkit grep -np \${id} ${in_qry} >> _fa
+            #seqkit grep -np \${id} \${qry_} >> _fa
+            _fa=${qry_id}/@\$(echo \${id} | sed 's#/#__#g').fa
             if [ "\${pos_end}" != "" ] ; then
-                cat _fa | seqkit subseq -r 1:\${pos_end} >> ${qry_id}/circular.cut.fa
+                cat \${_fa} | seqkit subseq -r 1:\${pos_end} >> ${qry_id}/circular.cut.fa
                 cp ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa
-                cat _fa | seqkit seq -s >> ${qry_id}/circular.extended.fa
-                cat _fa >> ${qry_id}/circular.fa
+                tail -n +2 \${_fa} >> ${qry_id}/circular.extended.fa
+                cat \${_fa} >> ${qry_id}/circular.fa
             else
-                cat _fa >> ${qry_id}/linear.fa
+                cat \${_fa} >> ${qry_id}/linear.fa
             fi
-            rm -f _fa
+            #rm -f _fa
         done
+        #seqkit split --help >> ${qry_id}/selfhit.tsv
+        #ls ${qry_id}  >> ${qry_id}/selfhit.tsv
         """
 }
 
