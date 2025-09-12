@@ -23,7 +23,7 @@ process fastqc {
         tuple val(pair_id), path("${pair_id}")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         export XDG_CACHE_HOME=\$(pwd)/.cache
         mkdir -p .cache
         mkdir -p ${pair_id}

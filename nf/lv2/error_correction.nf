@@ -26,7 +26,7 @@ process get_length {
         tuple val(id), path("${id}/*.length.txt")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         reads_=( ${reads} )
         for i in \${reads_[@]}

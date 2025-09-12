@@ -38,7 +38,7 @@ process spades_error_correction {
               path("${pair_id}/corrected/unpaired/*.cor.fastq", arity: '0..*')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir ${pair_id}
         spades.py \\
             --memory ${gb} \\
@@ -72,7 +72,7 @@ process spades_error_correction_gzip_output {
               path("${pair_id}/corrected/unpaired/*.cor.fastq.gz", arity: '0..*')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir ${pair_id}
         spades.py \\
             --memory ${gb} \\
@@ -105,7 +105,7 @@ process spades_assembler {
               path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
         spades.py \\
             --memory ${gb} \\
@@ -136,7 +136,7 @@ process spades_e2e {
               path("${pair_id}/contigs.fasta", arity: '0..*')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
         spades.py \\
             --memory ${params.spades_spades_e2e_memory} \\

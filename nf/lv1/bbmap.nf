@@ -30,7 +30,7 @@ process bbmap_makerefdb {
         tuple val(ref_id), path("${ref_id}")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         bbmap.sh \\
             -Xmx${gb}g \\
             threads=${threads} \\
@@ -55,7 +55,7 @@ process bbmap {
         tuple val(ref_id), val(pair_id), path("${pair_id}/out.sam", arity: '1')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
         bbmap.sh \\
             -Xmx${gb}g \\

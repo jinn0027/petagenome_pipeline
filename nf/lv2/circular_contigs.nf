@@ -47,7 +47,7 @@ process classify {
               path("${qry_id}/selfhit.tsv", arity: '1')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${qry_id}
         awk -F "\t" '{OFS="\t"}  { if (\$1 == \$2) print \$0 }' ${in_tsv} > ${qry_id}/selfhit.tsv
         touch ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa ${qry_id}/circular.fa ${qry_id}/linear.fa 
@@ -90,7 +90,7 @@ process deduplicate {
               path("${id}/*.txt", arity: '3')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         awk -F "\t" '{OFS="\t"}  { if (\$1 != \$2) print \$0 }' ${blst_out_tsv} > ${id}/otherhit.tsv
         python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py ${circular_cut} > ${id}/circular_cut.all.length.txt
@@ -130,7 +130,7 @@ workflow circular_contigs {
                             'blast_outfmt':6,
                             'blast_num_alignments':params.circular_contigs_blast2_num_alignments
                             ])
-    blstin2 = blstdb1.combine(circular_cut)
+    blstin2 = blstdb2.combine(circular_cut)
     blstn2 = blastn2(p_blastn2, blstin2)
 
     blstn2.view{ i-> "$i" }

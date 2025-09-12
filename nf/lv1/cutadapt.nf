@@ -27,7 +27,7 @@ process cutadapt {
         tuple val(pair_id), path("${pair_id}/out_{1,2}.fastq", arity: '2')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
         cutadapt \\
             -a ${getParam(p, 'cutadapt_fwd')} \\

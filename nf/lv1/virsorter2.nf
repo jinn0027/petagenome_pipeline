@@ -26,7 +26,7 @@ process virsorter2 {
         tuple val(read_id), path("${read_id}/final-viral-boundary.tsv"), path("${read_id}/final-viral-score.tsv")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         virsorter \\
             config \\
             --init-source \\

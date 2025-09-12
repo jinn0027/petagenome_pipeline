@@ -32,7 +32,7 @@ process diamond_makerefdb {
         tuple val(ref_id), path("${ref_id}")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${ref_id}
         diamond \\
             makedb \\

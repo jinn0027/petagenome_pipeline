@@ -32,7 +32,7 @@ process prodigal {
               path("${read_id}/out.${params.prodigal_outfmt}", arity: '1')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         read_=${read}
         echo ${read} | grep -e ".gz\$" >& /dev/null && :
         if [ \$? -eq 0 ] ; then

@@ -26,7 +26,7 @@ process bowtie_makerefdb {
         tuple val(ref_id), path("${ref_id}")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${ref_id}
         bowtie-build \\
             --threads ${threads} \\
@@ -52,7 +52,7 @@ process bowtie {
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${qry_id}
         bowtie \\
             -p ${threads} \\

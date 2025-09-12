@@ -31,7 +31,7 @@ process metaphlan {
               path("${read_id}/out.prof", arity: '1')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${read_id}
         metaphlan \\
             --nproc ${threads} \\

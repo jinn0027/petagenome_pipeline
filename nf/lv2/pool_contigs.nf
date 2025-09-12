@@ -42,7 +42,7 @@ process merge_contigs {
         tuple val(id), path("${id}/merged_contig.fa"), path("${id}/contig_list.txt")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         touch ${id}/merged_contig.fa
         touch ${id}/contig_list.txt
@@ -78,7 +78,7 @@ process filter_and_rename {
         tuple val(id), path("${id}/contig.${l_thre}.fa"), path("${id}/contig.name.txt")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
              --min ${l_thre} --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.${l_thre}.fa
@@ -103,7 +103,7 @@ process summarize_name {
         tuple val(id), path("${id}/${id}.name.txt"), path("${id}/*")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         if [ "${getParam(p, 'pool_contigs_clustering_process')}" = "mmseqs2" ] ; then
             cp -f ${clstr} ${id}/${id}.name_
@@ -141,7 +141,7 @@ process get_length {
         tuple val(id), path("${id}/*.length.txt")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         reads_=( ${reads} )
         for i in \${reads_[@]}
@@ -170,7 +170,7 @@ process get_stats {
         tuple val(id), path("${id}/*.stats.txt")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         lengths_=( ${lengths} )
         for i in \${lengths_[@]}

@@ -32,7 +32,7 @@ process virsorter {
         tuple val(read_id), path("${params.virsorter_aligner}/${read_id}/VIRSorter_global-phage-signal.csv", arity: '1')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         read_=${read}
         echo ${read} | grep -e ".gz\$" >& /dev/null && :
         if [ \$? -eq 0 ] ; then

@@ -23,7 +23,7 @@ process megahit {
         tuple val(pair_id), path("${pair_id}/out.contigs.fa", arity: '1')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         megahit \\
             -m "${gb}000000000" \\
             -t ${threads} \\

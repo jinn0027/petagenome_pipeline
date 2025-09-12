@@ -33,7 +33,7 @@ process blast_makerefdb {
         tuple val(ref_id), path("${ref_id}")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         ref_=${ref}
         echo ${ref} | grep -e ".gz\$" >& /dev/null && :
         if [ \$? -eq 0 ] ; then
@@ -41,11 +41,14 @@ process blast_makerefdb {
             unpigz -c ${ref} > \${ref_}
         fi
         mkdir -p ${ref_id}
-        makeblastdb \\
-            -in \${ref_} \\
-            -out ${ref_id}/ref \\
-            -dbtype ${getParam(p, 'blast_dbtype')} \\
-            -parse_seqids
+        ref_siz=\$( du -b \$(readlink -f \${ref_}) | awk '{print(\$1)}' )
+        if [ \${ref_siz} -gt 0 ] ; then
+            makeblastdb \\
+                -in \${ref_} \\
+                -out ${ref_id}/ref \\
+                -dbtype ${getParam(p, 'blast_dbtype')} \\
+                -parse_seqids
+        fi
         """
 }
 
@@ -65,7 +68,7 @@ process blastn {
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.tsv", arity: '1')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         qry_=${qry}
         echo ${qry} | grep -e ".gz\$" >& /dev/null && :
         if [ \$? -eq 0 ] ; then
@@ -73,16 +76,21 @@ process blastn {
             unpigz -c ${qry} > \${qry_}
         fi
         mkdir -p ${qry_id}
-        blastn \\
-            -task ${getParam(p, 'blast_task')} \\
-            -num_threads ${threads} \\
-            -query \${qry_} \\
-            -db ${ref_db}/ref \\
-            -perc_identity ${getParam(p, 'blast_perc_identity')} \\
-            -evalue ${getParam(p, 'blast_evalue')} \\
-            -outfmt ${getParam(p, 'blast_outfmt')} \\
-            -num_alignments ${getParam(p, 'blast_num_alignments')} \\
-            -out ${qry_id}/out.tsv
+        touch ${qry_id}/out.tsv
+        qry_siz=\$( du -b \$(readlink -f \${qry_}) | awk '{print(\$1)}' )
+        db_siz=\$(ls ${ref_db} 2>/dev/null | wc -l)
+        if [ \${qry_siz} -gt 0 ] && [ \${db_siz} -gt 0 ]; then
+            blastn \\
+                -task ${getParam(p, 'blast_task')} \\
+                -num_threads ${threads} \\
+                -query \${qry_} \\
+                -db ${ref_db}/ref \\
+                -perc_identity ${getParam(p, 'blast_perc_identity')} \\
+                -evalue ${getParam(p, 'blast_evalue')} \\
+                -outfmt ${getParam(p, 'blast_outfmt')} \\
+                -num_alignments ${getParam(p, 'blast_num_alignments')} \\
+                -out ${qry_id}/out.tsv
+        fi
         """
 }
 

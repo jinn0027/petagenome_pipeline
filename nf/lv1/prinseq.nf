@@ -35,7 +35,7 @@ process prinseq {
         tuple val(pair_id), path("${pair_id}")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
 
         read0=${reads[0]}

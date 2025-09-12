@@ -81,6 +81,17 @@ case ${test} in
         nextflow run ${nfDir}/toys/main.nf ${args} \
                  --test_main_reads "${longFnqGzPair}"
         ;;
+    "bacteriome_pipeline2")
+        args+="\
+            --fastp_fastp_memory 30 \
+            --spades_spades_error_correction_memory 80 \
+            --spades_spades_assembler_memory 100 \
+            --mmseqs2_mmseqs2_cluster_memory 100 \
+            "
+        nextflow run ${nfDir}/lv3/bacteriome_pipeline2.nf ${args} \
+                 --test_bacteriome_pipeline_lthre 0 \
+                 --test_bacteriome_pipeline_reads "${dataDir}/ecoli_1K_{1,2}.fq.gz"
+        ;;
     "bacteriome_pipeline")
         args+="\
             --fastp_fastp_memory 30 \

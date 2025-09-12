@@ -29,7 +29,7 @@ process cdhit_est {
         tuple val(id), path("${id}/out.fasta"), path("${id}/out.fasta.clstr")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         cd-hit-est \\
             -M "${gb}000" \\

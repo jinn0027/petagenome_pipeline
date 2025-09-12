@@ -92,7 +92,7 @@ process mmseqs2_makerefdb {
         tuple val(ref_id), path("${ref_id}")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${ref_id}
         mmseqs createdb \\
             --dbtype ${getParam(p, 'mmseqs2_ref_type')} \\
@@ -117,7 +117,7 @@ process mmseqs2_makeqrydb {
         tuple val(qry_id), path("${qry_id}")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${qry_id}
         mmseqs createdb \\
             --dbtype ${getParam(p, 'mmseqs2_qry_type')} \\
@@ -142,7 +142,7 @@ process mmseqs2_cluster {
         tuple val(ref_id), path("${ref_id}/out.fasta"), path("${ref_id}/out.tsv")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${ref_id} tmp
         if [ "${getParam(p, 'mmseqs2_cluster_mode')}" == "cluster" ] ; then
             args="\\
@@ -213,7 +213,7 @@ process mmseqs2_search {
         tuple val(ref_id), path("${qry_id}/out.*")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${qry_id} tmp
         args="\\
              --search-type ${getParam(p, 'mmseqs2_search_type')} \\

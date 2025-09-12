@@ -23,7 +23,7 @@ process falco {
         tuple val(pair_id), path("${pair_id}")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
         falco \\
             -t ${threads} \\

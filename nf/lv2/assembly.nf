@@ -32,7 +32,7 @@ process filter_and_rename {
         tuple val(id), path("${id}/contig.${l_thre}.fa", arity: '0..*'), path("${id}/contig.name.txt")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
              --min ${l_thre} --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.${l_thre}.fa
@@ -62,7 +62,7 @@ process get_length {
         tuple val(id), path("${id}/*.length.txt", arity: '0..*')
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         reads_=( ${reads} )
         for i in \${reads_[@]}
@@ -91,7 +91,7 @@ process get_stats {
         tuple val(id), path("${id}/*.stats.txt")
     script:
         """
-        echo "${processProfile(task)}"
+        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${id}
         lengths_=( ${lengths} )
         for i in \${lengths_[@]}
