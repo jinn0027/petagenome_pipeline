@@ -68,6 +68,33 @@ process classify {
         """
 }
 
+process deduplicate {
+    tag "${id}"
+    container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
+    //containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    def gb = "${params.circular_contigs_classify_memory}"
+    def threads = "${params.circular_contigs_classify_threads}"
+    memory params.executor=="sge" ? null : "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+    input:
+        val(p)
+        tuple val(id), path(circulre_cut), path(circular_ext), path(circular), path(in_tsv, arity: '1')
+    output:
+        tuple val(id),
+              path("${id}/circular.cut.fa"),
+              path("${id}/circular.extended.fa"),
+              path("${id}/circular.fa"),
+              path("${id}/otherhit.tsv", arity: '1')
+    script:
+        """
+        echo "${processProfile(task)}"
+        mkdir -p ${id}
+        awk -F "\t" '{OFS="\t"}  { if (\$1 != \$2) print \$0 }' ${in_tsv} > ${id}/selfhit.tsv
+        """
+}
+
 workflow circular_contigs {
   take:
     p
