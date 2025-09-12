@@ -13,13 +13,15 @@ params.circular_contigs_len_l = "5000"          // minimum length for linear con
 params.circular_contigs_len_c = "1500"          // minimum length for circular contigs
 params.circular_contigs_pi_self = 100           // identity for circular formation
 params.circular_contigs_al_self = 50            // alignment length for circular formation
-params.circular_contigs_blast_num_alignments=5
+params.circular_contigs_blast1_num_alignments=5
+params.circular_contigs_blast2_num_alignments=50
 params.test_circular_contigs_l_thre = 1000
 //params.test_circular_contigs_l_thre = 5000
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { blast_makerefdb as blast_makerefdb1; blastn as blastn1} from "${params.petagenomeDir}/nf/lv1/blast"
+include { blast_makerefdb as blast_makerefdb2; blastn as blastn2} from "${params.petagenomeDir}/nf/lv1/blast"
 
 process classify {
     tag "${ref_id}_@_${qry_id}"
@@ -36,7 +38,12 @@ process classify {
         tuple val(ref_id), val(qry_id), path(in_tsv, arity: '1')
         tuple val(qry_id), path(in_qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("${qry_id}/selfhit.tsv", arity: '1'), path("${qry_id}/*.fa", arity: '4')
+        tuple val(ref_id),
+              path("${qry_id}/circular.cut.fa"),
+              path("${qry_id}/circular.extended.fa"),
+              path("${qry_id}/circular.fa"),
+              path("${qry_id}/linear.fa"),
+              path("${qry_id}/selfhit.tsv", arity: '1')
     script:
         """
         echo "${processProfile(task)}"
@@ -73,12 +80,29 @@ workflow circular_contigs {
                             'blast_perc_identity':params.circular_contigs_pi_self,
                             'blast_evalue':params.circular_contigs_e_thre,
                             'blast_outfmt':6,
-                            'blast_num_alignments':params.circular_contigs_blast_num_alignments
+                            'blast_num_alignments':params.circular_contigs_blast1_num_alignments
                             ])
     blstn1 = blastn1(p_blastn1, blstin1)
     clsfy = classify(p, blstn1, contig)
+
+    circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv ->
+        [ id, circular_cut ]
+    }
+
+    circular_cut.view{ i-> "$i" }
+
+    blstdb2 = blast_makerefdb2(p, circular_cut)
+    p_blastn2 = Channel.of(['blast_task':'megablast',
+                            'blast_perc_identity':params.circular_contigs_pi_self,
+                            'blast_evalue':params.circular_contigs_e_thre,
+                            'blast_outfmt':6,
+                            'blast_num_alignments':params.circular_contigs_blast2_num_alignments
+                            ])
+    blstin2 = blstdb1.combine(circular_cut)
+    blstn2 = blastn2(p_blastn2, blstin2)
   emit:
     blstn1
+    blstn2
     clsfy
 }
 
@@ -88,6 +112,6 @@ workflow {
       .map{ path -> tuple(path.simpleName, path) }
     contig.view { i -> "$i" }
     out = circular_contigs(p, contig, params.test_circular_contigs_l_thre)
-    out.blstn1.view { i -> "$i" }
-    out.clsfy.view { i -> "$i" }
+    //out.blstn1.view { i -> "$i" }
+    //out.clsfy.view { i -> "$i" }
 }
