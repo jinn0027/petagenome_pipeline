@@ -17,8 +17,7 @@ process fastqc {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(pair_id), path(reads, arity: '2')
+        tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), path("${pair_id}")
     script:
@@ -38,6 +37,6 @@ process fastqc {
 workflow {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.test_fastqc_reads)
-    out = fastqc(p, reads)
+    out = fastqc(p.combine(reads))
     out.view { i -> "$i" }
 }

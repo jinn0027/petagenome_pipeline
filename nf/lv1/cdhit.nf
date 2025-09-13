@@ -23,8 +23,7 @@ process cdhit_est {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(read, arity: '1')
+        tuple val(p), val(id), path(read, arity: '1')
     output:
         tuple val(id), path("${id}/out.fasta"), path("${id}/out.fasta.clstr")
     script:
@@ -47,6 +46,6 @@ process cdhit_est {
 workflow {
     p = createNullParamsChannel()
     read = createSeqsChannel(params.test_cdhit_read)
-    out = cdhit_est(p, read)
+    out = cdhit_est(p.combine(read))
     out.view { i -> "$i" }
 }

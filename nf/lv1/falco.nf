@@ -17,8 +17,7 @@ process falco {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(pair_id), path(reads, arity: '2')
+        tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), path("${pair_id}")
     script:
@@ -36,6 +35,6 @@ process falco {
 workflow {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.test_falco_reads)
-    out = falco(p, reads)
+    out = falco(p.combine(reads))
     out.view { i -> "$i" }
 }

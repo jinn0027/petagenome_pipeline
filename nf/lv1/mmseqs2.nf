@@ -86,8 +86,7 @@ process mmseqs2_makerefdb {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(ref_id), path(ref, arity: '1')
+        tuple val(p), val(ref_id), path(ref, arity: '1')
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
@@ -111,8 +110,7 @@ process mmseqs2_makeqrydb {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(qry_id), path(qry, arity: '1')
+        tuple val(p), val(qry_id), path(qry, arity: '1')
     output:
         tuple val(qry_id), path("${qry_id}")
     script:
@@ -136,8 +134,7 @@ process mmseqs2_cluster {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(ref_id), path(ref_db)
+        tuple val(p), val(ref_id), path(ref_db)
     output:
         tuple val(ref_id), path("${ref_id}/out.fasta"), path("${ref_id}/out.tsv")
     script:
@@ -207,8 +204,7 @@ process mmseqs2_search {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(ref_id), path(ref_db), val(qry_id), path(qry_db)
+        tuple val(p), val(ref_id), path(ref_db), val(qry_id), path(qry_db)
     output:
         tuple val(ref_id), path("${qry_id}/out.*")
     script:
@@ -245,23 +241,23 @@ workflow {
     ref = createSeqsChannel(params.test_mmseqs2_ref)
     //ref.view { i -> "$i" }
 
-    ref_db = mmseqs2_makerefdb(p, ref)
+    ref_db = mmseqs2_makerefdb(p.combine(ref))
     //ref_db.view { i -> "$i" }
 
     if (params.test_mmseqs2_module == "search") {
         qry = createSeqsChannel(params.test_mmseqs2_qry)
         //qry.view { i -> "$i" }
 
-        qry_db = mmseqs2_makeqrydb(p, qry)
+        qry_db = mmseqs2_makeqrydb(p.combine(qry))
         //qry_db.view { i -> "$i" }
 
         in = ref_db.combine(qry_db)
         //in.view { i -> "$i" }
 
-        out = mmseqs2_search(p, in)
+        out = mmseqs2_search(p.combine(in))
         //out.view { i -> "$i" }
     } else if (params.test_mmseqs2_module == "cluster") {
-        out = mmseqs2_cluster(p, ref_db)
+        out = mmseqs2_cluster(p.combine(ref_db))
         //out.view { i -> "$i" }
     }
 }

@@ -26,8 +26,7 @@ process diamond_makerefdb {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(ref_id), path(ref, arity: '1')
+        tuple val(p), val(ref_id), path(ref, arity: '1')
     output:
         tuple val(ref_id), path("${ref_id}")
     script:
@@ -52,8 +51,7 @@ process diamond_blastp {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
+        tuple val(p), val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.tsv", arity: '1')
     script:
@@ -77,10 +75,10 @@ workflow {
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
 
-    ref_db = diamond_makerefdb(p, ref)
+    ref_db = diamond_makerefdb(p.combine(ref))
     //ref_db.view { i -> "$i" }
     in = ref_db.combine(qry)
     //in.view { i -> "$i" }
-    out = diamond_blastp(p, in)
+    out = diamond_blastp(p.combine(in))
     out.view { i -> "$i" }
 }

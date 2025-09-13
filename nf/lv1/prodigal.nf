@@ -23,8 +23,7 @@ process prodigal {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(read_id), path(read, arity: '1')
+        tuple val(p), val(read_id), path(read, arity: '1')
     output:
         tuple val(read_id), \
               path("${read_id}/out.faa", arity: '1'), \
@@ -53,6 +52,6 @@ process prodigal {
 workflow {
     p = createNullParamsChannel()
     read = createSeqsChannel(params.test_prodigal_read)
-    out = prodigal(p, read)
+    out = prodigal(p.combine(read))
     out.view { i -> "${i}" }
 }

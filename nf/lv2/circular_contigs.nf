@@ -33,8 +33,7 @@ process classify {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(ref_id), val(qry_id), path(in_tsv, arity: '1')
+        tuple val(p), val(ref_id), val(qry_id), path(in_tsv, arity: '1')
         tuple val(qry_id), path(qry, arity: '1')
     output:
         tuple val(ref_id),
@@ -94,8 +93,7 @@ process deduplicate {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(circular_cut), path(circular_ext), path(circular), path(blst_out_tsv, arity: '1')
+        tuple val(p), val(id), path(circular_cut), path(circular_ext), path(circular), path(blst_out_tsv, arity: '1')
     output:
         tuple val(id),
               path("${id}/circular.cut.fa"),
@@ -122,7 +120,7 @@ workflow circular_contigs {
     p
     contig
   main:
-    blstdb1 = blast_makerefdb1(p, contig)
+    blstdb1 = blast_makerefdb1(p.combine(contig))
     blstin1 = blstdb1.combine(contig)
     p_blastn1 = Channel.of(['blast_task':'megablast',
                             'blast_perc_identity':params.circular_contigs_pi_self,
@@ -130,14 +128,14 @@ workflow circular_contigs {
                             'blast_outfmt':6,
                             'blast_num_alignments':params.circular_contigs_blast1_num_alignments
                             ])
-    blstn1 = blastn1(p_blastn1, blstin1)
-    clsfy = classify(p, blstn1, contig)
+    blstn1 = blastn1(p_blastn1.combine(blstin1))
+    clsfy = classify(p.combine(blstn1), contig)
 
     circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv ->
         [ id, circular_cut ]
     }
 
-    blstdb2 = blast_makerefdb2(p, circular_cut)
+    blstdb2 = blast_makerefdb2(p.combine(circular_cut))
     p_blastn2 = Channel.of(['blast_task':'megablast',
                             'blast_perc_identity':params.circular_contigs_pi_self,
                             'blast_evalue':params.circular_contigs_e_thre,
@@ -145,7 +143,7 @@ workflow circular_contigs {
                             'blast_num_alignments':params.circular_contigs_blast2_num_alignments
                             ])
     blstin2 = blstdb2.combine(circular_cut)
-    blstn2 = blastn2(p_blastn2, blstin2)
+    blstn2 = blastn2(p_blastn2.combine(blstin2))
 
     blstn2.view{ i-> "$i" }
     clsfy.view{ i-> "$i" }
@@ -155,7 +153,7 @@ workflow circular_contigs {
         -> [id, cut, ext, circular, blst2_tsv]
     }
     ch_new.view{ i -> "${i}" }
-    dedupl = deduplicate(p, ch_new)
+    dedupl = deduplicate(p.combine(ch_new))
   emit:
     blstn1
     blstn2

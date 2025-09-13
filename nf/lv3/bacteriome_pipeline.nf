@@ -13,7 +13,7 @@ workflow bacteriome_pipeline {
     reads
     l_thre
   main:
-    fp = fastp(p, reads)
+    fp = fastp(p.combine(reads))
     ec = error_correction(p, fp)
     as = assembly(p, ec.ec.map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }, l_thre)
 

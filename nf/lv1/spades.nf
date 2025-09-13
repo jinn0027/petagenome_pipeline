@@ -30,8 +30,7 @@ process spades_error_correction {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(pair_id), path(reads, arity: '2')
+        tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), \
               path("${pair_id}/corrected/paired/*.cor.fastq", arity: '0..2'), \
@@ -64,8 +63,7 @@ process spades_error_correction_gzip_output {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(pair_id), path(reads, arity: '2')
+        tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), \
               path("${pair_id}/corrected/paired/*.cor.fastq.gz", arity: '0..2'), \
@@ -97,8 +95,7 @@ process spades_assembler {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(pair_id), path(reads, arity: '2')
+        tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), \
               path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
@@ -128,8 +125,7 @@ process spades_e2e {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(pair_id), path(reads, arity: '2')
+        tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), \
               path("${pair_id}/scaffolds.fasta", arity: '0..*'), \
@@ -152,13 +148,13 @@ workflow {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.test_spades_reads)
     if (params.test_spades_e2e) {
-        out = spades_e2e(p, reads)
+        out = spades_e2e(p.combine(reads))
         out.view { i -> "$i" }
     } else {
-        ec = spades_error_correction_gzip_output(p, reads)
+        ec = spades_error_correction_gzip_output(p.combine(reads))
                 .map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }
         ec.view { i -> "$i" }
-        out = spades_assembler(p, ec)
+        out = spades_assembler(p.combine(ec))
         out.view { i -> "$i" }
     }
 }

@@ -20,8 +20,7 @@ process get_length {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(reads, arity: '1..*')
+        tuple val(p), val(id), path(reads, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.length.txt")
     script:
@@ -43,9 +42,9 @@ workflow error_correction {
     p
     reads
   main:
-    ec = spades_error_correction(p, reads)
-    fqc = fastqc(p,  ec.map { id, reads, unpaired -> tuple( id, reads ) })
-    len = get_length(p, ec.map { id, reads, unpaired -> tuple( id, reads ) })
+    ec = spades_error_correction(p.combine(reads))
+    fqc = fastqc(p.combine(ec.map { id, reads, unpaired -> tuple( id, reads ) }))
+    len = get_length(p.combine(ec.map { id, reads, unpaired -> tuple( id, reads ) }))
   emit:
     ec
     fqc

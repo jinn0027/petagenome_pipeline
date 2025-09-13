@@ -26,8 +26,7 @@ process filter_and_rename {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(read, arity: '1'), val(l_thre)
+        tuple val(p), val(id), path(read, arity: '1'), val(l_thre)
     output:
         tuple val(id), path("${id}/contig.${l_thre}.fa", arity: '0..*'), path("${id}/contig.name.txt")
     script:
@@ -56,8 +55,7 @@ process get_length {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(reads, arity: '0..*')
+        tuple val(p), val(id), path(reads, arity: '0..*')
     output:
         tuple val(id), path("${id}/*.length.txt", arity: '0..*')
     script:
@@ -85,8 +83,7 @@ process get_stats {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(lengths, arity: '1..*')
+        tuple val(p), val(id), path(lengths, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.stats.txt")
     script:
@@ -114,12 +111,12 @@ workflow assembly {
     reads
     l_thre
   main:
-    asm = spades_assembler(p, reads)
+    asm = spades_assembler(p.combine(reads))
     asm = asm.map { id, scaffolds, contigs ->
         tuple(id, 0 < scaffolds.size() ? scaffolds : contigs)
     }
 
-    flt = filter_and_rename(p, asm.map { id, contigs -> tuple(id, contigs, l_thre) } )
+    flt = filter_and_rename(p.combine(asm.map { id, contigs -> tuple(id, contigs, l_thre) } ))
     flt = flt.flatMap { id, contigs, name ->
         contigs.collect { c ->
 	    if (c.size() != 0) {
@@ -128,9 +125,9 @@ workflow assembly {
         }.findAll{ it != null }
     }
 
-    len = get_length(p, flt)
-    sts = get_stats(p, len)
-    blstdb = blast_makerefdb(p, flt)
+    len = get_length(p.combine(flt))
+    sts = get_stats(p.combine(len))
+    blstdb = blast_makerefdb(p.combine(flt))
 
   emit:
     asm

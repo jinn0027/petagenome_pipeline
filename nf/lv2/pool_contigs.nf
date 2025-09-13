@@ -36,8 +36,7 @@ process merge_contigs {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(contigs, arity: '1..*', stageAs: "?/*")
+        tuple val(p), val(id), path(contigs, arity: '1..*', stageAs: "?/*")
     output:
         tuple val(id), path("${id}/merged_contig.fa"), path("${id}/contig_list.txt")
     script:
@@ -72,8 +71,7 @@ process filter_and_rename {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(read, arity: '1'), val(l_thre)
+        tuple val(p), val(id), path(read, arity: '1'), val(l_thre)
     output:
         tuple val(id), path("${id}/contig.${l_thre}.fa"), path("${id}/contig.name.txt")
     script:
@@ -96,8 +94,7 @@ process summarize_name {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(name, arity: '1')
+        tuple val(p), val(id), path(name, arity: '1')
         tuple val(id), path(clstr, arity: '1')
     output:
         tuple val(id), path("${id}/${id}.name.txt"), path("${id}/*")
@@ -135,8 +132,7 @@ process get_length {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(reads, arity: '1..*')
+        tuple val(p), val(id), path(reads, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.length.txt")
     script:
@@ -164,8 +160,7 @@ process get_stats {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(id), path(lengths, arity: '1..*')
+        tuple val(p), val(id), path(lengths, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.stats.txt")
     script:
@@ -194,31 +189,30 @@ workflow pool_contigs {
     l_thre
   main:
     // concatenate assemblies
-    merged = merge_contigs(p, contigs)
+    merged = merge_contigs(p.combine(contigs))
 
     // removing redundancy
     if ( params.pool_contigs_clustering_process == "mmseqs2" ) {
-        merged_db = mmseqs2_makerefdb(p, merged.map{ id, fasta, list -> tuple(id, fasta ) })
-        clust = mmseqs2_cluster(p, merged_db)
+        merged_db = mmseqs2_makerefdb(p.combine(merged.map{ id, fasta, list -> tuple(id, fasta ) }))
+        clust = mmseqs2_cluster(p.combine(merged_db))
     } else {
-        clust = cdhit_est(p, merged.map{ id, fasta, list -> tuple(id, fasta ) })
+        clust = cdhit_est(p.combine(merged.map{ id, fasta, list -> tuple(id, fasta ) }))
     }
 
     // rename and filter (L>=#{l_thre}) contigs
-    flt = filter_and_rename(p, clust.map{ id, fasta, clstr -> tuple(id, fasta, l_thre) })
+    flt = filter_and_rename(p.combine(clust.map{ id, fasta, clstr -> tuple(id, fasta, l_thre) }))
 
     // summarize contig name ( contig in each sample / representative contig / renamed representative contig )
-    name = summarize_name(p, flt.map{ id, fasta, name -> tuple(id, name) }, clust.map{ id, fasta, clstr -> tuple(id, clstr) })
+    name = summarize_name(p.combine(flt.map{ id, fasta, name -> tuple(id, name) }), clust.map{ id, fasta, clstr -> tuple(id, clstr) })
 
     // get length of contigs
-    len = get_length(p, flt.map{ id, fasta, name -> tuple(id, fasta) })
+    len = get_length(p.combine(flt.map{ id, fasta, name -> tuple(id, fasta) }))
 
     // stats of assemblies
-    sts = get_stats(p, len)
+    sts = get_stats(p.combine(len))
 
     // blastdb
-    blstdb = blast_makerefdb(p, flt.map{ id, contig, name -> tuple(id, contig) })
-
+    blstdb = blast_makerefdb(p.combine(flt.map{ id, contig, name -> tuple(id, contig) }))
   emit:
     merged
     clust

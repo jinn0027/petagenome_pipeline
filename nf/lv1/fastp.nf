@@ -20,8 +20,7 @@ process fastp {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        val(p)
-        tuple val(pair_id), path(reads, arity: '2')
+        tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), path("${pair_id}/out_{1,2}.fastq", arity: '2')
     script:
@@ -44,6 +43,6 @@ process fastp {
 workflow {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.test_fastp_reads)
-    out = fastp(p, reads)
+    out = fastp(p.combine(reads))
     out.view { i -> "$i" }
 }
