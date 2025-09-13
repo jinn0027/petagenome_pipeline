@@ -69,7 +69,7 @@ args_dbg="\
     "
 
 nextflow clean -f
-nextflow run ${nfDir}/lv3/bacteriome_pipeline2.nf \
+nextflow run ${nfDir}/lv3/bacteriome_pipeline.nf \
      ${args} \
      ${args_dbg} \
      --test_bacteriome_pipeline_lthre "${lthre}" \

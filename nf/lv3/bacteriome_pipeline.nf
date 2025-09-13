@@ -6,6 +6,8 @@ include { fastp } from "${params.petagenomeDir}/nf/lv1/fastp"
 include { error_correction } from "${params.petagenomeDir}/nf/lv2/error_correction"
 include { assembly } from "${params.petagenomeDir}/nf/lv2/assembly"
 include { pool_contigs } from "${params.petagenomeDir}/nf/lv2/pool_contigs"
+include { circular_contigs } from "${params.petagenomeDir}/nf/lv2/circular_contigs"
+
 
 workflow bacteriome_pipeline {
   take:
@@ -18,7 +20,6 @@ workflow bacteriome_pipeline {
     as = assembly(p, ec.ec.map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }, l_thre)
 
     def flt_all
-
     if (true) {
         flt_collected = as.flt.collect(flat: false, sort: true)
         flt_all = flt_collected.map { list_of_tuples ->
@@ -34,8 +35,9 @@ workflow bacteriome_pipeline {
     }
 
     pc = pool_contigs(p, flt_all, l_thre)
-
+    cc = circular_contigs(p, pc.flt.map { id, fa, name -> [id, fa] })
   emit:
+    reads
     fp
     ec.ec
     ec.fqc
@@ -51,6 +53,7 @@ workflow bacteriome_pipeline {
     pc.len
     pc.sts
     pc.blstdb
+    cc.dedupl
 }
 
 workflow {
