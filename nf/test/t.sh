@@ -76,6 +76,12 @@ nextflow clean -f
 
 test=${test%.*}
 
+args+="\
+    -with-report report_${test}.${date}.html \
+    -with-trace trace_${test}.${date}.txt \
+    -with-timeline timeline_${test}.${date}.html \
+    -with-dag dag_${test}.${date}.png \
+    "
 case ${test} in
     "main")
         nextflow run ${nfDir}/toys/main.nf ${args} \
