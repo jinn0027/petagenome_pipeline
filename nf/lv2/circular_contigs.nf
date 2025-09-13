@@ -63,23 +63,21 @@ process classify {
             each_selfhit="${qry_id}/selfhit"\${f}".tsv"
             touch \${each_selfhit}
             if [ -f \${each_selfhit} ] ; then
-            pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '2p' | \\
-                       awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} \\
-                           '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}')
-            if [ "\${pos_end}" != "" ] ; then
-                cat \${each_fa} | seqkit subseq -r 1:\${pos_end} > _fa
-                cat _fa >> ${qry_id}/circular.cut.fa
-                tail -n +2 \${each_fa} >> _fa
-                cat _fa >> ${qry_id}/circular.extended.fa
-                rm -f _fa
-                cat \${each_fa} >> ${qry_id}/circular.fa
-            else
-                cat \${each_fa} >> ${qry_id}/linear.fa
-            fi
+                pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '2p' | \\
+                           awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} \\
+                               '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}')
+                if [ "\${pos_end}" != "" ] ; then
+                    cat \${each_fa} | seqkit subseq -r 1:\${pos_end} > _fa
+                    cat _fa >> ${qry_id}/circular.cut.fa
+                    tail -n +2 \${each_fa} >> _fa
+                    cat _fa >> ${qry_id}/circular.extended.fa
+                    rm -f _fa
+                    cat \${each_fa} >> ${qry_id}/circular.fa
+                else
+                    cat \${each_fa} >> ${qry_id}/linear.fa
+                fi
             fi
         done
-        echo "==================" >> ${qry_id}/selfhit.tsv
-        ls -l ${qry_id} >> ${qry_id}/selfhit.tsv
         """
 }
 
