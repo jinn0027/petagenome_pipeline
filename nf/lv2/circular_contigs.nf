@@ -34,39 +34,11 @@ process classify {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
         tuple val(p), val(ref_id), val(qry_id), path(in_tsv, arity: '1')
-        tuple val(qry_id), path(qry, arity: '1')
-    output:
-        tuple val(ref_id),
-              path("${qry_id}/circular.cut.fa"),
-              path("${qry_id}/circular.extended.fa"),
-              path("${qry_id}/circular.fa"),
-              path("${qry_id}/linear.fa"),
-              path("${qry_id}/selfhit.tsv", arity: '1')
-    script:
-        """
-        echo "${processProfile(task)}" | tee prof.txt
-        qry_=${qry}
-        echo ${qry} | grep -e ".gz\$" >& /dev/null && :
-        if [ \$? -eq 0 ] ; then
-            qry_=\${qry_%%.gz}
-            unpigz -c ${qry} > \${qry_}
-        fi
-        mkdir -p ${qry_id}
-
-        awk -F "\t" '{OFS="\t"}  { if (\$1==\$2) print \$0 }' ${in_tsv} > ${qry_id}/selfhit.tsv
-        awk -F "\t" '{OFS="\t"}  { f=\$1; gsub("/", "__", f); print \$0 >> "${qry_id}/selfhit"f".tsv" }' ${qry_id}/selfhit.tsv
-        touch ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa ${qry_id}/circular.fa ${qry_id}/linear.fa
-        seqkit split -i \${qry_} --by-id-prefix @ -O ${qry_id}
-        seqkit fx2tab -j ${params.circular_contigs_classify_threads} -n -i -l \${qry_} | while read -r id len; do
-            f="\$(echo \${id} | sed 's#/#__#g')"
-            each_fa="${qry_id}/@\${f}.fa"
-            each_selfhit="${qry_id}/selfhit"\${f}".tsv"
-            touch \${each_selfhit}
             if [ -f \${each_selfhit} ] ; then
                 pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '2p' | \\
                            awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} \\
                                '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}')
-                if [ "\${pos_end}" != "" ] ; then
+                if [ "\${pos_end}" != "" ] && [ "\${pos_end}" -gt 1 ] ; then
                     cat \${each_fa} | seqkit subseq -r 1:\${pos_end} > _fa
                     cat _fa >> ${qry_id}/circular.cut.fa
                     tail -n +2 \${each_fa} >> _fa
@@ -154,8 +126,8 @@ workflow circular_contigs {
     dedupl = deduplicate(p.combine(ch_new))
   emit:
     blstn1
-    blstn2
     clsfy
+    blstn2
     dedupl
 }
 
