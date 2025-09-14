@@ -104,6 +104,7 @@ process spades_assembler {
         """
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
+        touch ${pair_id}/scaffolds.fasta ${pair_id}/contigs.fasta
         spades.py \\
             --memory ${gb} \\
             --threads ${threads} \\

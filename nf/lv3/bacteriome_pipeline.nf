@@ -43,9 +43,11 @@ workflow bacteriome_pipeline {
     ec.fqc
     ec.len
     as.flt
+    /*
     as.len
     as.sts
     as.blstdb
+    */
     pc.merged
     pc.clust
     pc.flt

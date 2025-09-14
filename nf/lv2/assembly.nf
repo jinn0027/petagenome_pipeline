@@ -117,17 +117,18 @@ workflow assembly {
     }
 
     flt = filter_and_rename(p.combine(asm.map { id, contigs -> tuple(id, contigs, l_thre) } ))
+
+    len = get_length(p.combine(flt.map { id, contigs, name -> tuple(id, contigs)} ))
+    sts = get_stats(p.combine(len))
+    blstdb = blast_makerefdb(p.combine(flt.map { id, contigs, name -> tuple(id, contigs)} ))
+
     flt = flt.flatMap { id, contigs, name ->
         contigs.collect { c ->
-	    if (c.size() != 0) {
-              return [c.getBaseName(), c]
-	    }
+            if (c.size() != 0) {
+                return [c.getBaseName(), c]
+            }
         }.findAll{ it != null }
     }
-
-    len = get_length(p.combine(flt))
-    sts = get_stats(p.combine(len))
-    blstdb = blast_makerefdb(p.combine(flt))
 
   emit:
     asm
