@@ -53,18 +53,40 @@ process classify {
         fi
         mkdir -p ${qry_id}
 
-        awk -F "\t" '{OFS="\t"}  { if (\$1==\$2) print \$0 }' ${in_tsv} > ${qry_id}/selfhit.tsv
-        awk -F "\t" '{OFS="\t"}  { f=\$1; gsub("/", "__", f); print \$0 >> "${qry_id}/selfhit"f".tsv" }' ${qry_id}/selfhit.tsv
+        # 自己ヒットしたもののみを選ぶ
+        awk -F "\t" '{OFS="\t"}  {
+             if (\$1==\$2) {
+                 print \$0
+             }
+        }' ${in_tsv} > ${qry_id}/selfhit.tsv 
+
+        # 完全に一致する断片（自己アライメント）を除外し、
+        # 残ったヒット（環状オーバーラップまたはリピート）を抽出
+        awk -F "\t" '{OFS="\t"} {
+            if (\$7 != \$9 || \$8 != \$10) {
+                print \$0
+            }
+        }' ${qry_id}/selfhit.tsv > ${qry_id}/non_self_aligned_hits.tsv
+
+        # 配列IDごとにヒットを分割
+        awk -F "\t" -v qry_id="${qry_id}" '{OFS="\t"} {
+            f=\$1; gsub("/", "__", f);
+            print \$0 >> qry_id"/selfhit"f".tsv"
+        }' ${qry_id}/non_self_aligned_hits.tsv
+
         touch ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa ${qry_id}/circular.fa ${qry_id}/linear.fa
+
+        # 配列IDごとにFASTAファイル分割
         seqkit split -i \${qry_} --by-id-prefix @ -O ${qry_id}
+
         seqkit fx2tab -j ${params.circular_contigs_classify_threads} -n -i -l \${qry_} | while read -r id len; do
             f="\$(echo \${id} | sed 's#/#__#g')"
             each_fa="${qry_id}/@\${f}.fa"
             each_selfhit="${qry_id}/selfhit"\${f}".tsv"
             if [ -f \${each_selfhit} ] ; then
-                pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '2p' | \\
+                pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '1p' | \\
                            awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} \\
-                               '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}')
+                           '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}')
                 if [ "\${pos_end}" != "" ] && [ "\${pos_end}" -gt 1 ] ; then
                     cat \${each_fa} | seqkit subseq -r 1:\${pos_end} > _fa
                     cat _fa >> ${qry_id}/circular.cut.fa
