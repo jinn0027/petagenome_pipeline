@@ -1,0 +1,24 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/SOAPdenovo2.tar.gz /opt
+
+%post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
+    pushd /opt
+        # install SOAPdenovo2
+        echo "############ SOAPdenovo2 ###############"
+        tar -I pigz -xvf SOAPdenovo2.tar.gz
+        chown -R $(whoami) SOAPdenovo2
+        pushd SOAPdenovo2
+            make -j$(nproc)
+        popd
+    popd
+
+%environment
+    export PATH=$PATH:/opt/SOAPdenovo2
+
+%runscript
