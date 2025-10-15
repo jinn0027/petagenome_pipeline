@@ -171,7 +171,9 @@ fi
 
 if need_make jloda.tar.gz ; then
     git clone https://github.com/husonlab/jloda --recursive
-    git checkout 27ec9d8
+    pushd jloda
+        git checkout 27ec9d8
+    popd
     tar -I pigz -cvf jloda.tar.gz jloda
     rm -rf jloda
 fi
@@ -185,8 +187,8 @@ fi
 if need_make megan-ce.tar.gz ; then
     git clone https://github.com/husonlab/megan-ce --recursive
     pushd megan-ce
-      git checkout 9b36523
-      popd
+        git checkout 9b36523
+    popd
     tar -I pigz -cvf megan-ce.tar.gz megan-ce
     rm -rf megan-ce
 fi
@@ -257,6 +259,15 @@ fi
 
 if need_make seqkit_linux_amd64.2.9.0.tar.gz ; then
     wget -O seqkit_linux_amd64.2.9.0.tar.gz  https://github.com/shenwei356/seqkit/releases/download/v2.9.0/seqkit_linux_amd64.tar.gz
+fi
+
+if need_make SOAPdenovo2.tar.gz ; then
+    git clone  https://github.com/aquaskyline/SOAPdenovo2 --recursive
+    pushd SOAPdenovo2
+        git checkout 7560c0b
+    popd
+    tar -I pigz -cvf SOAPdenovo2.tar.gz SOAPdenovo2
+    rm -rf SOAPdenovo2
 fi
 
 if need_make spades.tar.gz ; then
