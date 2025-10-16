@@ -7,8 +7,8 @@ mem=128
 
 #fq1=../../test/ecoli_1K_1.fq.gz
 #fq2=../../test/ecoli_1K_2.fq.gz
-fq1=./ERR1620255_XXXXXXXX_XXXXXXXX_L001_R1_001.fastq.gz
-fq2=./ERR1620255_XXXXXXXX_XXXXXXXX_L001_R2_001.fastq.gz
+fq1=/scratch/local/data/metagenome/ERR1620255_XXXXXXXX_XXXXXXXX_L001_R1_001.fastq.gz
+fq2=/scratch/local/data/metagenome/ERR1620255_XXXXXXXX_XXXXXXXX_L001_R2_001.fastq.gz
 
 odir=results
 refdir=ref
