@@ -27,15 +27,14 @@ mkdir -p ${odir}
 rm -rf ${odir}/*
 
 apptainer exec --bind ${fq1},${fq2},${contig},${config_templ},${odir} ../soapdenovo2.sif sh -c "\
-  cat ${config_templ} > config ; \
-  echo \"q1=${fq1}\" >> config ; \
-  echo \"q2=${fq2}\" >> config ; \
+  cat ${config_templ} > ${odir}/config ; \
+  echo \"q1=${fq1}\" >> ${odir}/config ; \
+  echo \"q2=${fq2}\" >> ${odir}/config ; \
   cat config ; \
-  SOAPdenovo-fusion -D -s config -p 40 -K 41 -g k41 -c ${contig}; \
-  SOAPdenovo-127mer map -s config -p 40 -g k41; \
-  SOAPdenovo-127mer scaff -p 40 -g k41; \
-  ls; \
-"
+  SOAPdenovo-fusion -D -s ${odir}/config -p 40 -K 41 -g ${odir}/out -c ${contig}; \
+  SOAPdenovo-127mer map -s ${odir}/config -p 40 -g ${odir}/out; \
+  SOAPdenovo-127mer scaff -p 40 -g ${odir}/out; \
+" > ${log} 2>&1
 
 exit
 
