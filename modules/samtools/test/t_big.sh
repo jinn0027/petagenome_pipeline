@@ -18,9 +18,9 @@ do
     odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
 
     apptainer exec --bind ${sam},${wdir},${odir} ../samtools.sif sh -c "\
-              samtools view -@ ${n_threads} -b ${sam} > ${wdir}/unsorted.bam; \
-              samtools sort -@ ${n_threads} -o ${odir}/out.bam ${wdir}/unsorted.bam; \
-              samtools index -@ ${n_threads} ${odir}/out.bam; \
+              samtools view -@ ${n_threads} -b ${sam} > ${wdir}/unsorted.bam && \
+              samtools sort -@ ${n_threads} -o ${odir}/out.bam ${wdir}/unsorted.bam && \
+              samtools index -@ ${n_threads} ${odir}/out.bam \
         " > ${log} 2>&1
 done
 
