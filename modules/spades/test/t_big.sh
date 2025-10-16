@@ -27,8 +27,12 @@ rm -rf ${odir}/* ${wdir}/*
 
 #apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sbx spades.py --only-error-correction --pe1-1 ${fq1} --pe1-2 ${fq2} --memory ${mem} --threads ${n_threads} -o ${odir} > ${log} 2>&1
 
+#date >> ${log}
+#apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sif spades.py --only-assembler --pe1-1 ${fq1} --pe1-2 ${fq2} --meta --memory ${mem} --threads ${n_threads} -o ${odir} >> ${log} 2>&1
+#date >> ${log}
+
 date >> ${log}
-apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sif spades.py --only-assembler --pe1-1 ${fq1} --pe1-2 ${fq2} --meta --memory ${mem} --threads ${n_threads} -o ${odir} >> ${log} 2>&1
+apptainer exec --bind ${fq1},${fq2},${odir} ../spades.sif spades.py --pe1-1 ${fq1} --pe1-2 ${fq2} --meta --memory ${mem} --threads ${n_threads} -o ${odir} >> ${log} 2>&1
 date >> ${log}
 
 exit

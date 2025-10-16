@@ -1,74 +1,36 @@
 #!/bin/bash
 
-# Since #threads may affect the result, it should be fixed here.
-#n_threads=$(nproc)
 n_threads=128
 
-fq1=/scratch/local/data/metagenome/ERR1620255_XXXXXXXX_XXXXXXXX_L001_R1_001.fastq.gz
-fq2=/scratch/local/data/metagenome/ERR1620255_XXXXXXXX_XXXXXXXX_L001_R2_001.fastq.gz
-contig=../../megahit/test/results/out/final.contigs.fa
-config_templ=./config.templ
-
-odir=results
-refdir=ref
-
-log=t.log
-
-ret=0
-
-fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
-fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
-contig=$(cd $(dirname ${contig}) && pwd)/$(basename ${contig})
-config_templ=$(cd $(dirname ${config_templ}) && pwd)/$(basename ${config_templ})
-
-odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
-
-mkdir -p ${odir}
-rm -rf ${odir}/*
-
-apptainer exec --bind ${fq1},${fq2},${contig},${config_templ},${odir} ../soapdenovo2.sif sh -c "\
-  cat ${config_templ} > ${odir}/config ; \
-  echo \"q1=${fq1}\" >> ${odir}/config ; \
-  echo \"q2=${fq2}\" >> ${odir}/config ; \
-  cat config ; \
-  SOAPdenovo-fusion -D -s ${odir}/config -p 40 -K 41 -g ${odir}/out -c ${contig}; \
-  SOAPdenovo-127mer map -s ${odir}/config -p 40 -g ${odir}/out; \
-  SOAPdenovo-127mer scaff -p 40 -g ${odir}/out; \
-" > ${log} 2>&1
-
-exit
-
-  cp ${config_templ} ./config \
-
-##-t ${n_threads} -o ${odir} ${fq1} ${fq2} > ${log} 2>&1
-
-failed=""
-for i in $(ls ${refdir}/*.txt)
+for eid in 1620255 1620256 1620257 1620258
 do
-    j=${odir}/$(basename $i)
-    diff -q $i $j >> ${log} 2>&1 && :
-    if [ $? -ne 0 ]; then
-        failed="${failed} $(basename $i)"
-        ret=1
-    fi
+    fq1=/scratch/local/data/metagenome/ERR${eid}_XXXXXXXX_XXXXXXXX_L001_R1_001.fastq.gz
+    fq2=/scratch/local/data/metagenome/ERR${eid}_XXXXXXXX_XXXXXXXX_L001_R2_001.fastq.gz
+    contig=../../megahit/test/results.${eid}/out/final.contigs.fa
+    config_templ=./config.templ
+
+    odir=results.${eid}
+    log=t.log.${eid}
+
+    fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
+    fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
+    contig=$(cd $(dirname ${contig}) && pwd)/$(basename ${contig})
+    config_templ=$(cd $(dirname ${config_templ}) && pwd)/$(basename ${config_templ})
+
+    odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
+
+    mkdir -p ${odir}
+    rm -rf ${odir}/* ${log}
+
+    date > ${log}
+    apptainer exec --bind ${fq1},${fq2},${contig},${config_templ},${odir} ../soapdenovo2.sif sh -c "\
+            cat ${config_templ} > ${odir}/config ; \
+            echo \"q1=${fq1}\" >> ${odir}/config ; \
+            echo \"q2=${fq2}\" >> ${odir}/config ; \
+            cat config ; \
+            SOAPdenovo-fusion -D -s ${odir}/config -p 40 -K 41 -g ${odir}/out -c ${contig}; \
+            SOAPdenovo-127mer map -s ${odir}/config -p 40 -g ${odir}/out; \
+            SOAPdenovo-127mer scaff -p 40 -g ${odir}/out; \
+        " >> ${log} 2>&1
+    date >> ${log}
 done
-
-if [ ${ret} -eq 0 ]; then
-    echo " PASSED" | tee -a ${log}
-else
-    echo " FAILED : ${failed}" | tee -a ${log}
-fi
-
-exit ${ret}
-
-# NOP
-
-
-
-
-
-
-
-
-
-
