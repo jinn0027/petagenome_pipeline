@@ -1,0 +1,38 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/MetaCarvel.tar.gz /opt
+
+%post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
+
+    pushd /opt
+        /opt/miniconda3/bin/conda install -y \
+            samtools=1.22.* \
+            bedtools=2.31.* \
+            networkx=3.5 \
+            ogdf=201207
+
+        # install MetaCarvel
+        echo "############ MetaCarvel ###############"
+        tar -I pigz -xvf MetaCarvel.tar.gz
+        chown -R $(whoami) MetaCarvel
+        pushd MetaCarvel
+          pushd OGDF
+            mkdir build _release
+            pushd build
+              cmake ..
+              make -j$(nproc)
+              mv *.a ../_release
+            popd
+          popd
+          make -j$(nproc)
+        popd
+    popd
+
+%environment
+
+%runscript
