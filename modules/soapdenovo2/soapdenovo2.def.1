@@ -14,7 +14,7 @@ From: ../common/gcc.sif
         tar -I pigz -xvf SOAPdenovo2.tar.gz
         chown -R $(whoami) SOAPdenovo2
         pushd SOAPdenovo2
-            make -j$(nproc)
+            make
         popd
     popd
 
