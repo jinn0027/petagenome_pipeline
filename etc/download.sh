@@ -266,6 +266,8 @@ if need_make SOAPdenovo2.tar.gz ; then
     pushd SOAPdenovo2
         git checkout 7560c0b
     popd
+    # 以下はコンパイル通らない
+    #git clone  https://github.com/aquaskyline/SOAPdenovo2 -b r242 --recursive
     tar -I pigz -cvf SOAPdenovo2.tar.gz SOAPdenovo2
     rm -rf SOAPdenovo2
 fi

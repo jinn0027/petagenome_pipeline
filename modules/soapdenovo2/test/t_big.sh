@@ -1,6 +1,7 @@
 #!/bin/bash
 
 n_threads=128
+k_mer=41
 
 for eid in 1620255 1620256 1620257 1620258
 do
@@ -27,10 +28,9 @@ do
             cat ${config_templ} > ${odir}/config ; \
             echo \"q1=${fq1}\" >> ${odir}/config ; \
             echo \"q2=${fq2}\" >> ${odir}/config ; \
-            cat config ; \
-            SOAPdenovo-fusion -D -s ${odir}/config -p 40 -K 41 -g ${odir}/out -c ${contig}; \
-            SOAPdenovo-127mer map -s ${odir}/config -p 40 -g ${odir}/out; \
-            SOAPdenovo-127mer scaff -p 40 -g ${odir}/out; \
+            SOAPdenovo-fusion -D -s ${odir}/config -p ${n_threads} -K ${k_mer} -g ${odir}/out -c ${contig}; \
+            SOAPdenovo-127mer map -s ${odir}/config -p ${n_threads} -g ${odir}/out; \
+            SOAPdenovo-127mer scaff -p ${n_threads} -g ${odir}/out; \
         " >> ${log} 2>&1
     date >> ${log}
 done
