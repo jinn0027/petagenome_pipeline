@@ -1,0 +1,21 @@
+Bootstrap: localimage
+From: ../common/gcc.sif
+
+%setup
+
+%files
+    ../../external/sspace_basic.tar.gz /opt
+
+%post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
+    pushd /opt
+        # install sspace
+        echo "############ sspace ###############"
+        tar -I pigz -xvf sspace_basic.tar.gz
+        chown -R $(whoami) sspace_basic
+    popd
+
+%environment
+    export PATH=$PATH:/opt/sspace_basic:/opt/sspace_basic/bin:/opt/sspace_basic/tools
+
+%runscript
