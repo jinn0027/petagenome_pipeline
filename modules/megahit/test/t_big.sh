@@ -12,12 +12,12 @@ do
     odir=results.${eid}
     log=t.log.${eid}
 
+    mkdir -p ${odir}
+    rm -rf ${odir}/* ${log}
+
     fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
     fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
     odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
-
-    mkdir -p ${odir}
-    rm -rf ${odir}/* ${log}
 
     date > ${log}
     apptainer exec --bind ${fq1},${fq2},${odir} ../megahit.sif \

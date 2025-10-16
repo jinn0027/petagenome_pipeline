@@ -1,10 +1,6 @@
 #!/bin/bash
 
-n_threads=128
-
-fq1=../../test/ecoli_1K_1.fq.gz
-fq2=../../test/ecoli_1K_2.fq.gz
-contig=../../megahit/test/ref/out/final.contigs.fa
+n_threads=$(nproc)
 
 for eid in 1620255 1620256 1620257 1620258
 do
@@ -14,16 +10,15 @@ do
 
     wdir=work
     odir=results.${eid}
+    log=t.log.${eid}
+
+    mkdir -p ${wdir} ${odir}
+    rm -rf ${wdir}/* ${odir}/* ${log}
 
     fq1=$(cd $(dirname ${fq1}) && pwd)/$(basename ${fq1})
     fq2=$(cd $(dirname ${fq2}) && pwd)/$(basename ${fq2})
     wdir=$(cd $(dirname ${wdir}) && pwd)/$(basename ${wdir})
     odir=$(cd $(dirname ${odir}) && pwd)/$(basename ${odir})
-
-    log=t.log.${eid}
-
-    mkdir -p ${wdir} ${odir}
-    rm -rf ${wdir}/* ${odir}/* ${log}
 
     wref=${wdir}/$(basename ${contig})
 
