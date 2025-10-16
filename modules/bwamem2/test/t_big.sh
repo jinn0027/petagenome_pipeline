@@ -32,12 +32,12 @@ do
     date > ${log}
     echo "== Making index" >> ${log}
     apptainer exec --bind ${wdir} ../bwamem2.sif sh -c "\
-              bwa-mem2 index ${wref}" > ${log} 2>&1
+              bwa-mem2 index ${wref}" >> ${log} 2>&1
 
     echo "== Alignment" >> ${log}
     date >> ${log}
     apptainer exec --bind ${fq1},${fq2},${wdir},${odir} ../bwamem2.sif sh -c "\
-              bwa-mem2 mem -t ${n_threads} ${wref} ${fq1} ${fq2} > ${odir}/out.sam" > ${log} 2>&1
+              bwa-mem2 mem -t ${n_threads} ${wref} ${fq1} ${fq2} > ${odir}/out.sam" >> ${log} 2>&1
     date >> ${log}
 
 done
