@@ -1,0 +1,19 @@
+Bootstrap: localimage
+From: ../common/el9.sif
+
+%setup
+
+%files
+    ../../external/SOAPdenovo2.tar.gz /opt
+
+%post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
+    pushd /opt
+        # install soapdenovo2
+        echo "############ soapdenovo2 ###############"
+        /opt/miniconda3/bin/mamba install -y -q soapdenovo2
+    popd
+
+%environment
+
+%runscript
