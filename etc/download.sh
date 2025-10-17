@@ -178,6 +178,15 @@ if need_make jloda.tar.gz ; then
     rm -rf jloda
 fi
 
+if need_make MetaCarvel.tar.gz ; then
+    git clone https://github.com/marbl/MetaCarvel --recursive
+    pushd MetaCarvel
+        git checkout d4b5408
+    popd
+    tar -I pigz -cvf MetaCarvel.tar.gz MetaCarvel
+    rm -rf MetaCarvel
+fi
+
 if need_make megahit.tar.gz ; then
     git clone https://github.com/voutcn/megahit -b v1.2.9 --recursive
     tar -I pigz -cvf megahit.tar.gz megahit
@@ -282,6 +291,12 @@ if need_make sra-tools.tar.gz ; then
     git clone https://github.com/ncbi/sra-tools -b 3.2.0 --recursive
     tar -I pigz -cvf sra-tools.tar.gz sra-tools
     rm -rf sra-tools
+fi
+
+if need_make sspace_basic.tar.gz ; then
+    git clone https://github.com/nsoranzo/sspace_basic.git -b v2.1.1 --recursive
+    tar -I pigz -cvf sspace_basic.tar.gz sspace_basic
+    rm -rf sspace_basic
 fi
 
 if need_make VirSorter.tar.gz ; then
