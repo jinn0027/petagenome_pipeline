@@ -18,7 +18,7 @@ params.circular_contigs_al_self = 50            // alignment length for circular
 params.circular_contigs_blast1_num_alignments=5
 params.circular_contigs_blast2_num_alignments=50
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { blast_makerefdb as blast_makerefdb1; blastn as blastn1} from "${params.petagenomeDir}/nf/lv1/blast"
 include { blast_makerefdb as blast_makerefdb2; blastn as blastn2} from "${params.petagenomeDir}/nf/lv1/blast"
@@ -182,8 +182,7 @@ workflow circular_contigs {
 
 workflow {
     p = createNullParamsChannel()
-    contig = channel.fromPath(params.test_circular_contigs_contig, checkIfExists: true)
-      .map{ path -> tuple(path.simpleName, path) }
+    contig = createSeqsChannel(params.test_circular_contigs_contig)
     contig.view { i -> "$i" }
     out = circular_contigs(p, contig)
     //out.blstn1.view { i -> "$i" }

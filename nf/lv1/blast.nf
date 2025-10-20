@@ -96,10 +96,8 @@ workflow {
     p = createNullParamsChannel()
     ref = createSeqsChannel(params.test_blast_ref)
     qry = createSeqsChannel(params.test_blast_qry)
-
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
-
     ref_db = blast_makerefdb(p.combine(ref))
     //ref_db.view { i -> "$i" }
     in = ref_db.combine(qry)
