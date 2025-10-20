@@ -1,16 +1,33 @@
 #!/bin/bash
 
-if [[ ! -v PETAGENOME_PIPELINE_DIR ]] ; then
+petagenomeDir=""
+if [[ -v PETAGENOME_PIPELINE_DIR ]] ; then
+    petagenomeDir=${PETAGENOME_PIPELINE_DIR}
+else
     echo "PETAGENOME_PIPELINE_DIR not defined"
     echo "Please source <petagenome_dir>/etc/host_setup.sh"
     exit 1
 fi
-if [ ! -d ${PETAGENOME_PIPELINE_DIR} ] ; then
-    echo "${PETAGENOME_PIPELINE_DIR} does not exist"
+if [ ! -d ${petagenomeDir} ] ; then
+    echo "${petagenomeDir} does not exist"
     echo "Please source <petagenome_dir>/etc/host_setup.sh"
     exit 1
 fi
-echo "PETAGENOME_PIPELINE_DIR : ${PETAGENOME_PIPELINE_DIR}"
+echo "PETAGENOME_PIPELINE_DIR : ${petagenomeDir}"
+
+pzrepoDir=""
+if [[ -v PZREPO_DIR ]] ; then
+    pzrepoDir=${PZREPO_DIR}
+else
+    echo "PZREPO_DIR not defined"
+    echo "If necessary, please source <pzrepo_dir>/etc/host_setup.sh"
+fi
+if [ ! -d ${pzrepoDir} ] ; then
+    echo "${pzrepoDir} does not exist"
+    echo "Please source <pzrepo_dir>/etc/host_setup.sh"
+    exit 1
+fi
+echo "PZREPO_DIR : ${pzrepoDir}"
 
 #export TMPDIR=/dev/shm/${USER}/tmp
 export TMPDIR=$(pwd)/tmp
@@ -31,9 +48,9 @@ memory=64
 #outdir=/dev/shm/${USER}/petagenome_pipeline/out
 outdir=out
 
-nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
-dataDir="${PETAGENOME_PIPELINE_DIR}/modules/test"
-extDir="${PETAGENOME_PIPELINE_DIR}/external"
+nfDir="${petagenomeDir}/nf"
+dataDir="${petagenomeDir}/modules/test"
+extDir="${petagenomeDir}/external"
 
 virsorterDb="${extDir}/virsorter-data"
 virsorterMga="${extDir}/mga_linux_ia64"
@@ -55,13 +72,17 @@ shortFaa2="${dataDir}/2.faa"
 shortFna1="${dataDir}/q.fa"
 
 args="\
-    --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
+    --petagenomeDir=${petagenomeDir} \
     --output ${outdir} \
     --memory ${memory} \
     --threads ${threads} \
     --cpus ${cpus} \
     --random_seed ${random_seed} \
     "
+
+if [ "${pzrepoDir}" != "" ] ; then
+    args+=" --pzrepoDir=${pzrepoDir}"
+fi
 
 args+=" --publish_output true"
 args+=" -profile local"
@@ -114,6 +135,10 @@ case ${test} in
         ;;
     "circular_contigs")
         nextflow run ${nfDir}/lv2/circular_contigs.nf ${args} \
+                 --test_circular_contigs_contig "${longFnaX8}"
+        ;;
+    "circular_contigs2")
+        nextflow run ${nfDir}/lv2/circular_contigs2.nf ${args} \
                  --test_circular_contigs_contig "${longFnaX8}"
         ;;
     "bbmap")
