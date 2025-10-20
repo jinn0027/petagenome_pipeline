@@ -148,8 +148,8 @@ case ${test} in
         ;;
     "blast")
         nextflow run ${nfDir}/lv1/blast.nf ${args} \
-                 --test_blast_ref "${longFnaGz1}" \
-                 --test_blast_qry "${shortFna1}"
+                 --test_blast_ref "${longFnaX8}" \
+                 --test_blast_qry "${longFnaX8}"
         ;;
     "bowtie")
         nextflow run ${nfDir}/lv1/bowtie.nf ${args} \

@@ -1,0 +1,196 @@
+#!/usr/bin/env nextflow
+nextflow.enable.dsl=2
+
+params.circular_contigs_classify_memory = params.memory
+params.circular_contigs_classify_threads = params.threads
+params.circular_contigs_deduplicate_memory = params.memory
+params.circular_contigs_deduplicate_threads = params.threads
+
+params.circular_contigs_e_thre = "1e-10"        // E-value cutoff for circular formation
+params.circular_contigs_pi_thre = "100"         // identity for circular formation
+params.circular_contigs_al_thre = "50"          // minimum alignment length for circular formation
+params.circular_contigs_pi_thre_rd = "95"       // identity for removal of redundancy
+params.circular_contigs_qc_thre_rd = "95"       // query coverage for removal of redundancy
+params.circular_contigs_len_l = "5000"          // minimum length for linear contigs
+params.circular_contigs_len_c = "1500"          // minimum length for circular contigs
+params.circular_contigs_pi_self = 100           // identity for circular formation
+params.circular_contigs_al_self = 50            // alignment length for circular formation
+params.circular_contigs_blast1_num_alignments=5
+params.circular_contigs_blast2_num_alignments=50
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
+//include { blast_makerefdb as blast_makerefdb1; blastn as blastn1} from "${params.petagenomeDir}/nf/lv1/blast"
+//include { blast_makerefdb as blast_makerefdb2; blastn as blastn2} from "${params.petagenomeDir}/nf/lv1/blast"
+include { pzlast_makerefdb as blast_makerefdb1; pzlastn as blastn1} from "${params.pzrepoDir}/nf/lv1/pzlast"
+include { pzlast_makerefdb as blast_makerefdb2; pzlastn as blastn2} from "${params.pzrepoDir}/nf/lv1/pzlast"
+
+process classify {
+    tag "${ref_id}_@_${qry_id}"
+    container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    def gb = "${params.circular_contigs_classify_memory}"
+    def threads = "${params.circular_contigs_classify_threads}"
+    memory params.executor=="sge" ? null : "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+    input:
+        tuple val(p), val(ref_id), val(qry_id), path(in_tsv, arity: '1')
+        tuple val(qry_id), path(qry, arity: '1')
+    output:
+        tuple val(ref_id),
+        path("${qry_id}/circular.cut.fa"),
+        path("${qry_id}/circular.extended.fa"),
+        path("${qry_id}/circular.fa"),
+        path("${qry_id}/linear.fa"),
+        path("${qry_id}/selfhit.tsv", arity: '1')
+    script:
+        """
+        echo "${processProfile(task)}" | tee prof.txt
+        qry_=${qry}
+        echo ${qry} | grep -e ".gz\$" >& /dev/null && :
+        if [ \$? -eq 0 ] ; then
+            qry_=\${qry_%%.gz}
+            unpigz -c ${qry} > \${qry_}
+        fi
+        mkdir -p ${qry_id}
+
+        # 自己ヒットしたもののみを選ぶ
+        awk -F "\t" '{OFS="\t"}  {
+             if (\$1==\$2) {
+                 print \$0
+             }
+        }' ${in_tsv} > ${qry_id}/selfhit.tsv 
+
+        # 完全に一致する断片（自己アライメント）を除外し、
+        # 残ったヒット（環状オーバーラップまたはリピート）を抽出
+        awk -F "\t" '{OFS="\t"} {
+            if (\$7 != \$9 || \$8 != \$10) {
+                print \$0
+            }
+        }' ${qry_id}/selfhit.tsv > ${qry_id}/non_self_aligned_hits.tsv
+
+        # 配列IDごとにヒットを分割
+        awk -F "\t" -v qry_id="${qry_id}" '{OFS="\t"} {
+            f=\$1; gsub("/", "__", f);
+            print \$0 >> qry_id"/selfhit"f".tsv"
+        }' ${qry_id}/non_self_aligned_hits.tsv
+
+        touch ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa ${qry_id}/circular.fa ${qry_id}/linear.fa
+
+        # 配列IDごとにFASTAファイル分割
+        seqkit split -i \${qry_} --by-id-prefix @ -O ${qry_id}
+
+        seqkit fx2tab -j ${params.circular_contigs_classify_threads} -n -i -l \${qry_} | while read -r id len; do
+            f="\$(echo \${id} | sed 's#/#__#g')"
+            each_fa="${qry_id}/@\${f}.fa"
+            each_selfhit="${qry_id}/selfhit"\${f}".tsv"
+            if [ -f \${each_selfhit} ] ; then
+                pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '1p' | \\
+                           awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} \\
+                           '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}')
+                if [ "\${pos_end}" != "" ] && [ "\${pos_end}" -gt 1 ] ; then
+                    cat \${each_fa} | seqkit subseq -r 1:\${pos_end} > _fa
+                    cat _fa >> ${qry_id}/circular.cut.fa
+                    tail -n +2 \${each_fa} >> _fa
+                    cat _fa >> ${qry_id}/circular.extended.fa
+                    rm -f _fa
+                    cat \${each_fa} >> ${qry_id}/circular.fa
+                else
+                    cat \${each_fa} >> ${qry_id}/linear.fa
+                fi
+            fi
+        done
+        """
+}
+
+process deduplicate {
+    tag "${id}"
+    container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    def gb = "${params.circular_contigs_deduplicate_memory}"
+    def threads = "${params.circular_contigs_deduplicate_threads}"
+    memory params.executor=="sge" ? null : "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+    input:
+        tuple val(p), val(id), path(circular_cut), path(circular_ext), path(circular), path(blst_out_tsv, arity: '1')
+    output:
+        tuple val(id),
+              path("${id}/circular.cut.fa"),
+              path("${id}/circular.extended.fa"),
+              path("${id}/circular.fa"),
+              path("${id}/otherhit.tsv", arity: '1'),
+              path("${id}/*.txt", arity: '3')
+    script:
+        """
+        echo "${processProfile(task)}" | tee prof.txt
+        mkdir -p ${id}
+        awk -F "\t" '{OFS="\t"}  { if (\$1 != \$2) print \$0 }' ${blst_out_tsv} > ${id}/otherhit.tsv
+        python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py ${circular_cut} > ${id}/circular_cut.all.length.txt
+        ruby ${params.petagenomeDir}/scripts/Ruby/extract_contig_redundancy.3.rb -b ${id}/otherhit.tsv -l ${id}/circular_cut.all.length.txt -c ${params.circular_contigs_qc_thre_rd}  -d 6  -i ${id}/out_rd_info.txt  -o ${id}/out_ex_config.txt
+        touch ${id}/circular.cut.fa ${id}/circular.extended.fa ${id}/circular.fa
+        python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular_cut} | sed '/^\$/d'  > ${id}/circular.cut.fa
+        python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular_ext} | sed '/^\$/d'  > ${id}/circular.extended.fa
+        python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular} | sed '/^\$/d' > ${id}/circular.fa
+        """
+}
+
+workflow circular_contigs {
+  take:
+    p
+    contig
+  main:
+    blstdb1 = blast_makerefdb1(p.combine(contig))
+    blstin1 = blstdb1.combine(contig)
+    p_blastn1 = Channel.of(['blast_task':'megablast',
+                            'blast_perc_identity':params.circular_contigs_pi_self,
+                            'blast_evalue':params.circular_contigs_e_thre,
+                            'blast_outfmt':6,
+                            'blast_num_alignments':params.circular_contigs_blast1_num_alignments
+                            ])
+    blstn1 = blastn1(p_blastn1.combine(blstin1))
+    /*
+    clsfy = classify(p.combine(blstn1), contig)
+
+    circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv ->
+        [ id, circular_cut ]
+    }
+
+    blstdb2 = blast_makerefdb2(p.combine(circular_cut))
+    p_blastn2 = Channel.of(['blast_task':'megablast',
+                            'blast_perc_identity':params.circular_contigs_pi_self,
+                            'blast_evalue':params.circular_contigs_e_thre,
+                            'blast_outfmt':6,
+                            'blast_num_alignments':params.circular_contigs_blast2_num_alignments
+                            ])
+    blstin2 = blstdb2.combine(circular_cut)
+    blstn2 = blastn2(p_blastn2.combine(blstin2))
+
+    blstn2.view{ i-> "$i" }
+    clsfy.view{ i-> "$i" }
+    ch_new = blstn2.merge(clsfy).map {
+        ref_id, qry_id, blst2_tsv,
+        id, cut, ext, circular, linear, selfhit_tsv
+        -> [id, cut, ext, circular, blst2_tsv]
+    }
+    ch_new.view{ i -> "${i}" }
+    dedupl = deduplicate(p.combine(ch_new))
+    */
+  emit:
+    blstn1
+    /*
+    clsfy
+    blstn2
+    dedupl
+    */
+}
+
+workflow {
+    p = createNullParamsChannel()
+    contig = createSeqsChannel(params.test_circular_contigs_contig)
+    contig.view { i -> "$i" }
+    out = circular_contigs(p, contig)
+    //out.blstn1.view { i -> "$i" }
+    //out.clsfy.view { i -> "$i" }
+}
