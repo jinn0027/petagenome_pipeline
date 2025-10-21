@@ -43,7 +43,8 @@ process classify {
         path("${qry_id}/circular.extended.fa"),
         path("${qry_id}/circular.fa"),
         path("${qry_id}/linear.fa"),
-        path("${qry_id}/selfhit.tsv", arity: '1')
+        path("${qry_id}/selfhit.tsv", arity: '1'),
+        path("${qry_id}")
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
@@ -150,10 +151,9 @@ workflow circular_contigs {
                             'blast_num_alignments':params.circular_contigs_blast1_num_alignments
                             ])
     blstn1 = blastn1(p_blastn1.combine(blstin1))
-    /*
     clsfy = classify(p.combine(blstn1), contig)
 
-    circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv ->
+    circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv, _ ->
         [ id, circular_cut ]
     }
 
@@ -171,19 +171,16 @@ workflow circular_contigs {
     clsfy.view{ i-> "$i" }
     ch_new = blstn2.merge(clsfy).map {
         ref_id, qry_id, blst2_tsv,
-        id, cut, ext, circular, linear, selfhit_tsv
+        id, cut, ext, circular, linear, selfhit_tsv, _
         -> [id, cut, ext, circular, blst2_tsv]
     }
     ch_new.view{ i -> "${i}" }
     dedupl = deduplicate(p.combine(ch_new))
-    */
   emit:
     blstn1
-    /*
     clsfy
     blstn2
     dedupl
-    */
 }
 
 workflow {
