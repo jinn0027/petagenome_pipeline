@@ -1,16 +1,33 @@
 #!/bin/bash
 
-if [[ ! -v PETAGENOME_PIPELINE_DIR ]] ; then
+petagenomeDir=""
+if [[ -v PETAGENOME_PIPELINE_DIR ]] ; then
+    petagenomeDir=${PETAGENOME_PIPELINE_DIR}
+else
     echo "PETAGENOME_PIPELINE_DIR not defined"
     echo "Please source <petagenome_dir>/etc/host_setup.sh"
     exit 1
 fi
-if [ ! -d ${PETAGENOME_PIPELINE_DIR} ] ; then
-    echo "${PETAGENOME_PIPELINE_DIR} does not exist"
+if [ ! -d ${petagenomeDir} ] ; then
+    echo "${petagenomeDir} does not exist"
     echo "Please source <petagenome_dir>/etc/host_setup.sh"
     exit 1
 fi
-echo "PETAGENOME_PIPELINE_DIR : ${PETAGENOME_PIPELINE_DIR}"
+echo "PETAGENOME_PIPELINE_DIR : ${petagenomeDir}"
+
+pzrepoDir=""
+if [[ -v PZREPO_DIR ]] ; then
+    pzrepoDir=${PZREPO_DIR}
+else
+    echo "PZREPO_DIR not defined"
+    echo "If necessary, please source <pzrepo_dir>/etc/host_setup.sh"
+fi
+if [ ! -d ${pzrepoDir} ] ; then
+    echo "${pzrepoDir} does not exist"
+    echo "Please source <pzrepo_dir>/etc/host_setup.sh"
+    exit 1
+fi
+echo "PZREPO_DIR : ${pzrepoDir}"
 
 #export TMPDIR=/dev/shm/${USER}/tmp
 export TMPDIR=$(pwd)/tmp
@@ -30,14 +47,14 @@ memory=20
 #lthre=5000
 lthre=0
 
-nfDir="${PETAGENOME_PIPELINE_DIR}/nf"
+nfDir="${petagenomeDir}/nf"
 #inPairs="/scratch/local/data/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
-inPairs="${PETAGENOME_PIPELINE_DIR}/modules/test/ecoli_1K_{1,2}.fq.gz;${PETAGENOME_PIPELINE_DIR}/modules/test/s_6_{1,2}.fastq.gz"
+inPairs="${petagenomeDir}/modules/test/ecoli_1K_{1,2}.fq.gz;${petagenomeDir}/modules/test/s_6_{1,2}.fastq.gz"
 
 outDir=out
 
 args="\
-    --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
+    --petagenomeDir=${petagenomeDir} \
     --output ${outDir} \
     --memory ${memory} \
     --threads ${threads} \
@@ -45,6 +62,10 @@ args="\
     --random_seed ${random_seed} \
     --publish_output true \
     "
+
+if [ "${pzrepoDir}" != "" ] ; then
+    args+=" --pzrepoDir=${pzrepoDir}"
+fi
 
 args+="\
     -profile local
