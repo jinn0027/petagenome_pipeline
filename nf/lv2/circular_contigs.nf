@@ -20,8 +20,13 @@ params.circular_contigs_blast2_num_alignments=50
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
-include { blast_makerefdb as blast_makerefdb1; blastn as blastn1} from "${params.petagenomeDir}/nf/lv1/blast"
-include { blast_makerefdb as blast_makerefdb2; blastn as blastn2} from "${params.petagenomeDir}/nf/lv1/blast"
+if (params.use_pzlast) {
+  include { pzlast_makerefdb as blast_makerefdb1; pzlastn as blastn1} from "${params.pzrepoDir}/nf/lv1/pzlast"
+  include { pzlast_makerefdb as blast_makerefdb2; pzlastn as blastn2} from "${params.pzrepoDir}/nf/lv1/pzlast"
+} else {
+  include { blast_makerefdb as blast_makerefdb1; blastn as blastn1} from "${params.petagenomeDir}/nf/lv1/blast"
+  include { blast_makerefdb as blast_makerefdb2; blastn as blastn2} from "${params.petagenomeDir}/nf/lv1/blast"
+}
 
 process classify {
     tag "${ref_id}_@_${qry_id}"
@@ -151,13 +156,19 @@ workflow circular_contigs {
   main:
     blstdb1 = blast_makerefdb1(p.combine(contig))
     blstin1 = blstdb1.combine(contig)
-    p_blastn1 = Channel.of(['blast_task':'megablast',
-                            'blast_perc_identity':params.circular_contigs_pi_self,
-                            'blast_evalue':params.circular_contigs_e_thre,
-                            'blast_outfmt':6,
-                            'blast_num_alignments':params.circular_contigs_blast1_num_alignments,
-                            'blast_strand':'plus'
-                            ])
+    if (params.use_pzlast) {
+        p_blastn1 = Channel.of([
+            'pzlast_q_with_comp':0])
+    } else {
+        p_blastn1 = Channel.of([
+            'blast_task':'megablast',
+            'blast_perc_identity':params.circular_contigs_pi_self,
+            'blast_evalue':params.circular_contigs_e_thre,
+            'blast_outfmt':6,
+            'blast_num_alignments':params.circular_contigs_blast1_num_alignments,
+            'blast_strand':'plus'])
+   }
+
     blstn1 = blastn1(p_blastn1.combine(blstin1))
     clsfy = classify(p.combine(blstn1), contig)
 
@@ -166,13 +177,17 @@ workflow circular_contigs {
     }
 
     blstdb2 = blast_makerefdb2(p.combine(circular_cut))
-    p_blastn2 = Channel.of(['blast_task':'megablast',
-                            'blast_perc_identity':params.circular_contigs_pi_self,
-                            'blast_evalue':params.circular_contigs_e_thre,
-                            'blast_outfmt':6,
-                            'blast_num_alignments':params.circular_contigs_blast2_num_alignments,
-                            'blast_strand':'both'
-                            ])
+    if (params.use_pzlast) {
+        p_blastn2 = Channel.of([
+            'pzlast_q_with_comp':1])
+    } else {
+        p_blastn2 = Channel.of([
+            'blast_task':'megablast',
+            'blast_perc_identity':params.circular_contigs_pi_self,
+            'blast_evalue':params.circular_contigs_e_thre,
+            'blast_outfmt':6,
+            'blast_num_alignments':params.circular_contigs_blast2_num_alignments,
+            'blast_strand':'both'])
     blstin2 = blstdb2.combine(circular_cut)
     blstn2 = blastn2(p_blastn2.combine(blstin2))
 
