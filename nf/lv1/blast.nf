@@ -12,6 +12,7 @@ params.blast_task = "megablast"
 params.blast_num_alignments = "1"
 params.blast_perc_identity = "95"
 params.blast_evalue = "1e-20"
+params.blast_strand = "both"
 params.blast_outfmt = 6
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
@@ -87,6 +88,7 @@ process blastn {
                 -evalue ${getParam(p, 'blast_evalue')} \\
                 -outfmt ${getParam(p, 'blast_outfmt')} \\
                 -num_alignments ${getParam(p, 'blast_num_alignments')} \\
+                -strand  ${getParam(p, 'blast_strand')} \\
                 -out ${qry_id}/out.tsv
         fi
         """

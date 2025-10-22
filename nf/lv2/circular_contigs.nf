@@ -63,7 +63,11 @@ process classify {
         # 完全に一致する断片（自己アライメント）を除外し、
         # 残ったヒット（環状オーバーラップまたはリピート）を抽出
         awk -F "\t" '{OFS="\t"} {
-            if (\$7 != \$9 || \$8 != \$10) {
+            q1 = \$7 < \$8 ? \$7 : \$8;
+            q2 = \$7 < \$8 ? \$8 : \$7;
+            t1 = \$9 < \$(10) ? \$9 : \$(10);
+            t2 = \$9 < \$(10) ? \$(10) : \$9;
+            if (q1 != t1 || q2 != t2) {
                 print \$0
             }
         }' ${qry_id}/selfhit.tsv > ${qry_id}/non_self_aligned_hits.tsv
@@ -85,8 +89,14 @@ process classify {
             each_selfhit="${qry_id}/selfhit"\${f}".tsv"
             if [ -f \${each_selfhit} ] ; then
                 pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '1p' | \\
-                           awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} \\
-                           '{if (\$1==id && \$4!=len && \$4>=al_self && \$9==1) print(\$7-1)}')
+                           awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} '{ \\
+                               if (\$1==id && \$4!=len && \$4>=al_self) { \\
+                                   q1 = \$7 < \$8 ? \$7 : \$8; \\
+                                   t1 = \$9 < \$(10) ? \$9 : \$(10); \\
+                                   if (q1==1) {print(t1-1)} \\
+                                   else if (t1==1) {print(q1-1)}; \\
+                               } \\
+                           }')
                 if [ "\${pos_end}" != "" ] && [ "\${pos_end}" -gt 1 ] ; then
                     cat \${each_fa} | seqkit subseq -r 1:\${pos_end} > _fa
                     cat _fa >> ${qry_id}/circular.cut.fa
@@ -145,7 +155,8 @@ workflow circular_contigs {
                             'blast_perc_identity':params.circular_contigs_pi_self,
                             'blast_evalue':params.circular_contigs_e_thre,
                             'blast_outfmt':6,
-                            'blast_num_alignments':params.circular_contigs_blast1_num_alignments
+                            'blast_num_alignments':params.circular_contigs_blast1_num_alignments,
+                            'blast_strand':'plus'
                             ])
     blstn1 = blastn1(p_blastn1.combine(blstin1))
     clsfy = classify(p.combine(blstn1), contig)
@@ -159,7 +170,8 @@ workflow circular_contigs {
                             'blast_perc_identity':params.circular_contigs_pi_self,
                             'blast_evalue':params.circular_contigs_e_thre,
                             'blast_outfmt':6,
-                            'blast_num_alignments':params.circular_contigs_blast2_num_alignments
+                            'blast_num_alignments':params.circular_contigs_blast2_num_alignments,
+                            'blast_strand':'both'
                             ])
     blstin2 = blstdb2.combine(circular_cut)
     blstn2 = blastn2(p_blastn2.combine(blstin2))
