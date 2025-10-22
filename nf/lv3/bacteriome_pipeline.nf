@@ -6,11 +6,7 @@ include { fastp } from "${params.petagenomeDir}/nf/lv1/fastp"
 include { error_correction } from "${params.petagenomeDir}/nf/lv2/error_correction"
 include { assembly } from "${params.petagenomeDir}/nf/lv2/assembly"
 include { pool_contigs } from "${params.petagenomeDir}/nf/lv2/pool_contigs"
-if (params.use_pzlast) {
-    include { circular_contigs } from "${params.petagenomeDir}/nf/lv2/circular_contigs2"
-} else {
-    include { circular_contigs } from "${params.petagenomeDir}/nf/lv2/circular_contigs"
-}
+include { circular_contigs } from "${params.petagenomeDir}/nf/lv2/circular_contigs"
 
 workflow bacteriome_pipeline {
   take:
