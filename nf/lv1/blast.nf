@@ -64,7 +64,7 @@ process blastn {
     input:
         tuple val(p), val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
     output:
-        tuple val(ref_id), val(qry_id), path("${qry_id}/out.tsv", arity: '1')
+        tuple val(ref_id), val(qry_id), path("${qry_id}/out", arity: '1')
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
@@ -75,7 +75,7 @@ process blastn {
             unpigz -c ${qry} > \${qry_}
         fi
         mkdir -p ${qry_id}
-        touch ${qry_id}/out.tsv
+        touch ${qry_id}/out
         qry_siz=\$( du -b \$(readlink -f \${qry_}) | awk '{print(\$1)}' )
         db_siz=\$(ls ${ref_db} 2>/dev/null | wc -l)
         if [ \${qry_siz} -gt 0 ] && [ \${db_siz} -gt 0 ]; then
@@ -89,7 +89,7 @@ process blastn {
                 -outfmt ${getParam(p, 'blast_outfmt')} \\
                 -num_alignments ${getParam(p, 'blast_num_alignments')} \\
                 -strand  ${getParam(p, 'blast_strand')} \\
-                -out ${qry_id}/out.tsv
+                -out ${qry_id}/out
         fi
         """
 }

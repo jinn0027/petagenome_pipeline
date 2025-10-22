@@ -158,6 +158,8 @@ workflow circular_contigs {
     blstin1 = blstdb1.combine(contig)
     if (params.use_pzlast) {
         p_blastn1 = Channel.of([
+            'pzlast_outfmt':6,
+            'pzlast_fmt6_swapside':'s',
             'pzlast_q_with_comp':0])
     } else {
         p_blastn1 = Channel.of([
@@ -179,6 +181,8 @@ workflow circular_contigs {
     blstdb2 = blast_makerefdb2(p.combine(circular_cut))
     if (params.use_pzlast) {
         p_blastn2 = Channel.of([
+            'pzlast_outfmt':6,
+            'pzlast_fmt6_swapside':'s',
             'pzlast_q_with_comp':1])
     } else {
         p_blastn2 = Channel.of([
@@ -188,6 +192,7 @@ workflow circular_contigs {
             'blast_outfmt':6,
             'blast_num_alignments':params.circular_contigs_blast2_num_alignments,
             'blast_strand':'both'])
+    }
     blstin2 = blstdb2.combine(circular_cut)
     blstn2 = blastn2(p_blastn2.combine(blstin2))
 
