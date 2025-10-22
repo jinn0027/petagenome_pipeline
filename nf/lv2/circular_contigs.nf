@@ -98,8 +98,8 @@ process classify {
                                if (\$1==id && \$4!=len && \$4>=al_self) { \\
                                    q1 = \$7 < \$8 ? \$7 : \$8; \\
                                    t1 = \$9 < \$(10) ? \$9 : \$(10); \\
-                                   if (q1==1) {print(t1-1)} \\
-                                   else if (t1==1) {print(q1-1)}; \\
+                                   if (q1==1) {print(t1)} \\
+                                   else if (t1==1) {print(q1)}; \\
                                } \\
                            }')
                 if [ "\${pos_end}" != "" ] && [ "\${pos_end}" -gt 1 ] ; then
