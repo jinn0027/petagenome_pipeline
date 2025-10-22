@@ -43,8 +43,7 @@ process classify {
         path("${qry_id}/circular.extended.fa"),
         path("${qry_id}/circular.fa"),
         path("${qry_id}/linear.fa"),
-        path("${qry_id}/selfhit.tsv", arity: '1'),
-        path("${qry_id}")
+        path("${qry_id}/selfhit.tsv", arity: '1')
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
@@ -71,7 +70,7 @@ process classify {
             t1 = \$9 < \$(10) ? \$9 : \$(10);
             t2 = \$9 < \$(10) ? \$(10) : \$9;
             if (q1 != t1 || q2 != t2) {
-                print \$0;
+                print \$0
             }
         }' ${qry_id}/selfhit.tsv > ${qry_id}/non_self_aligned_hits.tsv
 
@@ -164,7 +163,7 @@ workflow circular_contigs {
     blstn1 = blastn1(p_blastn1.combine(blstin1))
     clsfy = classify(p.combine(blstn1), contig)
 
-    circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv, _ ->
+    circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv ->
         [ id, circular_cut ]
     }
 
@@ -183,7 +182,7 @@ workflow circular_contigs {
     clsfy.view{ i-> "$i" }
     ch_new = blstn2.merge(clsfy).map {
         ref_id, qry_id, blst2_tsv,
-        id, cut, ext, circular, linear, selfhit_tsv, _
+        id, cut, ext, circular, linear, selfhit_tsv
         -> [id, cut, ext, circular, blst2_tsv]
     }
     ch_new.view{ i -> "${i}" }

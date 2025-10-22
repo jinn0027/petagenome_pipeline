@@ -64,6 +64,7 @@ args="\
 
 if [ "${pzrepoDir}" != "" ] ; then
     args+=" --pzrepoDir=${pzrepoDir}"
+    args+=" --use_pzlast true"
 fi
 
 args+="\
