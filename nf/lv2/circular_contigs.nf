@@ -155,39 +155,48 @@ workflow circular_contigs {
     contig
   main:
     if (params.use_pzlast) {
-        blstdb1 = blast_makerefdb1(p.combine(contig))
-        blstin1 = blstdb1.combine(contig)
-        p_blastn1 = Channel.of([
+        if (params.test_pzlast_cfg1) {
+            cfg1 = Channel.of(file(params.test_pzlast_cfg1))
+        } else {
+            cfg1 = Channel.of('')
+        }
+        pzlstdb1 = pzlast_makerefdb1(p.combine(contig).combine(cfg1))
+        pzlstin1 = pzlstdb1.combine(contig)
+        p_pzlastn1 = Channel.of([
             'pzlast_outfmt':6,
             'pzlast_fmt6_swapside':'s',
             'pzlast_q_with_comp':0])
-        blstn1 = blastn1(p_blastn1.combine(blstin1))
-        clsfy = classify(p.combine(blstn1), contig)
+        pzlstn1 = pzlastn1(p_pzlastn1.combine(pzlstin1)).combine(cfg1)
+        clsfy = classify(p.combine(pzlstn1), contig)
 
         circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv ->
             [ id, circular_cut ]
         }
 
-        blstdb2 = blast_makerefdb2(p.combine(circular_cut))
-
-        p_blastn2 = Channel.of([
+        if (params.test_pzlast_cfg2) {
+            cfg2 = Channel.of(file(params.test_pzlast_cfg2))
+        } else {
+            cfg2 = Channel.of('')
+        }
+        pzlstdb2 = pzlast_makerefdb2(p.combine(circular_cut).combine(cfg2))
+        p_pzlastn2 = Channel.of([
             'pzlast_outfmt':6,
             'pzlast_fmt6_swapside':'s',
             'pzlast_q_with_comp':1])
 
-        blstin2 = blstdb2.combine(circular_cut)
-        blstn2 = blastn2(p_blastn2.combine(blstin2))
+        pzlstin2 = pzlstdb2.combine(circular_cut)
+        pzlstn2 = pzlastn2(p_pzlastn2.combine(pzlstin2)).combine(cfg2)
 
-        blstn2.view{ i-> "$i" }
+        pzlstn2.view{ i-> "$i" }
+
         clsfy.view{ i-> "$i" }
-        ch_new = blstn2.merge(clsfy).map {
-            ref_id, qry_id, blst2_tsv,
+        ch_new = pzlstn2.merge(clsfy).map {
+            ref_id, qry_id, pzlst2_tsv,
             id, cut, ext, circular, linear, selfhit_tsv
-            -> [id, cut, ext, circular, blst2_tsv]
+            -> [id, cut, ext, circular, pzlst2_tsv]
         }
         ch_new.view{ i -> "${i}" }
         dedupl = deduplicate(p.combine(ch_new))
-
     } else {
         blstdb1 = blast_makerefdb1(p.combine(contig))
         blstin1 = blstdb1.combine(contig)
