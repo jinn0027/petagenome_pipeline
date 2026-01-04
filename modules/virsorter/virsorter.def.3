@@ -11,7 +11,7 @@ From: ../common/gcc.sif
 %post
     alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
     pushd /opt
-        /opt/miniconda3/bin/mamba install -y -q \
+        /opt/miniconda3/bin/conda install -y -q \
             mcl=14.137 \
             muscle=5.3 \
             perl-bioperl=1.7.8 \
@@ -19,7 +19,7 @@ From: ../common/gcc.sif
             perl-parallel-forkmanager=2.03 \
             perl-list-moreutils=0.430 \
             blast=2.16.0 \
-            diamond=0.9.36 \
+            diamond=2.1.10 \
             hmmer=3.1b2
             # NOTE : latest diamond(=2.1.10) is not compiled with blast database support.
 
