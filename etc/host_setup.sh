@@ -1,32 +1,36 @@
 #!/bin/bash
 
-if groups | grep -q wheel ; then
-    sudo dnf -y groupinstall 'Development Tools'
-    sudo dnf -y install \
-        openssl-devel \
-        libuuid-devel \
-        libseccomp-devel \
-        wget \
-        git \
-        squashfs-tools \
-        glib2-devel \
-        fuse3-devel \
-        fakeroot \
-        cryptsetup \
-        squashfuse \
-        pigz \
-        bzip2 \
-        pbzip2
+update=${1:-0}
 
-    #sudo dnf --enablerepo=devel install -y \
-    #    shadow-utils-subid-devel
+if [ "${update}" != "0" ] ; then
+    if groups | grep -q wheel ; then
+        sudo dnf -y groupinstall 'Development Tools'
+        sudo dnf -y install \
+            openssl-devel \
+            libuuid-devel \
+            libseccomp-devel \
+            wget \
+            git \
+            squashfs-tools \
+            glib2-devel \
+            fuse3-devel \
+            fakeroot \
+            cryptsetup \
+            squashfuse \
+            pigz \
+            bzip2 \
+            pbzip2
 
-    sudo dnf install -y \
-        shadow-utils-subid
+        #sudo dnf --enablerepo=devel install -y \
+        #    shadow-utils-subid-devel
 
-    # SElinuxをpermissiveに設定。
-    # これをやらないとapptainerでfakerootでdnfをやろうとするとエラーが発生する場合がある。
-    sudo setenforce 0
+        sudo dnf install -y \
+            shadow-utils-subid
+
+        # SElinuxをpermissiveに設定。
+        # これをやらないとapptainerでfakerootでdnfをやろうとするとエラーが発生する場合がある。
+        sudo setenforce 0
+    fi
 fi
 
 mkdir -p ~/bin
