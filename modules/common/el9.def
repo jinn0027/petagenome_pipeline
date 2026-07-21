@@ -51,6 +51,9 @@ From: almalinux:9
     echo "alias ll=\"ls -l\"" >> /etc/bashrc
     echo "alias dnf=\"LD_LIBRARY_PATH=/usr/local/lib dnf\"" >> /etc/bashrc
 
+    /opt/miniconda3/bin/pip uninstall -y conda-content-trust || true
+    rm -rf /opt/miniconda3/lib/python*/site-packages/conda_content_trust*
+
 %environment
     export LC_ALL=C
     export PATH=/opt/miniconda3/bin:$PATH
