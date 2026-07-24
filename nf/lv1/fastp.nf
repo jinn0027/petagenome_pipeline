@@ -43,6 +43,9 @@ process fastp {
 workflow {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.test_fastp_reads)
-    out = fastp(p.combine(reads))
+    in = p.combine(reads).map{
+        p_val, pair_id, reads_path -> [ p_val, pair_id, reads_path ]
+    }
+    out = fastp(in)
     out.view { i -> "$i" }
 }

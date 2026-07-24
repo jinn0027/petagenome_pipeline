@@ -76,11 +76,20 @@ workflow {
     //ref.view { i -> "$i" }
     //reads.view { i -> "$i" }
 
-    ref_db = bbmap_makerefdb(p.combine(ref))
+    db_input = p.combine(ref).map {
+      p_val, ref_id, ref_path -> [ p_val, ref_id, ref_path ]
+    }
+    ref_db = bbmap_makerefdb(db_input)
     //ref_db.view { i -> "$i" }
-    in = ref_db.combine(reads)
+    in = ref_db.combine(reads).map {
+        ref_id, ref_path, pair_id, reads_path -> [ ref_id, ref_path, pair_id, reads_path ]
+    }
     //in.view { i -> "$i" }
-    out = bbmap(p.combine(in))
+    in = p.combine(in).map {
+        p_val, ref_id, ref_path, pair_id, reads_path -> [ p_val, ref_id, ref_path, pair_id, reads_path ]
+    }
+    //in.view { i -> "$i" }
+    out = bbmap(in)
     out.view { i -> "$i" }
 }
 
