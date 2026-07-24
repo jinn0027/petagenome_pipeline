@@ -39,7 +39,7 @@ function need_make () {
     return 1
 }
 
-pushd ../external
+pushd ${DIR_EXTERNAL}
 
 ############ MiniConda setup script
 
@@ -365,10 +365,10 @@ fi
 # update VirSorter database
 # see modules/virsorter/memo
 if check_module virsorter && [ ! -f virsorter-data-v2.updated.tar.gz ] ; then
-    pushd ../modules/common
+    pushd ${DIR_MODULES}/common
         make gcc.sif
     popd
-    pushd ../modules/virsorter
+    pushd ${DIR_MODULES}/virsorter
         make virsorter_update_db.sbx
         make db_updated
     popd
