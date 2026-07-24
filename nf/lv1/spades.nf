@@ -145,17 +145,95 @@ process spades_e2e {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
-    reads = createPairsChannel(params.test_spades_reads)
-    if (params.test_spades_e2e) {
-        out = spades_e2e(p.combine(reads))
-        out.view { i -> "$i" }
-    } else {
-        ec = spades_error_correction_gzip_output(p.combine(reads))
-                .map { pair_id, paired, unpaired -> tuple( pair_id, paired ) }
-        ec.view { i -> "$i" }
-        out = spades_assembler(p.combine(ec))
-        out.view { i -> "$i" }
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// SPAdes End-to-End 処理の本体
+workflow SPADES_E2E_SUB {
+    take:
+    p
+    reads
+
+    main:
+    // [ p_val, pair_id, reads_path ] にフラット化
+    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+        tuple(p_val, pair_id, reads_path)
     }
+
+    out = spades_e2e(in_ch)
+
+    emit:
+    out = out
+}
+
+// エラー修正 ＋ アセンブリ分割処理の本体
+workflow SPADES_STEPWISE_SUB {
+    take:
+    p
+    reads
+
+    main:
+    // エラー修正用入力のフラット化
+    ec_in = p.combine(reads).map { p_val, pair_id, reads_path ->
+        tuple(p_val, pair_id, reads_path)
+    }
+
+    // エラー修正実行と出力の整列 [ pair_id, paired ]
+    ec_raw = spades_error_correction_gzip_output(ec_in)
+    ec = ec_raw.map { pair_id, paired, unpaired ->
+        tuple(pair_id, paired)
+    }
+
+    // アセンブリ用入力の結合とフラット化
+    asm_in = p.combine(ec).map { p_val, pair_id, paired_path ->
+        tuple(p_val, pair_id, paired_path)
+    }
+
+    out = spades_assembler(asm_in)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. End-to-End 実行のみ (-entry SPADES_E2E_ONLY)
+workflow SPADES_E2E_ONLY {
+    p     = createNullParamsChannel()
+    reads = createPairsChannel(params.test_spades_reads)
+
+    out_ch = SPADES_E2E_SUB(p, reads)
+    out_ch.out.view { i -> "$i" }
+}
+
+// B. エラー修正〜アセンブリ分割実行のみ (-entry SPADES_STEPWISE_ONLY)
+workflow SPADES_STEPWISE_ONLY {
+    p     = createNullParamsChannel()
+    reads = createPairsChannel(params.test_spades_reads)
+
+    out_ch = SPADES_STEPWISE_SUB(p, reads)
+    out_ch.out.view { i -> "$i" }
+}
+
+// C. 条件分岐または一括実行 (デフォルト または -entry SPADES_ALL)
+workflow SPADES_ALL {
+    p     = createNullParamsChannel()
+    reads = createPairsChannel(params.test_spades_reads)
+
+    if (params.test_spades_e2e) {
+        out_ch = SPADES_E2E_SUB(p, reads)
+        out_ch.out.view { i -> "$i" }
+    } else {
+        out_ch = SPADES_STEPWISE_SUB(p, reads)
+        out_ch.out.view { i -> "$i" }
+    }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    SPADES_ALL()
 }

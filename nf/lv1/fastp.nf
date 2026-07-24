@@ -43,12 +43,43 @@ process fastp {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
-    reads = createPairsChannel(params.test_fastp_reads)
-    in = p.combine(reads).map{
-        p_val, pair_id, reads_path -> [ p_val, pair_id, reads_path ]
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// fastp 処理の本体
+workflow FASTP_SUB {
+    take:
+    p
+    reads
+
+    main:
+    // [ p_val, pair_id, reads_path ] にフラット化
+    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+        tuple(p_val, pair_id, reads_path)
     }
-    out = fastp(in)
-    out.view { i -> "$i" }
+
+    out = fastp(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow FASTP_ALL {
+    p     = createNullParamsChannel()
+    reads = createPairsChannel(params.test_fastp_reads)
+
+    out_ch = FASTP_SUB(p, reads)
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    FASTP_ALL()
 }

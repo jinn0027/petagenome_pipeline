@@ -57,11 +57,43 @@ process virsorter {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
-    read = createSeqsChannel(params.test_virsorter_read)
-    //read.view { i -> "$i" }
-    out = virsorter(p.combine(read))
-    out.view { i -> "$i" }
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// VirSorter 処理の本体
+workflow VIRSORTER_SUB {
+    take:
+    p
+    read
+
+    main:
+    // [ p_val, seq_id, seq_path ] にフラット化
+    in_ch = p.combine(read).map { p_val, seq_id, seq_path ->
+        tuple(p_val, seq_id, seq_path)
+    }
+
+    out = virsorter(in_ch)
+
+    emit:
+    out = out
 }
 
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow VIRSORTER_ALL {
+    p    = createNullParamsChannel()
+    read = createSeqsChannel(params.test_virsorter_read)
+
+    out_ch = VIRSORTER_SUB(p, read)
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    VIRSORTER_ALL()
+}

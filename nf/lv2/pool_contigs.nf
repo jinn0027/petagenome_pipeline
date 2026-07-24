@@ -182,57 +182,114 @@ process get_stats {
         """
 }
 
-workflow pool_contigs {
-  take:
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// コンティグ統合・重複除去・統計計算の一連処理
+workflow POOL_CONTIGS_SUB {
+    take:
     p
     contigs
     l_thre
-  main:
-    // concatenate assemblies
-    merged = merge_contigs(p.combine(contigs))
 
-    // removing redundancy
-    if ( params.pool_contigs_clustering_process == "mmseqs2" ) {
-        merged_db = mmseqs2_makerefdb(p.combine(merged.map{ id, fasta, list -> tuple(id, fasta ) }))
-        clust = mmseqs2_cluster(p.combine(merged_db))
-    } else {
-        clust = cdhit_est(p.combine(merged.map{ id, fasta, list -> tuple(id, fasta ) }))
+    main:
+    // [ p_val, seq_id, seq_path ] にフラット化
+    in_ch = p.combine(contigs).map { p_val, seq_id, seq_path ->
+        tuple(p_val, seq_id, seq_path)
     }
 
-    // rename and filter (L>=#{l_thre}) contigs
-    flt = filter_and_rename(p.combine(clust.map{ id, fasta, clstr -> tuple(id, fasta, l_thre) }))
+    // 1. アセンブリの結合
+    merged = merge_contigs(in_ch)
 
-    // summarize contig name ( contig in each sample / representative contig / renamed representative contig )
-    name = summarize_name(p.combine(flt.map{ id, fasta, name -> tuple(id, name) }), clust.map{ id, fasta, clstr -> tuple(id, clstr) })
+    // 結合済み FASTA の取り出し [ p_val, id, fasta ]
+    merged_fasta = p.combine(
+        merged.map { id, fasta, list -> tuple(id, fasta) }
+    ).map { p_val, id, fasta ->
+        tuple(p_val, id, fasta)
+    }
 
-    // get length of contigs
-    len = get_length(p.combine(flt.map{ id, fasta, name -> tuple(id, fasta) }))
+    // 2. クラスタリングによる重複除去 (MMseqs2 または CD-HIT)
+    if (params.pool_contigs_clustering_process == "mmseqs2") {
+        merged_db = mmseqs2_makerefdb(merged_fasta)
+        
+        clust_in = p.combine(merged_db).map { p_val, id, db_path ->
+            tuple(p_val, id, db_path)
+        }
+        clust = mmseqs2_cluster(clust_in)
+    } else {
+        clust = cdhit_est(merged_fasta)
+    }
 
-    // stats of assemblies
-    sts = get_stats(p.combine(len))
+    // 3. リネームと配列長フィルタリング (L >= l_thre)
+    flt_in = p.combine(
+        clust.map { id, fasta, clstr -> tuple(id, fasta, l_thre) }
+    ).map { p_val, id, fasta, length_threshold ->
+        tuple(p_val, id, fasta, length_threshold)
+    }
+    flt = filter_and_rename(flt_in)
 
-    // blastdb
-    blstdb = blast_makerefdb(p.combine(flt.map{ id, contig, name -> tuple(id, contig) }))
-  emit:
-    merged
-    clust
-    flt
-    name
-    len
-    sts
-    blstdb
+    // フィルタリング後の配列の抽出 [ p_val, id, fasta ]
+    flt_seqs = p.combine(
+        flt.map { id, fasta, name -> tuple(id, fasta) }
+    ).map { p_val, id, fasta ->
+        tuple(p_val, id, fasta)
+    }
+
+    // 4. 名前の要約テーブル作成
+    flt_names = p.combine(
+        flt.map { id, fasta, name -> tuple(id, name) }
+    ).map { p_val, id, name ->
+        tuple(p_val, id, name)
+    }
+    clust_clstr = clust.map { id, fasta, clstr -> tuple(id, clstr) }
+
+    name = summarize_name(flt_names, clust_clstr)
+
+    // 5. 配列長計算 ＋ 統計取得 ＋ BLAST DB作成
+    len = get_length(flt_seqs)
+
+    sts_in = p.combine(len).map { p_val, id, len_file ->
+        tuple(p_val, id, len_file)
+    }
+    sts = get_stats(sts_in)
+
+    blstdb = blast_makerefdb(flt_seqs)
+
+    emit:
+    merged = merged
+    clust  = clust
+    flt    = flt
+    name   = name
+    len    = len
+    sts    = sts
+    blstdb = blstdb
 }
 
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow POOL_CONTIGS_ALL {
+    p        = createNullParamsChannel()
+    contigs  = createSeqsChannel(params.test_pool_contigs_contigs)
+    l_thresh = params.test_pool_contigs_l_thre
+
+    out_ch = POOL_CONTIGS_SUB(p, contigs, l_thresh)
+
+    // 各出力チャンネルの確認
+    out_ch.merged.view { i -> "MERGED: $i" }
+    out_ch.clust.view  { i -> "CLUST: $i" }
+    out_ch.flt.view    { i -> "FLT: $i" }
+    out_ch.name.view   { i -> "NAME: $i" }
+    out_ch.len.view    { i -> "LEN: $i" }
+    out_ch.sts.view    { i -> "STS: $i" }
+    out_ch.blstdb.view { i -> "BLSTDB: $i" }
+}
+
+// デフォルトエントリーポイント
 workflow {
-    p = createNullParamsChannel()
-    def contigs = createSeqsChannel(params.test_pool_contigs_contigs)
-    contigs.view{ i -> "$i" }
-    out = pool_contigs(p, contigs, params.test_pool_contigs_l_thre)
-    //out.merged.view{ i -> "$i" }
-    //out.clust.view{ i -> "$i" }
-    //out.flt.view{ i -> "$i" }
-    //out.name.view{ i -> "$i" }
-    //out.len.view{ i -> "$i" }
-    //out.sts.view{ i -> "$i" }
-    out.blstdb.view{ i -> "$i" }
+    POOL_CONTIGS_ALL()
 }

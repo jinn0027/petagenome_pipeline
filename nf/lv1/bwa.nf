@@ -60,19 +60,88 @@ process bwa_mem {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// BWA リファレンス DB (Index) 作成処理の本体
+workflow BUILD_DB_SUB {
+    take:
+    p
+    ref
+
+    main:
+    // [ p_val, ref_id, ref_path ] にフラット化
+    db_input = p.combine(ref).map { p_val, ref_id, ref_path ->
+        tuple(p_val, ref_id, ref_path)
+    }
+    ref_db = bwa_makerefdb(db_input)
+
+    emit:
+    ref_db = ref_db
+}
+
+// BWA マッピング処理 (bwa mem) の本体
+workflow MAP_SUB {
+    take:
+    p
+    ref_db
+    qry
+
+    main:
+    // ref_db と qry を結合してフラット化
+    in_ch = ref_db.combine(qry).map { ref_id, ref_path, qry_id, qry_path ->
+        tuple(ref_id, ref_path, qry_id, qry_path)
+    }
+
+    // パラメータ p と結合してフラット化
+    in_ch = p.combine(in_ch).map { p_val, ref_id, ref_path, qry_id, qry_path ->
+        tuple(p_val, ref_id, ref_path, qry_id, qry_path)
+    }
+
+    out = bwa_mem(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. DB 作成のみ実行 (-entry BUILD_DB_ONLY)
+workflow BUILD_DB_ONLY {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.test_bwa_ref)
+
+    BUILD_DB_SUB(p, ref)
+}
+
+// B. 作成済み DB を使ってマッピングのみ実行 (-entry MAP_ONLY)
+workflow MAP_ONLY {
+    p      = createNullParamsChannel()
+    ref_db = createSeqsChannel(params.test_bwa_db) // 既存のインデックスパス
+    qry    = createSeqsChannel(params.test_bwa_qry)
+
+    out_ch = MAP_SUB(p, ref_db, qry)
+    out_ch.out.view { i -> "$i" }
+}
+
+// C. DB作成 〜 マッピングを一括実行 (デフォルト または -entry BWA_ALL)
+workflow BWA_ALL {
+    p   = createNullParamsChannel()
     ref = createSeqsChannel(params.test_bwa_ref)
     qry = createSeqsChannel(params.test_bwa_qry)
 
-    //ref.view { i -> "$i" }
-    //qry.view { i -> "$i" }
+    // インデックスを作成してマッピングへ流し込む
+    db_ch  = BUILD_DB_SUB(p, ref)
+    out_ch = MAP_SUB(p, db_ch.ref_db, qry)
 
-    ref_db = bwa_makerefdb(p.combine(ref))
-    //ref_db.view { i -> "$i" }
-    in = ref_db.combine(qry)
-    //in.view { i -> "$i" }
-    out = bwa_mem(p.combine(in))
-    out.view { i -> "$i" }
+    out_ch.out.view { i -> "$i" }
 }
 
+// デフォルトエントリーポイント
+workflow {
+    BWA_ALL()
+}

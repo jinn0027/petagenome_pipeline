@@ -236,29 +236,138 @@ process mmseqs2_search {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_mmseqs2_ref)
-    //ref.view { i -> "$i" }
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
 
-    ref_db = mmseqs2_makerefdb(p.combine(ref))
-    //ref_db.view { i -> "$i" }
+// リファレンス DB 作成処理の本体
+workflow BUILD_REF_DB_SUB {
+    take:
+    p
+    ref
+
+    main:
+    db_input = p.combine(ref).map { p_val, ref_id, ref_path ->
+        tuple(p_val, ref_id, ref_path)
+    }
+    ref_db = mmseqs2_makerefdb(db_input)
+
+    emit:
+    ref_db = ref_db
+}
+
+// クエリ DB 作成処理の本体
+workflow BUILD_QRY_DB_SUB {
+    take:
+    p
+    qry
+
+    main:
+    db_input = p.combine(qry).map { p_val, qry_id, qry_path ->
+        tuple(p_val, qry_id, qry_path)
+    }
+    qry_db = mmseqs2_makeqrydb(db_input)
+
+    emit:
+    qry_db = qry_db
+}
+
+// MMseqs2 Search 処理の本体
+workflow SEARCH_SUB {
+    take:
+    p
+    ref_db
+    qry_db
+
+    main:
+    // ref_db と qry_db を結合してフラット化
+    in_ch = ref_db.combine(qry_db).map { ref_id, ref_path, qry_id, qry_path ->
+        tuple(ref_id, ref_path, qry_id, qry_path)
+    }
+
+    // パラメータ p と結合してフラット化
+    in_ch = p.combine(in_ch).map { p_val, ref_id, ref_path, qry_id, qry_path ->
+        tuple(p_val, ref_id, ref_path, qry_id, qry_path)
+    }
+
+    out = mmseqs2_search(in_ch)
+
+    emit:
+    out = out
+}
+
+// MMseqs2 Cluster 処理の本体
+workflow CLUSTER_SUB {
+    take:
+    p
+    ref_db
+
+    main:
+    in_ch = p.combine(ref_db).map { p_val, ref_id, ref_path ->
+        tuple(p_val, ref_id, ref_path)
+    }
+
+    out = mmseqs2_cluster(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. DB 作成のみ実行 (-entry BUILD_DB_ONLY)
+workflow BUILD_DB_ONLY {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.test_mmseqs2_ref)
+
+    BUILD_REF_DB_SUB(p, ref)
+}
+
+// B. 作成済み DB を使って Search のみ実行 (-entry SEARCH_ONLY)
+workflow SEARCH_ONLY {
+    p      = createNullParamsChannel()
+    ref_db = createSeqsChannel(params.test_mmseqs2_db)
+    qry    = createSeqsChannel(params.test_mmseqs2_qry)
+
+    qry_db = BUILD_QRY_DB_SUB(p, qry)
+    out_ch = SEARCH_SUB(p, ref_db, qry_db.qry_db)
+
+    out_ch.out.view { i -> "$i" }
+}
+
+// C. 作成済み DB を使って Cluster のみ実行 (-entry CLUSTER_ONLY)
+workflow CLUSTER_ONLY {
+    p      = createNullParamsChannel()
+    ref_db = createSeqsChannel(params.test_mmseqs2_db)
+
+    out_ch = CLUSTER_SUB(p, ref_db)
+    out_ch.out.view { i -> "$i" }
+}
+
+// D. 条件分岐または一括実行 (デフォルト または -entry MMSEQS2_ALL)
+workflow MMSEQS2_ALL {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.test_mmseqs2_ref)
+
+    ref_db_ch = BUILD_REF_DB_SUB(p, ref)
 
     if (params.test_mmseqs2_module == "search") {
-        qry = createSeqsChannel(params.test_mmseqs2_qry)
-        //qry.view { i -> "$i" }
+        qry       = createSeqsChannel(params.test_mmseqs2_qry)
+        qry_db_ch = BUILD_QRY_DB_SUB(p, qry)
 
-        qry_db = mmseqs2_makeqrydb(p.combine(qry))
-        //qry_db.view { i -> "$i" }
+        out_ch = SEARCH_SUB(p, ref_db_ch.ref_db, qry_db_ch.qry_db)
+        out_ch.out.view { i -> "$i" }
 
-        in = ref_db.combine(qry_db)
-        //in.view { i -> "$i" }
-
-        out = mmseqs2_search(p.combine(in))
-        //out.view { i -> "$i" }
     } else if (params.test_mmseqs2_module == "cluster") {
-        out = mmseqs2_cluster(p.combine(ref_db))
-        //out.view { i -> "$i" }
+        out_ch = CLUSTER_SUB(p, ref_db_ch.ref_db)
+        out_ch.out.view { i -> "$i" }
     }
 }
 
+// デフォルトエントリーポイント
+workflow {
+    MMSEQS2_ALL()
+}

@@ -37,25 +37,63 @@ process get_length {
         """
 }
 
-workflow error_correction {
-  take:
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// エラー修正 ＋ QC ＋ 配列長取得の一連処理
+workflow ERROR_CORRECTION_SUB {
+    take:
     p
     reads
-  main:
-    ec = spades_error_correction(p.combine(reads))
-    fqc = fastqc(p.combine(ec.map { id, reads, unpaired -> tuple( id, reads ) }))
-    len = get_length(p.combine(ec.map { id, reads, unpaired -> tuple( id, reads ) }))
-  emit:
-    ec
-    fqc
-    len
+
+    main:
+    // [ p_val, pair_id, reads_path ] にフラット化
+    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+        tuple(p_val, pair_id, reads_path)
+    }
+
+    // 1. SPAdes によるエラー修正
+    ec_out = spades_error_correction(in_ch)
+
+    // 修正済みペアリードの抽出 [ p_val, pair_id, paired_reads ]
+    ec_paired_ch = p.combine(
+        ec_out.map { pair_id, paired_reads, unpaired_reads ->
+            tuple(pair_id, paired_reads)
+        }
+    ).map { p_val, pair_id, paired_reads ->
+        tuple(p_val, pair_id, paired_reads)
+    }
+
+    // 2. FastQC と 配列長取得 (get_length)
+    fqc_out = fastqc(ec_paired_ch)
+    len_out = get_length(ec_paired_ch)
+
+    emit:
+    ec  = ec_out
+    fqc = fqc_out
+    len = len_out
 }
 
-workflow {
-    p = createNullParamsChannel()
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow ERROR_CORRECTION_ALL {
+    p     = createNullParamsChannel()
     reads = createPairsChannel(params.test_error_correction_reads)
-    out = error_correction(p, reads)
-    out.ec.view{ i -> "$i" }
-    out.fqc.view{ i -> "$i" }
-    out.len.view{ i -> "$i" }
+
+    out_ch = ERROR_CORRECTION_SUB(p, reads)
+
+    // 各出力チャンネルの確認
+    out_ch.ec.view  { i -> "EC: $i" }
+    out_ch.fqc.view { i -> "FQC: $i" }
+    out_ch.len.view { i -> "LEN: $i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    ERROR_CORRECTION_ALL()
 }

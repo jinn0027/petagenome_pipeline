@@ -49,9 +49,43 @@ process prodigal {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// Prodigal (遺伝子予測) 処理の本体
+workflow PRODIGAL_SUB {
+    take:
+    p
+    read
+
+    main:
+    // [ p_val, seq_id, seq_path ] にフラット化
+    in_ch = p.combine(read).map { p_val, seq_id, seq_path ->
+        tuple(p_val, seq_id, seq_path)
+    }
+
+    out = prodigal(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow PRODIGAL_ALL {
+    p    = createNullParamsChannel()
     read = createSeqsChannel(params.test_prodigal_read)
-    out = prodigal(p.combine(read))
-    out.view { i -> "${i}" }
+
+    out_ch = PRODIGAL_SUB(p, read)
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    PRODIGAL_ALL()
 }

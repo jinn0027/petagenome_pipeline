@@ -105,46 +105,96 @@ process get_stats {
         """
 }
 
-workflow assembly {
-  take:
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// アセンブリ〜フィルタリング〜アノテーションDB作成の一連処理
+workflow ASSEMBLY_SUB {
+    take:
     p
     reads
     l_thre
-  main:
-    asm = spades_assembler(p.combine(reads))
-    asm = asm.map { id, scaffolds, contigs ->
-        tuple(id, 0 < scaffolds.size() ? scaffolds : contigs)
+
+    main:
+    // [ p_val, pair_id, reads_path ] にフラット化
+    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+        tuple(p_val, pair_id, reads_path)
     }
 
-    flt = filter_and_rename(p.combine(asm.map { id, contigs -> tuple(id, contigs, l_thre) } ))
+    // 1. SPAdes アセンブラの実行
+    asm_raw = spades_assembler(in_ch)
 
-    len = get_length(p.combine(flt.map { id, contigs, name -> tuple(id, contigs)} ))
-    sts = get_stats(p.combine(len))
-    blstdb = blast_makerefdb(p.combine(flt.map { id, contigs, name -> tuple(id, contigs)} ))
+    // scaffolds が存在する場合はそれを使い、無ければ contigs を選択
+    asm = asm_raw.map { id, scaffolds, contigs ->
+        tuple(id, (scaffolds && 0 < scaffolds.size()) ? scaffolds : contigs)
+    }
 
-    flt = flt.flatMap { id, contigs, name ->
+    // 2. 配列長のフィルタリングとリネーム
+    flt_in = p.combine(
+        asm.map { id, contigs -> tuple(id, contigs, l_thre) }
+    ).map { p_val, id, contigs, length_threshold ->
+        tuple(p_val, id, contigs, length_threshold)
+    }
+
+    flt_raw = filter_and_rename(flt_in)
+
+    // 後続プロセス用の入力作成 [ p_val, id, contigs ]
+    flt_seqs = p.combine(
+        flt_raw.map { id, contigs, name -> tuple(id, contigs) }
+    ).map { p_val, id, contigs ->
+        tuple(p_val, id, contigs)
+    }
+
+    // 3. 配列長計算、統計取得、BLAST DB作成
+    len = get_length(flt_seqs)
+
+    sts_in = p.combine(len).map { p_val, id, len_file ->
+        tuple(p_val, id, len_file)
+    }
+    sts = get_stats(sts_in)
+
+    blstdb = blast_makerefdb(flt_seqs)
+
+    // 4. フィルタリング後のコンティグ配列を1ファイルずつ展開 (flatMap)
+    flt = flt_raw.flatMap { id, contigs, name ->
         contigs.collect { c ->
-            if (c.size() != 0) {
+            if (c && c.size() != 0) {
                 return [c.getBaseName(), c]
             }
-        }.findAll{ it != null }
+        }.findAll { it != null }
     }
 
-  emit:
-    asm
-    flt
-    len
-    sts
-    blstdb
+    emit:
+    asm    = asm
+    flt    = flt
+    len    = len
+    sts    = sts
+    blstdb = blstdb
 }
 
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow ASSEMBLY_ALL {
+    p      = createNullParamsChannel()
+    reads  = createPairsChannel(params.test_assembly_reads)
+    l_thre = params.test_assembly_l_thre
+
+    out_ch = ASSEMBLY_SUB(p, reads, l_thre)
+
+    // 各出力チャンネルの確認
+    out_ch.asm.view    { i -> "ASM: $i" }
+    out_ch.flt.view    { i -> "FLT: $i" }
+    out_ch.len.view    { i -> "LEN: $i" }
+    out_ch.sts.view    { i -> "STS: $i" }
+    out_ch.blstdb.view { i -> "BLSTDB: $i" }
+}
+
+// デフォルトエントリーポイント
 workflow {
-    p = createNullParamsChannel()
-    reads = createPairsChannel(params.test_assembly_reads)
-    out = assembly(p, reads, params.test_assembly_l_thre)
-    out.asm.view{ i -> "$i" }
-    out.flt.view{ i -> "$i" }
-    out.len.view{ i -> "$i" }
-    out.sts.view{ i -> "$i" }
-    out.blstdb.view{ i -> "$i" }
+    ASSEMBLY_ALL()
 }

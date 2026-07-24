@@ -41,10 +41,43 @@ process metaphlan {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// MetaPhlAn 処理の本体
+workflow METAPHLAN_SUB {
+    take:
+    p
+    read
+
+    main:
+    // [ p_val, seq_id, seq_path ] にフラット化
+    in_ch = p.combine(read).map { p_val, seq_id, seq_path ->
+        tuple(p_val, seq_id, seq_path)
+    }
+
+    out = metaphlan(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow METAPHLAN_ALL {
+    p    = createNullParamsChannel()
     read = createSeqsChannel(params.test_metaphlan_read)
-    //read.view { i -> "${i}" }
-    out = metaphlan(p.combine(read))
-    out.view { i -> "${i}" }
+
+    out_ch = METAPHLAN_SUB(p, read)
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    METAPHLAN_ALL()
 }

@@ -93,25 +93,120 @@ process minimap2_e2e {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// Minimap2 リファレンス DB (.mmi インデックス) 作成処理の本体
+workflow BUILD_DB_SUB {
+    take:
+    p
+    ref
+
+    main:
+    db_input = p.combine(ref).map { p_val, ref_id, ref_path ->
+        tuple(p_val, ref_id, ref_path)
+    }
+    ref_db = minimap2_makerefdb(db_input)
+
+    emit:
+    ref_db = ref_db
+}
+
+// 作成済み DB (.mmi) を使った Minimap2 マッピング処理の本体
+workflow MAP_SUB {
+    take:
+    p
+    ref_db
+    qry
+
+    main:
+    in_ch = ref_db.combine(qry).map { ref_id, ref_path, qry_id, qry_path ->
+        tuple(ref_id, ref_path, qry_id, qry_path)
+    }
+
+    in_ch = p.combine(in_ch).map { p_val, ref_id, ref_path, qry_id, qry_path ->
+        tuple(p_val, ref_id, ref_path, qry_id, qry_path)
+    }
+
+    out = minimap2(in_ch)
+
+    emit:
+    out = out
+}
+
+// DB作成なしで直接アライメントする End-to-End 処理の本体
+workflow MAP_E2E_SUB {
+    take:
+    p
+    ref
+    qry
+
+    main:
+    in_ch = ref.combine(qry).map { ref_id, ref_path, qry_id, qry_path ->
+        tuple(ref_id, ref_path, qry_id, qry_path)
+    }
+
+    in_ch = p.combine(in_ch).map { p_val, ref_id, ref_path, qry_id, qry_path ->
+        tuple(p_val, ref_id, ref_path, qry_id, qry_path)
+    }
+
+    out = minimap2_e2e(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. DB (Index) 作成のみ実行 (-entry BUILD_DB_ONLY)
+workflow BUILD_DB_ONLY {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.test_minimap2_ref)
+
+    BUILD_DB_SUB(p, ref)
+}
+
+// B. 作成済み DB を使ってマッピングのみ実行 (-entry MAP_ONLY)
+workflow MAP_ONLY {
+    p      = createNullParamsChannel()
+    ref_db = createSeqsChannel(params.test_minimap2_db) // 既存の .mmi パス
+    qry    = createSeqsChannel(params.test_minimap2_qry)
+
+    out_ch = MAP_SUB(p, ref_db, qry)
+    out_ch.out.view { i -> "$i" }
+}
+
+// C. 直接アライメントのみ実行 (-entry MAP_E2E_ONLY)
+workflow MAP_E2E_ONLY {
+    p   = createNullParamsChannel()
     ref = createSeqsChannel(params.test_minimap2_ref)
     qry = createSeqsChannel(params.test_minimap2_qry)
 
-    //ref.view { i -> "$i" }
-    //qry.view { i -> "$i" }
+    out_ch = MAP_E2E_SUB(p, ref, qry)
+    out_ch.out.view { i -> "$i" }
+}
+
+// D. フラグ分岐または一括実行 (デフォルト または -entry MINIMAP2_ALL)
+workflow MINIMAP2_ALL {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.test_minimap2_ref)
+    qry = createSeqsChannel(params.test_minimap2_qry)
 
     if (params.test_minimap2_e2e) {
-        in = ref.combine(qry)
-        out = minimap2_e2e(p.combine(in))
-        out.view { i -> "$i" }
+        out_ch = MAP_E2E_SUB(p, ref, qry)
+        out_ch.out.view { i -> "$i" }
     } else {
-        ref_db = minimap2_makerefdb(p.combine(ref))
-        //ref_db.view { i -> "$i" }
-        in = ref_db.combine(qry)
-        //in.view { i -> "$i" }
-        out = minimap2(p.combine(in))
-        out.view { i -> "$i" }
+        db_ch  = BUILD_DB_SUB(p, ref)
+        out_ch = MAP_SUB(p, db_ch.ref_db, qry)
+        out_ch.out.view { i -> "$i" }
     }
 }
 
+// デフォルトエントリーポイント
+workflow {
+    MINIMAP2_ALL()
+}

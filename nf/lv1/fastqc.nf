@@ -34,9 +34,43 @@ process fastqc {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// FastQC 処理の本体
+workflow FASTQC_SUB {
+    take:
+    p
+    reads
+
+    main:
+    // [ p_val, pair_id, reads_path ] にフラット化
+    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+        tuple(p_val, pair_id, reads_path)
+    }
+
+    out = fastqc(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow FASTQC_ALL {
+    p     = createNullParamsChannel()
     reads = createPairsChannel(params.test_fastqc_reads)
-    out = fastqc(p.combine(reads))
-    out.view { i -> "$i" }
+
+    out_ch = FASTQC_SUB(p, reads)
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    FASTQC_ALL()
 }

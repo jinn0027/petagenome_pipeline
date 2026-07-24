@@ -68,29 +68,86 @@ process bbmap {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_bbmap_ref)
-    reads = createPairsChannel(params.test_bbmap_reads)
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
 
-    //ref.view { i -> "$i" }
-    //reads.view { i -> "$i" }
+// BBMap リファレンス DB (Index) 作成処理の本体
+workflow BUILD_DB_SUB {
+    take:
+    p
+    ref
 
-    db_input = p.combine(ref).map {
-        p_val, ref_id, ref_path -> [ p_val, ref_id, ref_path ]
+    main:
+    db_input = p.combine(ref).map { p_val, ref_id, ref_path ->
+        tuple(p_val, ref_id, ref_path)
     }
-    //db_input.view { i -> "$i" }
     ref_db = bbmap_makerefdb(db_input)
-    //ref_db.view { i -> "$i" }
-    in = ref_db.combine(reads).map {
-        ref_id, ref_path, pair_id, reads_path -> [ ref_id, ref_path, pair_id, reads_path ]
-    }
-    //in.view { i -> "$i" }
-    in = p.combine(in).map {
-        p_val, ref_id, ref_path, pair_id, reads_path -> [ p_val, ref_id, ref_path, pair_id, reads_path ]
-    }
-    //in.view { i -> "$i" }
-    out = bbmap(in)
-    out.view { i -> "$i" }
+
+    emit:
+    ref_db = ref_db
 }
 
+// BBMap マッピング処理の本体
+workflow MAP_SUB {
+    take:
+    p
+    ref_db
+    reads
+
+    main:
+    // ref_db と reads を結合してフラット化
+    in_ch = ref_db.combine(reads).map { ref_id, ref_path, pair_id, reads_path ->
+        tuple(ref_id, ref_path, pair_id, reads_path)
+    }
+
+    // パラメータ p と結合してフラット化
+    in_ch = p.combine(in_ch).map { p_val, ref_id, ref_path, pair_id, reads_path ->
+        tuple(p_val, ref_id, ref_path, pair_id, reads_path)
+    }
+
+    out = bbmap(in_ch)
+
+    emit:
+    out = out
+}
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. DB 作成のみ実行 (-entry BUILD_DB_ONLY)
+workflow BUILD_DB_ONLY {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.test_bbmap_ref)
+
+    BUILD_DB_SUB(p, ref)
+}
+
+// B. 作成済み DB を使ってマッピングのみ実行 (-entry MAP_ONLY)
+workflow MAP_ONLY {
+    p      = createNullParamsChannel()
+    ref_db = createSeqsChannel(params.test_bbmap_db) // 既存のインデックスパス
+    reads  = createPairsChannel(params.test_bbmap_reads)
+
+    out_ch = MAP_SUB(p, ref_db, reads)
+    out_ch.out.view { i -> "$i" }
+}
+
+// C. DB作成 〜 マッピングを一括実行 (デフォルト または -entry BBMAP_ALL)
+workflow BBMAP_ALL {
+    p     = createNullParamsChannel()
+    ref   = createSeqsChannel(params.test_bbmap_ref)
+    reads = createPairsChannel(params.test_bbmap_reads)
+
+    // インデックスを作成してマッピングへ流し込む
+    db_ch  = BUILD_DB_SUB(p, ref)
+    out_ch = MAP_SUB(p, db_ch.ref_db, reads)
+
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    BBMAP_ALL()
+}

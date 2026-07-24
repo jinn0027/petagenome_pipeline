@@ -67,18 +67,88 @@ process diamond_blastp {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// DIAMOND DB (.dmnd) 作成処理の本体
+workflow BUILD_DB_SUB {
+    take:
+    p
+    ref
+
+    main:
+    // [ p_val, ref_id, ref_path ] にフラット化
+    db_input = p.combine(ref).map { p_val, ref_id, ref_path ->
+        tuple(p_val, ref_id, ref_path)
+    }
+    ref_db = diamond_makerefdb(db_input)
+
+    emit:
+    ref_db = ref_db
+}
+
+// DIAMOND 検索処理 (diamond blastp) の本体
+workflow SEARCH_SUB {
+    take:
+    p
+    ref_db
+    qry
+
+    main:
+    // ref_db と qry を結合してフラット化
+    in_ch = ref_db.combine(qry).map { ref_id, ref_path, qry_id, qry_path ->
+        tuple(ref_id, ref_path, qry_id, qry_path)
+    }
+
+    // パラメータ p と結合してフラット化
+    in_ch = p.combine(in_ch).map { p_val, ref_id, ref_path, qry_id, qry_path ->
+        tuple(p_val, ref_id, ref_path, qry_id, qry_path)
+    }
+
+    out = diamond_blastp(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. DB 作成のみ実行 (-entry BUILD_DB_ONLY)
+workflow BUILD_DB_ONLY {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.test_diamond_ref)
+
+    BUILD_DB_SUB(p, ref)
+}
+
+// B. 作成済み DB を使って検索のみ実行 (-entry SEARCH_ONLY)
+workflow SEARCH_ONLY {
+    p      = createNullParamsChannel()
+    ref_db = createSeqsChannel(params.test_diamond_db) // 既存の .dmnd パス
+    qry    = createSeqsChannel(params.test_diamond_qry)
+
+    out_ch = SEARCH_SUB(p, ref_db, qry)
+    out_ch.out.view { i -> "$i" }
+}
+
+// C. DB作成 〜 検索を一括実行 (デフォルト または -entry DIAMOND_ALL)
+workflow DIAMOND_ALL {
+    p   = createNullParamsChannel()
     ref = createSeqsChannel(params.test_diamond_ref)
     qry = createSeqsChannel(params.test_diamond_qry)
 
-    //ref.view { i -> "$i" }
-    //qry.view { i -> "$i" }
+    // DB を作成して検索処理へ流し込む
+    db_ch  = BUILD_DB_SUB(p, ref)
+    out_ch = SEARCH_SUB(p, db_ch.ref_db, qry)
 
-    ref_db = diamond_makerefdb(p.combine(ref))
-    //ref_db.view { i -> "$i" }
-    in = ref_db.combine(qry)
-    //in.view { i -> "$i" }
-    out = diamond_blastp(p.combine(in))
-    out.view { i -> "$i" }
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    DIAMOND_ALL()
 }

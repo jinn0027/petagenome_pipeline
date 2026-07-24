@@ -149,107 +149,189 @@ process deduplicate {
         """
 }
 
-workflow circular_contigs {
-  take:
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// 環状コンティグ検出・重複除去の一連処理
+workflow CIRCULAR_CONTIGS_SUB {
+    take:
     p
     contig
-  main:
+
+    main:
     if (params.use_pzlast) {
+        // --- PZLAST モード ---
         if (params.test_pzlast_cfg1) {
             cfg1 = Channel.of(file(params.test_pzlast_cfg1))
         } else {
             cfg1 = Channel.of('')
         }
-        pzlstdb1 = pzlast_makerefdb1(p.combine(contig).combine(cfg1))
-        pzlstin1 = pzlstdb1.combine(contig)
-        p_pzlastn1 = Channel.of([
-            'pzlast_outfmt':6,
-            'pzlast_fmt6_swapside':'s',
-            'pzlast_q_with_comp':0])
-        pzlstn1 = pzlastn1(p_pzlastn1.combine(pzlstin1)).combine(cfg1)
-        clsfy = classify(p.combine(pzlstn1), contig)
 
-        circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv ->
-            [ id, circular_cut ]
+        // 1. PZLAST DB1 作成 ＋ アライメント 1
+        db1_in = p.combine(contig).combine(cfg1).map { p_val, id, seq, cfg ->
+            tuple(p_val, id, seq, cfg)
+        }
+        pzlstdb1 = pzlast_makerefdb1(db1_in)
+
+        pzlstin1 = pzlstdb1.combine(contig).map { ref_id, db_path, qry_id, seq_path ->
+            tuple(ref_id, db_path, qry_id, seq_path)
+        }
+        p_pzlastn1 = Channel.of([
+            'pzlast_outfmt': 6,
+            'pzlast_fmt6_swapside': 's',
+            'pzlast_q_with_comp': 0
+        ])
+        
+        aln1_in = p_pzlastn1.combine(pzlstin1).map { p_map, ref_id, db_path, qry_id, seq_path ->
+            tuple(p_map, ref_id, db_path, qry_id, seq_path)
+        }
+        aln1 = pzlastn1(aln1_in).combine(cfg1)
+
+        // 2. 分類 (Classify)
+        clsfy_p_in = p.combine(aln1).map { p_val, ref_id, qry_id, tsv, cfg ->
+            tuple(p_val, ref_id, qry_id, tsv, cfg)
+        }
+        clsfy = classify(clsfy_p_in, contig)
+
+        circular_cut = clsfy.map { id, cut, ext, circular, linear, selfhit_tsv ->
+            tuple(id, cut)
         }
 
+        // 3. PZLAST DB2 作成 ＋ アライメント 2
         if (params.test_pzlast_cfg2) {
             cfg2 = Channel.of(file(params.test_pzlast_cfg2))
         } else {
             cfg2 = Channel.of('')
         }
-        pzlstdb2 = pzlast_makerefdb2(p.combine(circular_cut).combine(cfg2))
+
+        db2_in = p.combine(circular_cut).combine(cfg2).map { p_val, id, seq, cfg ->
+            tuple(p_val, id, seq, cfg)
+        }
+        pzlstdb2 = pzlast_makerefdb2(db2_in)
+
         p_pzlastn2 = Channel.of([
-            'pzlast_outfmt':6,
-            'pzlast_fmt6_swapside':'s',
-            'pzlast_q_with_comp':1])
+            'pzlast_outfmt': 6,
+            'pzlast_fmt6_swapside': 's',
+            'pzlast_q_with_comp': 1
+        ])
+        pzlstin2 = pzlstdb2.combine(circular_cut).map { ref_id, db_path, qry_id, seq_path ->
+            tuple(ref_id, db_path, qry_id, seq_path)
+        }
+        aln2_in = p_pzlastn2.combine(pzlstin2).map { p_map, ref_id, db_path, qry_id, seq_path ->
+            tuple(p_map, ref_id, db_path, qry_id, seq_path)
+        }
+        aln2 = pzlastn2(aln2_in).combine(cfg2)
 
-        pzlstin2 = pzlstdb2.combine(circular_cut)
-        pzlstn2 = pzlastn2(p_pzlastn2.combine(pzlstin2)).combine(cfg2)
-
-        pzlstn2.view{ i-> "$i" }
-
-        clsfy.view{ i-> "$i" }
-        ch_new = pzlstn2.merge(clsfy).map {
-            ref_id, qry_id, pzlst2_tsv,
+        // 4. 重複除去 (Deduplicate)
+        ch_new = aln2.merge(clsfy).map {
+            ref_id, qry_id, pzlst2_tsv, cfg,
             id, cut, ext, circular, linear, selfhit_tsv
-            -> [id, cut, ext, circular, pzlst2_tsv]
+            -> tuple(id, cut, ext, circular, pzlst2_tsv)
         }
-        ch_new.view{ i -> "${i}" }
-        dedupl = deduplicate(p.combine(ch_new))
+
+        dedupl_in = p.combine(ch_new).map { p_val, id, cut, ext, circular, aln2_tsv ->
+            tuple(p_val, id, cut, ext, circular, aln2_tsv)
+        }
+        dedupl = deduplicate(dedupl_in)
+
     } else {
-        blstdb1 = blast_makerefdb1(p.combine(contig))
-        blstin1 = blstdb1.combine(contig)
-        p_blastn1 = Channel.of([
-            'blast_task':'megablast',
-            'blast_perc_identity':params.circular_contigs_pi_self,
-            'blast_evalue':params.circular_contigs_e_thre,
-            'blast_outfmt':6,
-            'blast_num_alignments':params.circular_contigs_blast1_num_alignments,
-            'blast_strand':'plus'])
-        blstn1 = blastn1(p_blastn1.combine(blstin1))
-        clsfy = classify(p.combine(blstn1), contig)
+        // --- BLAST モード ---
+        // 1. BLAST DB1 作成 ＋ アライメント 1
+        db1_in = p.combine(contig).map { p_val, id, seq ->
+            tuple(p_val, id, seq)
+        }
+        blstdb1 = blast_makerefdb1(db1_in)
 
-        circular_cut = clsfy.map { id, circular_cut, circular_extended, circular, linear, selfhit_tsv ->
-            [ id, circular_cut ]
+        blstin1 = blstdb1.combine(contig).map { ref_id, db_path, qry_id, seq_path ->
+            tuple(ref_id, db_path, qry_id, seq_path)
+        }
+        p_blastn1 = Channel.of([
+            'blast_task': 'megablast',
+            'blast_perc_identity': params.circular_contigs_pi_self,
+            'blast_evalue': params.circular_contigs_e_thre,
+            'blast_outfmt': 6,
+            'blast_num_alignments': params.circular_contigs_blast1_num_alignments,
+            'blast_strand': 'plus'
+        ])
+        
+        aln1_in = p_blastn1.combine(blstin1).map { p_map, ref_id, db_path, qry_id, seq_path ->
+            tuple(p_map, ref_id, db_path, qry_id, seq_path)
+        }
+        aln1 = blastn1(aln1_in)
+
+        // 2. 分類 (Classify)
+        clsfy_p_in = p.combine(aln1).map { p_val, ref_id, qry_id, tsv ->
+            tuple(p_val, ref_id, qry_id, tsv)
+        }
+        clsfy = classify(clsfy_p_in, contig)
+
+        circular_cut = clsfy.map { id, cut, ext, circular, linear, selfhit_tsv ->
+            tuple(id, cut)
         }
 
-        blstdb2 = blast_makerefdb2(p.combine(circular_cut))
+        // 3. BLAST DB2 作成 ＋ アライメント 2
+        db2_in = p.combine(circular_cut).map { p_val, id, seq ->
+            tuple(p_val, id, seq)
+        }
+        blstdb2 = blast_makerefdb2(db2_in)
 
         p_blastn2 = Channel.of([
-            'blast_task':'megablast',
-            'blast_perc_identity':params.circular_contigs_pi_self,
-            'blast_evalue':params.circular_contigs_e_thre,
-            'blast_outfmt':6,
-            'blast_num_alignments':params.circular_contigs_blast2_num_alignments,
-            'blast_strand':'both'])
+            'blast_task': 'megablast',
+            'blast_perc_identity': params.circular_contigs_pi_self,
+            'blast_evalue': params.circular_contigs_e_thre,
+            'blast_outfmt': 6,
+            'blast_num_alignments': params.circular_contigs_blast2_num_alignments,
+            'blast_strand': 'both'
+        ])
+        blstin2 = blstdb2.combine(circular_cut).map { ref_id, db_path, qry_id, seq_path ->
+            tuple(ref_id, db_path, qry_id, seq_path)
+        }
+        aln2_in = p_blastn2.combine(blstin2).map { p_map, ref_id, db_path, qry_id, seq_path ->
+            tuple(p_map, ref_id, db_path, qry_id, seq_path)
+        }
+        aln2 = blastn2(aln2_in)
 
-        blstin2 = blstdb2.combine(circular_cut)
-        blstn2 = blastn2(p_blastn2.combine(blstin2))
-
-        blstn2.view{ i-> "$i" }
-        clsfy.view{ i-> "$i" }
-        ch_new = blstn2.merge(clsfy).map {
+        // 4. 重複除去 (Deduplicate)
+        ch_new = aln2.merge(clsfy).map {
             ref_id, qry_id, blst2_tsv,
             id, cut, ext, circular, linear, selfhit_tsv
-            -> [id, cut, ext, circular, blst2_tsv]
+            -> tuple(id, cut, ext, circular, blst2_tsv)
         }
-        ch_new.view{ i -> "${i}" }
-        dedupl = deduplicate(p.combine(ch_new))
+
+        dedupl_in = p.combine(ch_new).map { p_val, id, cut, ext, circular, aln2_tsv ->
+            tuple(p_val, id, cut, ext, circular, aln2_tsv)
+        }
+        dedupl = deduplicate(dedupl_in)
     }
 
-  emit:
-    blstn1
-    clsfy
-    blstn2
-    dedupl
+    emit:
+    aln1   = aln1
+    clsfy  = clsfy
+    aln2   = aln2
+    dedupl = dedupl
 }
 
-workflow {
-    p = createNullParamsChannel()
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow CIRCULAR_CONTIGS_ALL {
+    p      = createNullParamsChannel()
     contig = createSeqsChannel(params.test_circular_contigs_contig)
-    contig.view { i -> "$i" }
-    out = circular_contigs(p, contig)
-    //out.blstn1.view { i -> "$i" }
-    //out.clsfy.view { i -> "$i" }
+
+    out_ch = CIRCULAR_CONTIGS_SUB(p, contig)
+
+    // 各出力チャンネルの確認
+    out_ch.aln1.view   { i -> "ALN1: $i" }
+    out_ch.clsfy.view  { i -> "CLSFY: $i" }
+    out_ch.aln2.view   { i -> "ALN2: $i" }
+    out_ch.dedupl.view { i -> "DEDUPL: $i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    CIRCULAR_CONTIGS_ALL()
 }

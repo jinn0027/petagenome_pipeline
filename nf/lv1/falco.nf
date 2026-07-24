@@ -32,9 +32,83 @@ process falco {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// Falco (FastQC) 処理の本体
+workflow FALCO_SUB {
+    take:
+    p
+    reads
+
+    main:
+    // [ p_val, pair_id, reads_path ] にフラット化
+    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+        tuple(p_val, pair_id, reads_path)
+    }
+
+    out = falco(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow FALCO_ALL {
+    p     = createNullParamsChannel()
     reads = createPairsChannel(params.test_falco_reads)
-    out = falco(p.combine(reads))
-    out.view { i -> "$i" }
+
+    out_ch = FALCO_SUB(p, reads)
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    FALCO_ALL()
+}
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// Falco (FastQC) 処理の本体
+workflow FALCO_SUB {
+    take:
+    p
+    reads
+
+    main:
+    // [ p_val, pair_id, reads_path ] にフラット化
+    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+        tuple(p_val, pair_id, reads_path)
+    }
+
+    out = falco(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow FALCO_ALL {
+    p     = createNullParamsChannel()
+    reads = createPairsChannel(params.test_falco_reads)
+
+    out_ch = FALCO_SUB(p, reads)
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    FALCO_ALL()
 }

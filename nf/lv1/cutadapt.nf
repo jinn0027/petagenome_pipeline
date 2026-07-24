@@ -39,9 +39,43 @@ process cutadapt {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// Cutadapt 処理の本体
+workflow CUTADAPT_SUB {
+    take:
+    p
+    reads
+
+    main:
+    // [ p_val, pair_id, reads_path ] にフラット化
+    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+        tuple(p_val, pair_id, reads_path)
+    }
+
+    out = cutadapt(in_ch)
+
+    emit:
+    out = out
+}
+
+
+// ==========================================
+// 2. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// A. メインの実行ワークフロー
+workflow CUTADAPT_ALL {
+    p     = createNullParamsChannel()
     reads = createPairsChannel(params.test_cutadapt_reads)
-    out = cutadapt(p.combine(reads))
-    //out.view { i -> "$i" }
+
+    out_ch = CUTADAPT_SUB(p, reads)
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    CUTADAPT_ALL()
 }
