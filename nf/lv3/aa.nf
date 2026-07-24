@@ -2,8 +2,9 @@
 nextflow.enable.dsl=2
 
 include { createNullParamsChannel; createSeqsChannel; getParam } from "${params.petagenomeDir}/nf/common/utils"
-include { FASTP_SUB } from "${params.petagenomeDir}/nf/lv1/fastp.nf"
+include { FASTP_SUB }       from "${params.petagenomeDir}/nf/lv1/fastp.nf"
 include { REMOVE_HOST_SUB } from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
+include { ASSEMBLY_SUB }    from "${params.petagenomeDir}/nf/lv2/assembly.nf"
 
 // ==========================================
 // 1. サブワークフロー（再利用可能な処理の本体）
@@ -23,10 +24,20 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 2. ホスト除去 (FASTP通過後のクリーンリード fp.out を入力にする)
     host_removed = REMOVE_HOST_SUB(p, host_ref, fp.out)
 
+    // 3. アセンブリ (長さの閾値をパラメータから取得。デフォルトは 1000 bp)
+    l_thre = params.containsKey('assembly_l_thre') ? params.assembly_l_thre : 1000
+    asm_res = ASSEMBLY_SUB(p, host_removed.reads, l_thre)
+
     emit:
-    raw_reads    = reads
-    fastp_reads  = fp.out
-    final_reads  = host_removed.reads  // ホスト除去後の最終非ホストリード
+    raw_reads   = reads
+    fastp_reads = fp.out
+    final_reads = host_removed.reads  // ホスト除去後の最終非ホストリード
+    
+    // アセンブリ結果の出力
+    contigs     = asm_res.asm         // アセンブルされたコンティグ/スカッフォールド
+    flt_contigs = asm_res.flt         // フィルタリング・リネーム後のコンティグ
+    stats       = asm_res.sts         // 統計情報
+    blastdb     = asm_res.blstdb      // 作成された BLAST DB
 }
 
 
@@ -57,7 +68,6 @@ workflow BACTERIOME_PIPELINE_ALL {
     }
 
     // 2. ホスト参照配列（またはDB）のチャンネル生成
-    // ※ params.host_ref_fasta または動的に設定されたパラメータを使用
     host_ref = createSeqsChannel(params.host_ref_fasta)
 
     // 3. パイプライン本体の呼び出し
@@ -66,6 +76,8 @@ workflow BACTERIOME_PIPELINE_ALL {
     // 結果の確認
     out_ch.fastp_reads.view { i -> "FASTP PASSED READS : $i" }
     out_ch.final_reads.view { i -> "HOST REMOVED READS : $i" }
+    out_ch.contigs.view     { i -> "ASSEMBLY CONTIGS   : $i" }
+    out_ch.stats.view       { i -> "ASSEMBLY STATS     : $i" }
 }
 
 // デフォルトエントリーポイント
