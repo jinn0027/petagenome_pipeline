@@ -100,11 +100,21 @@ workflow {
     qry = createSeqsChannel(params.test_blast_qry)
     //ref.view { i -> "$i" }
     //qry.view { i -> "$i" }
-    ref_db = blast_makerefdb(p.combine(ref))
+    db_input = p.combine(ref).map {
+        p_val, ref_id, ref_path -> [ p_val, ref_id, ref_path ]
+    }
+    //db_input.view { i -> "$i" }
+    ref_db = blast_makerefdb(db_input)
     //ref_db.view { i -> "$i" }
-    in = ref_db.combine(qry)
+    in = ref_db.combine(qry).map {
+        ref_id, ref_path, qry_id, qry_path -> [ ref_id, ref_path, qry_id, qry_path ]
+    }
     //in.view { i -> "$i" }
-    out = blastn(p.combine(in))
+    in = p.combine(in).map {
+        p_val, ref_id, ref_path, qry_id, qry_path -> [ p_val, ref_id, ref_path, qry_id, qry_path ]
+    }
+    //in.view { i -> "$i" }
+    out = blastn(in)
     out.view { i -> "$i" }
 }
 
