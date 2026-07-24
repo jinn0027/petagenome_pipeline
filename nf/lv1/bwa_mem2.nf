@@ -43,19 +43,22 @@ process bwa_mem2_mem {
     memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
     input:
-        tuple val(p), val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
+        tuple val(p), val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry)
+
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
+
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${qry_id}
-        bwa \\
-            mem \\
-            -t ${threads} \\
-            ${ref_db}/ref \\
-            ${qry} \\
+        bwa \
+            mem \
+            -t ${threads} \
+            ${ref_db}/ref \
+            ${qry} \
             > ${qry_id}/out.sam
         """
 }

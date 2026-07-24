@@ -44,7 +44,7 @@ process bwa_mem {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        tuple val(p), val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
+        tuple val(p), val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry)
     output:
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
     script:

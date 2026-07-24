@@ -75,7 +75,8 @@ args_dbg="\
 
 args+=" ${args_dbg}"
 
-test=${1:-"main"}
+#test=${1:-"remove_host"}
+test=${1:-"aa"}
 #test=${1:-"error_correction"}
 #test=${1:-"assembly"}
 #test=${1:-"pool_contigs"}
@@ -86,6 +87,18 @@ nextflow clean -f
 test=${test%.*}
 
 case ${test} in
+    "remove_host")
+        nextflow run ${nfDir}/lv2/remove_host.nf ${args} \
+		 --host_removal_tool "bwa_mem2" \
+		 --host_is_prebuilt_db "false" \
+		 --test_host_ref_fasta "${dataDir}/ecoli_1K_1.fa.gz" \
+                 --test_host_removal_reads "${shortFnqGzPair}"
+        ;;
+    "aa")
+        nextflow run ${nfDir}/lv3/aa.nf ${args} \
+		 --host_ref_fasta "${dataDir}/ecoli_1K_1.fa.gz" \
+                 --test_bacteriome_pipeline_reads "${shortFnqGzPair}"
+        ;;
     "main")
         nextflow run ${nfDir}/toys/main.nf ${args} \
                  --test_main_reads "${longFnqGzPair}"

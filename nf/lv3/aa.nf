@@ -20,12 +20,12 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 1. FASTP による QC・トリミング
     fp = FASTP_SUB(p, reads)
 
-    // 2. ホスト除去 (FASTP通過後のクリーンリード fp.reads を入力にする)
-    host_removed = REMOVE_HOST_SUB(p, host_ref, fp.reads)
+    // 2. ホスト除去 (FASTP通過後のクリーンリード fp.out を入力にする)
+    host_removed = REMOVE_HOST_SUB(p, host_ref, fp.out)
 
     emit:
     raw_reads    = reads
-    fastp_reads  = fp.reads
+    fastp_reads  = fp.out
     final_reads  = host_removed.reads  // ホスト除去後の最終非ホストリード
 }
 
