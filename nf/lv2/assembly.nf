@@ -10,10 +10,19 @@ params.assembly_get_length_threads = params.threads
 params.assembly_get_stats_memory = params.memory
 params.assembly_get_stats_threads = params.threads
 
+// 共通ユーティリティと BLAST のインポート
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
-include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
+
+// アセンブラ（SPAdes / MEGAHIT）のインポート
+include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades.nf"
+include { MEGAHIT_SUB      } from "${params.petagenomeDir}/nf/lv1/megahit.nf"
+
+
+// ==========================================
+// 1. プロセス定義
+// ==========================================
 
 process filter_and_rename {
     tag "${id}"
@@ -35,12 +44,6 @@ process filter_and_rename {
         mkdir -p ${id}
         python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
              --min ${l_thre} --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.${l_thre}.fa
-        #python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-        #     --min 1000 --rename --prefix n. --table ${id}/contig.name.txt ${read} > ${id}/contig.1000.fa
-        #python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-        #     --min 5000 ${id}/contig.1000.fa > ${id}/contig.5000.fa
-        #python ${params.petagenomeDir}/scripts/Python/filter_contig.rename.py \
-        #     --min 10000 ${id}/contig.1000.fa > ${id}/contig.10000.fa
         """
 }
 
@@ -96,7 +99,6 @@ process get_stats {
           outname=\$(basename \${i} | sed "s#length#stats#")
           n=\$(cat \${i} | wc -l)
           if [ \${n} -gt 0 ] ; then
-              #R --vanilla --slave --args \${i} 2 <  ${params.petagenomeDir}/scripts/R/stats.assembly.R > ${id}/\${outname}
               Rscript ${params.petagenomeDir}/scripts/R/stats.assembly.R \${i} 2 > ${id}/\${outname}
           else
               touch ${id}/\${outname}
@@ -105,8 +107,9 @@ process get_stats {
         """
 }
 
+
 // ==========================================
-// 1. サブワークフロー（再利用可能な処理の本体）
+// 2. サブワークフロー（再利用可能な処理の本体）
 // ==========================================
 
 // アセンブリ〜フィルタリング〜アノテーションDB作成の一連処理
@@ -117,17 +120,28 @@ workflow ASSEMBLY_SUB {
     l_thre
 
     main:
-    // [ p_val, pair_id, reads_path ] にフラット化
-    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
-        tuple(p_val, pair_id, reads_path)
-    }
+    // ツール選択 (デフォルトは 'megahit')
+    def tool = params.containsKey('assembler') ? params.assembler : 'megahit'
 
-    // 1. SPAdes アセンブラの実行
-    asm_raw = spades_assembler(in_ch)
-
-    // scaffolds が存在する場合はそれを使い、無ければ contigs を選択
-    asm = asm_raw.map { id, scaffolds, contigs ->
-        tuple(id, (scaffolds && 0 < scaffolds.size()) ? scaffolds : contigs)
+    // 1. アセンブラの分岐実行
+    if (tool == 'spades') {
+        // SPAdes 向けに [ p_val, pair_id, reads_path ] に整形
+        in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+            tuple(p_val, pair_id, reads_path)
+        }
+        
+        asm_raw = spades_assembler(in_ch)
+        
+        // scaffolds が存在する場合はそれを使い、無ければ contigs を選択 -> [id, contigs]
+        asm = asm_raw.map { id, scaffolds, contigs ->
+            tuple(id, (scaffolds && 0 < scaffolds.size()) ? scaffolds : contigs)
+        }
+    } else {
+        // MEGAHIT 実行 (MEGAHIT_SUB は内部で p.combine(reads) するため (p, reads) をそのまま渡す)
+        asm_raw = MEGAHIT_SUB(p, reads)
+        
+        // 出力は [id, contigs]
+        asm = asm_raw.out
     }
 
     // 2. 配列長のフィルタリングとリネーム
@@ -175,14 +189,14 @@ workflow ASSEMBLY_SUB {
 
 
 // ==========================================
-// 2. コマンドライン (-entry) 用エントリーポイント
+// 3. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
 
 // A. メインの実行ワークフロー
 workflow ASSEMBLY_ALL {
     p      = createNullParamsChannel()
     reads  = createPairsChannel(params.test_assembly_reads)
-    l_thre = params.test_assembly_l_thre
+    l_thre = params.containsKey('test_assembly_l_thre') ? params.test_assembly_l_thre : 1000
 
     out_ch = ASSEMBLY_SUB(p, reads, l_thre)
 
