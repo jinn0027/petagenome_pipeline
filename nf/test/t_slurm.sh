@@ -90,14 +90,19 @@ case ${test} in
     "remove_host")
         nextflow run ${nfDir}/lv2/remove_host.nf ${args} \
 		 --host_removal_tool "bwa_mem2" \
-		 --host_is_prebuilt_db "false" \
-		 --test_host_ref_fasta "${dataDir}/ecoli_1K_1.fa.gz" \
+		 --host_is_prebuilt_db "true" \
+		 --test_host_prebuilt_db ${extDir}/bwa_db/GRCh38 \
                  --test_host_removal_reads "${shortFnqGzPair}"
         ;;
     "aa")
         nextflow run ${nfDir}/lv3/aa.nf ${args} \
-		 --host_ref_fasta "${dataDir}/ecoli_1K_1.fa.gz" \
-                 --test_bacteriome_pipeline_reads "${shortFnqGzPair}"
+		 --host_removal_tool "bwa_mem2" \
+		 --host_is_prebuilt_db "true" \
+		 --host_ref_fasta_or_db "${extDir}/bwa_db/GRCh38" \
+                 --test_bacteriome_pipeline_reads "${longFnqGzPair}"
+
+#		 --host_is_prebuilt_db "false" \
+#		 --host_ref_fasta_or_db "${dataDir}/ecoli_1K_1.fa.gz" \
         ;;
     "main")
         nextflow run ${nfDir}/toys/main.nf ${args} \

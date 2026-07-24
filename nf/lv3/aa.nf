@@ -72,7 +72,7 @@ workflow BACTERIOME_PIPELINE_ALL {
     }
 
     // 2. ホスト参照配列（またはDB）のチャンネル生成
-    host_ref = createSeqsChannel(params.host_ref_fasta)
+    host_ref = createSeqsChannel(params.host_ref_fasta_or_db)
 
     // 3. パイプライン本体の呼び出し
     out_ch = BACTERIOME_PIPELINE_SUB(p, host_ref, reads)

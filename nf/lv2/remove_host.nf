@@ -107,5 +107,9 @@ workflow REMOVE_HOST_WITH_DB {
 }
 
 workflow {
-    REMOVE_HOST_ALL()
+    if (params.host_is_prebuilt_db) {
+        REMOVE_HOST_WITH_DB()
+    } else {
+        REMOVE_HOST_ALL()
+    }
 }
