@@ -10,12 +10,9 @@ params.assembly_get_length_threads = params.threads
 params.assembly_get_stats_memory = params.memory
 params.assembly_get_stats_threads = params.threads
 
-// 共通ユーティリティと BLAST のインポート
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
-
-// アセンブラ（SPAdes / MEGAHIT）のインポート
 include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades.nf"
 include { MEGAHIT_SUB      } from "${params.petagenomeDir}/nf/lv1/megahit.nf"
 
@@ -35,7 +32,7 @@ process filter_and_rename {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        tuple val(p), val(id), path(read, arity: '1'), val(l_thre)
+        tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
         tuple val(id), path("${id}/contig.${l_thre}.fa", arity: '0..*'), path("${id}/contig.name.txt")
     script:
@@ -58,7 +55,7 @@ process get_length {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        tuple val(p), val(id), path(reads, arity: '0..*')
+        tuple val(id), path(reads, arity: '0..*')
     output:
         tuple val(id), path("${id}/*.length.txt", arity: '0..*')
     script:
@@ -86,7 +83,7 @@ process get_stats {
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input:
-        tuple val(p), val(id), path(lengths, arity: '1..*')
+        tuple val(id), path(lengths, arity: '1..*')
     output:
         tuple val(id), path("${id}/*.stats.txt")
     script:
@@ -112,7 +109,6 @@ process get_stats {
 // 2. サブワークフロー（再利用可能な処理の本体）
 // ==========================================
 
-// アセンブリ〜フィルタリング〜アノテーションDB作成の一連処理
 workflow ASSEMBLY_SUB {
     take:
     p
@@ -120,79 +116,43 @@ workflow ASSEMBLY_SUB {
     l_thre
 
     main:
-    // ツール選択 (デフォルトは 'megahit')
     def tool = params.containsKey('assembler') ? params.assembler : 'megahit'
 
     // 1. アセンブラの分岐実行
     if (tool == 'spades') {
-        // SPAdes 向けに [ p_val, pair_id, reads_path ] に整形
-        in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
-            tuple(p_val, pair_id, reads_path)
-        }
-        
+        in_ch = p.combine(reads).map { p_val, pair_id, reads_path -> tuple(p_val, pair_id, reads_path) }
         asm_raw = spades_assembler(in_ch)
-        
-        // scaffolds が存在する場合はそれを使い、無ければ contigs を選択 -> [id, contigs]
-        asm = asm_raw.map { id, scaffolds, contigs ->
-            tuple(id, (scaffolds && 0 < scaffolds.size()) ? scaffolds : contigs)
-        }
+        asm = asm_raw.map { id, scaffolds, contigs -> tuple(id, (scaffolds && 0 < scaffolds.size()) ? scaffolds : contigs) }
     } else {
-        // MEGAHIT 実行 (MEGAHIT_SUB は内部で p.combine(reads) するため (p, reads) をそのまま渡す)
+        // MEGAHIT_SUB の出力は [pair_id, contigs]
         asm_raw = MEGAHIT_SUB(p, reads)
-        
-        // 出力は [id, contigs]
         asm = asm_raw.out
     }
 
     // 2. 配列長のフィルタリングとリネーム
-    flt_in = p.combine(
-        asm.map { id, contigs -> tuple(id, contigs, l_thre) }
-    ).map { p_val, id, contigs, length_threshold ->
-        tuple(p_val, id, contigs, length_threshold)
+    flt_in = asm.map { id, contigs -> 
+        tuple(id, contigs, l_thre) 
     }
-
     flt_raw = filter_and_rename(flt_in)
-
-    // 後続プロセス用の入力作成 [ p_val, id, contigs ]
-    flt_seqs = p.combine(
-        flt_raw.map { id, contigs, name -> tuple(id, contigs) }
-    ).map { p_val, id, contigs ->
-        tuple(p_val, id, contigs)
+    flt_seqs = flt_raw.map { id, contigs, name -> 
+        tuple(id, contigs) 
     }
 
-    // 3. 配列長計算、統計取得、BLAST DB作成
+    // 3. 配列長計算、統計取得
     len = get_length(flt_seqs)
-
-    sts_in = p.combine(len).map { p_val, id, len_file ->
-        tuple(p_val, id, len_file)
-    }
-    sts = get_stats(sts_in)
-
-    blstdb = blast_makerefdb(flt_seqs)
-
-    // 4. フィルタリング後のコンティグ配列を1ファイルずつ展開 (flatMap)
-    flt = flt_raw.flatMap { id, contigs, name ->
-        contigs.collect { c ->
-            if (c && c.size() != 0) {
-                return [c.getBaseName(), c]
-            }
-        }.findAll { it != null }
-    }
+    sts = get_stats(len)
 
     emit:
-    asm    = asm
-    flt    = flt
-    len    = len
-    sts    = sts
-    blstdb = blstdb
+    asm      = asm
+    flt_seqs = flt_seqs
+    len      = len
+    sts      = sts
 }
 
 
 // ==========================================
 // 3. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
-
-// A. メインの実行ワークフロー
 workflow ASSEMBLY_ALL {
     p      = createNullParamsChannel()
     reads  = createPairsChannel(params.test_assembly_reads)
@@ -200,15 +160,12 @@ workflow ASSEMBLY_ALL {
 
     out_ch = ASSEMBLY_SUB(p, reads, l_thre)
 
-    // 各出力チャンネルの確認
-    out_ch.asm.view    { i -> "ASM: $i" }
-    out_ch.flt.view    { i -> "FLT: $i" }
-    out_ch.len.view    { i -> "LEN: $i" }
-    out_ch.sts.view    { i -> "STS: $i" }
-    out_ch.blstdb.view { i -> "BLSTDB: $i" }
+    out_ch.asm.view     { i -> "ASM: $i" }
+    out_ch.flt_seq.view { i -> "FLT_SEQ: $i" }
+    out_ch.len.view     { i -> "LEN: $i" }
+    out_ch.sts.view     { i -> "STS: $i" }
 }
 
-// デフォルトエントリーポイント
 workflow {
     ASSEMBLY_ALL()
 }

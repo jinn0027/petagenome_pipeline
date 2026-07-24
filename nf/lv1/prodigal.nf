@@ -39,13 +39,20 @@ process prodigal {
             unpigz -c ${read} > \${read_}
         fi
         mkdir -p ${read_id}
-        prodigal \\
-            -p ${getParam(p, 'prodigal_procedure')} \\
-            -i \${read_} \\
-            -f ${getParam(p, 'prodigal_outfmt')} \\
-            -a ${read_id}/out.faa \\
-            -d ${read_id}/out.fna \\
-            -o ${read_id}/out.${getParam(p, 'prodigal_outfmt')}
+        if [ \$(grep -c '^>' \${read_}) -eq 0 ]; then
+            echo "Warning: \${read_} is empty or contains no reads. Creating empty outputs."
+            touch ${read_id}/out.faa
+            touch ${read_id}/out.fna
+            touch ${read_id}/out.${getParam(p, 'prodigal_outfmt')}
+        else
+            prodigal \\
+                -p ${getParam(p, 'prodigal_procedure')} \\
+                -i \${read_} \\
+                -f ${getParam(p, 'prodigal_outfmt')} \\
+                -a ${read_id}/out.faa \\
+                -d ${read_id}/out.fna \\
+                -o ${read_id}/out.${getParam(p, 'prodigal_outfmt')}
+            fi
         """
 }
 
