@@ -94,27 +94,84 @@ process blastn {
         """
 }
 
-workflow {
-    p = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_blast_ref)
-    qry = createSeqsChannel(params.test_blast_qry)
-    //ref.view { i -> "$i" }
-    //qry.view { i -> "$i" }
-    db_input = p.combine(ref).map {
-        p_val, ref_id, ref_path -> [ p_val, ref_id, ref_path ]
+// ==========================================
+// 1. サブワークフロー（再利用可能な処理の本体）
+// ==========================================
+
+// DB作成処理の本体
+workflow BUILD_DB_SUB {
+    take:
+    p
+    ref
+
+    main:
+    db_input = p.combine(ref).map { p_val, ref_id, ref_path ->
+        tuple(p_val, ref_id, ref_path)
     }
-    //db_input.view { i -> "$i" }
     ref_db = blast_makerefdb(db_input)
-    //ref_db.view { i -> "$i" }
-    in = ref_db.combine(qry).map {
-        ref_id, ref_path, qry_id, qry_path -> [ ref_id, ref_path, qry_id, qry_path ]
-    }
-    //in.view { i -> "$i" }
-    in = p.combine(in).map {
-        p_val, ref_id, ref_path, qry_id, qry_path -> [ p_val, ref_id, ref_path, qry_id, qry_path ]
-    }
-    //in.view { i -> "$i" }
-    out = blastn(in)
-    out.view { i -> "$i" }
+
+    emit:
+    ref_db = ref_db
 }
 
+// BLAST検索処理の本体
+workflow SEARCH_SUB {
+    take:
+    p
+    ref_db
+    qry
+
+    main:
+    in_ch = ref_db.combine(qry).map { ref_id, ref_path, qry_id, qry_path ->
+        tuple(ref_id, ref_path, qry_id, qry_path)
+    }
+    in_ch = p.combine(in_ch).map { p_val, ref_id, ref_path, qry_id, qry_path ->
+        tuple(p_val, ref_id, ref_path, qry_id, qry_path)
+    }
+
+    out = blastn(in_ch)
+
+    emit:
+    out = out
+}
+
+// ==========================================
+// 2. コマンドライン（-entry）用エントリーポイント
+//    ※ take: を持たせず、params からチャンネルを生成する
+// ==========================================
+
+// A. DB作成のみ実行 (-entry BUILD_DB_ONLY)
+workflow BUILD_DB_ONLY {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.test_blast_ref)
+
+    BUILD_DB_SUB(p, ref)
+}
+
+// B. 作成済みDBで検索のみ実行 (-entry SEARCH_ONLY)
+workflow SEARCH_ONLY {
+    p      = createNullParamsChannel()
+    ref_db = createSeqsChannel(params.test_blast_db) // 既存DBのパス指定
+    qry    = createSeqsChannel(params.test_blast_qry)
+
+    out_ch = SEARCH_SUB(p, ref_db, qry)
+    out_ch.out.view { i -> "$i" }
+}
+
+// C. 一括実行 (デフォルト または -entry BLAST_ALL)
+workflow BLAST_ALL {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.test_blast_ref)
+    qry = createSeqsChannel(params.test_blast_qry)
+
+    // DBを作成して、その出力を検索処理へ流し込む
+    db_ch  = BUILD_DB_SUB(p, ref)
+    out_ch = SEARCH_SUB(p, db_ch.ref_db, qry)
+
+    out_ch.out.view { i -> "$i" }
+}
+
+// デフォルトエントリーポイント
+workflow {
+    BLAST_ALL()
+}

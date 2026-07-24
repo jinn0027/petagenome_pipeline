@@ -22,21 +22,24 @@ process fastp {
     input:
         tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
-        tuple val(pair_id), path("${pair_id}/out_{1,2}.fastq", arity: '2')
+        tuple val(pair_id), path("${pair_id}/out_{1,2}.fastq*", arity: '2')
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
         fastp \\
             -w ${threads} \\
+            --detect_adapter_for_pe \\
             --low_complexity_filter \\
             -i ${reads[0]} \\
             -I ${reads[1]} \\
-            -o ${pair_id}/out_1.fastq \\
-            -O ${pair_id}/out_2.fastq \\
+            -o ${pair_id}/out_1.fastq.gz \\
+            -O ${pair_id}/out_2.fastq.gz \\
             --cut_front --cut_tail \\
             --cut_mean_quality ${getParam(p, 'fastp_cut_mean_quality')} \\
-            --length_required ${getParam(p, 'fastp_reads_minlength')}
+            --length_required ${getParam(p, 'fastp_reads_minlength')} \\
+            --json ${pair_id}_fastp.json \\
+            --html ${pair_id}_fastp.html
         """
 }
 
