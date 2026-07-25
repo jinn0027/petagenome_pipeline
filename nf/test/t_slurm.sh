@@ -54,6 +54,8 @@ shortFaaGz1="${dataDir}/1.faa.gz"
 shortFaa2="${dataDir}/2.faa"
 shortFna1="${dataDir}/q.fa"
 
+inPairs="/home/data202502/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+
 args="\
     --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
     --output ${outdir} \
@@ -91,17 +93,18 @@ case ${test} in
         nextflow run ${nfDir}/lv2/remove_host.nf ${args} \
 		 --host_removal_tool "bwa_mem2" \
 		 --host_is_prebuilt_db "true" \
-		 --test_host_prebuilt_db ${extDir}/bwa_db/GRCh38 \
+		 --test_host_prebuilt_db ${extDir}/GRCh38/bwa_db \
                  --test_host_removal_reads "${shortFnqGzPair}"
         ;;
     "aa")
         nextflow run ${nfDir}/lv3/aa.nf ${args} \
 		 --host_removal_tool "bwa_mem2" \
 		 --host_is_prebuilt_db "true" \
-		 --host_ref_fasta_or_db "${extDir}/bwa_db/GRCh38" \
-                 --test_bacteriome_pipeline_reads "${longFnqGzPair}"
+		 --host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db \
+                 --test_bacteriome_pipeline_reads "${inPairs}"
 
 #		 --host_is_prebuilt_db "false" \
+#                 --test_bacteriome_pipeline_reads "${longFnqGzPair}"
 #		 --host_ref_fasta_or_db "${dataDir}/ecoli_1K_1.fa.gz" \
         ;;
     "main")
