@@ -206,7 +206,8 @@ process mmseqs2_search {
     input:
         tuple val(p), val(ref_id), path(ref_db), val(qry_id), path(qry_db)
     output:
-        tuple val(ref_id), path("${qry_id}/out.*")
+        // バイナリではなく、fmt6 形式のテキストファイルを出力するように変更
+        tuple val(ref_id), path("${qry_id}/out.m8")
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
@@ -225,14 +226,25 @@ process mmseqs2_search {
              --split-mode ${getParam(p, 'mmseqs2_cluster_split_mode')} \\
              --split-memory-limit ${getParam(p, 'mmseqs2_cluster_split_memory_limit')} \\
              --sort-results ${getParam(p, 'mmseqs2_search_sort_results')} \\
-                 "
+                "
+        
+        # 1. 検索実行 (バイナリ結果を出力)
         mmseqs search \\
             --threads ${threads} \\
             \${args} \\
             ${qry_db}/qry \\
             ${ref_db}/ref \\
-            ${qry_id}/out \\
+            ${qry_id}/aln_res \\
             tmp
+
+        # 2. バイナリ結果を BLAST fmt6 互換のタブ区切りテキストに変換
+        mmseqs convertalis \\
+            --threads ${threads} \\
+            ${qry_db}/qry \\
+            ${ref_db}/ref \\
+            ${qry_id}/aln_res \\
+            ${qry_id}/out.m8 \\
+            --format-output "query,target,fident,alnlen,mismatch,gapopen,qstart,qend,tstart,tend,evalue,bits"
         """
 }
 
