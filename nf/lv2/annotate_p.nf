@@ -73,7 +73,7 @@ workflow ANNOTATE_TAXID_KO_SUB {
 
     main:
     // A. DB の準備
-    if (params.is_prebuilt_db) {
+    if (params.is_annotate_p_prebuilt_db) {
         db = ref_or_db
     } else {
         db = BUILD_REF_DB_SUB(p, ref_or_db).ref_db
@@ -90,4 +90,45 @@ workflow ANNOTATE_TAXID_KO_SUB {
 
     emit:
     annotated = annotated_out.annotated
+}
+
+// ==========================================
+// テスト・単体実行用エントリーポイント
+// ==========================================
+
+// FASTA からリファレンス DB を構築して検索・アノテーションを行うワークフロー
+workflow ANNOTATE_ALL {
+    p         = createNullParamsChannel()
+    ref_fasta = createSeqsChannel(params.test_annotate_p_ref_fasta)
+    orfs      = createSeqsChannel(params.test_annotate_p_orfs)
+    taxid_map = file(params.test_annotate_p_taxid_map)
+    ko_map    = file(params.test_annotate_p_ko_map)
+
+    params.is_annotate_p_prebuilt_db = false
+
+    out_ch = ANNOTATE_TAXID_KO_SUB(p, ref_fasta, orfs, taxid_map, ko_map)
+    out_ch.annotated.view { i -> "ANNOTATED RESULT: $i" }
+}
+
+// 事前構築済み DB を使用して検索・アノテーションを行うワークフロー
+workflow ANNOTATE_WITH_DB {
+    p         = createNullParamsChannel()
+    ref_db    = createSeqsChannel(params.test_annotate_p_prebuilt_db)
+    orfs      = createSeqsChannel(params.test_annotate_p_orfs)
+    taxid_map = file(params.test_annotate_p_taxid_map)
+    ko_map    = file(params.test_annotate_p_ko_map)
+
+    params.is_annotate_p_prebuilt_db = true
+
+    out_ch = ANNOTATE_TAXID_KO_SUB(p, ref_db, orfs, taxid_map, ko_map)
+    out_ch.annotated.view { i -> "ANNOTATED RESULT (PREBUILT DB): $i" }
+}
+
+// メイン・デフォルトエントリーポイント
+workflow {
+    if (params.is_annotate_p_prebuilt_db) {
+        ANNOTATE_WITH_DB()
+    } else {
+        ANNOTATE_ALL()
+    }
 }

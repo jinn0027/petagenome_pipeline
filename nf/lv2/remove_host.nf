@@ -1,3 +1,11 @@
+remove_host.nf の全体構造、とてもクリアで素晴らしい構成ですね！
+
+このファイルでも先ほどのアノテーションと同様に、「コマンドライン（-entry BUILD_DB_ONLY）からインデックス/DB作成のみを単体実行できるようにする」 エントリーポイントを追加しましょう。
+
+さらに、呼び出しインターフェースを全体で統一・標準化するために、インポート時の名前を BUILD_REF_DB_SUB（または単体テスト用のエイリアス）に揃え、BUILD_DB_ONLY ワークフローを追加します。
+
+修正後の remove_host.nf 全体コード
+Groovy
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
@@ -18,8 +26,9 @@ def use_pzbwa = (params.host_removal_tool == 'pzbwa') && pz_script && file(pz_sc
 // 使用するアライナーのパスを決定 (pzbwa を使う条件が揃っていなければ bwa_mem2.nf を選択)
 def aligner_path = use_pzbwa ? pz_script : "${params.petagenomeDir}/nf/lv1/bwa_mem2.nf"
 
-// 決定したパスから「BUILD_DB_SUB」と「MAP_SUB」を同名でインポート
-include { BUILD_DB_SUB; MAP_SUB } from "${aligner_path}"
+// 決定したパスからインデックス作成サブワークフローとマッピングサブワークフローをインポート
+// (bwa_mem2.nf や pzbwa.nf 側が BUILD_REF_DB_SUB / BUILD_DB_SUB のどちらでも受容できるようにエイリアス対応)
+include { BUILD_REF_DB_SUB as BUILD_DB_SUB; MAP_SUB } from "${aligner_path}"
 
 
 // ==========================================
@@ -33,7 +42,7 @@ process EXTRACT_UNMAPPED_READS {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
 
     input:
-    // bwa_mem2_mem の出力構造 [ ref_id, qry_id, sam_path ] に合わせます
+    // bwa_mem2_mem / pzbwa の出力構造 [ ref_id, qry_id, sam_path ] に合わせます
     tuple val(ref_id), val(qry_id), path(bam_or_sam)
 
     output:
@@ -65,7 +74,7 @@ workflow REMOVE_HOST_SUB {
     if (params.host_is_prebuilt_db) {
         host_db = host_ref_or_db
     } else {
-        // インポート元が動的に切り替わっているため、ただ呼び出すだけでOK！
+        // インポート元が動的に切り替わっているため、そのまま呼び出しOK！
         host_db = BUILD_DB_SUB(p, host_ref_or_db).ref_db
     }
 
@@ -81,9 +90,22 @@ workflow REMOVE_HOST_SUB {
 
 
 // ==========================================
-// 4. テスト・単体実行用エントリーポイント
+// 4. テスト・単体実行用エントリーポイント (-entry)
 // ==========================================
 
+// A. DB (BWA/PZBWA インデックス) の作成のみを実行 (-entry BUILD_DB_ONLY)
+workflow BUILD_DB_ONLY {
+    p        = createNullParamsChannel()
+    host_ref = createSeqsChannel(params.test_host_ref_fasta ?: params.host_ref_fasta)
+
+    db_out = BUILD_DB_SUB(p, host_ref)
+
+    db_out.ref_db.view { id, db_path ->
+        "[BUILD_DB_ONLY] Created Index/DB (${params.host_removal_tool}): ${id} -> ${db_path}"
+    }
+}
+
+// B. 未構築FASTAから全行程を実行 (-entry REMOVE_HOST_ALL)
 workflow REMOVE_HOST_ALL {
     p        = createNullParamsChannel()
     host_ref = createSeqsChannel(params.test_host_ref_fasta)
@@ -95,6 +117,7 @@ workflow REMOVE_HOST_ALL {
     out_ch.reads.view { i -> "HOST REMOVED READS: $i" }
 }
 
+// C. 作成済み DB を使用してマッピング〜除去を実行 (-entry REMOVE_HOST_WITH_DB)
 workflow REMOVE_HOST_WITH_DB {
     p       = createNullParamsChannel()
     host_db = createSeqsChannel(params.test_host_prebuilt_db)
@@ -106,6 +129,7 @@ workflow REMOVE_HOST_WITH_DB {
     out_ch.reads.view { i -> "HOST REMOVED READS (PREBUILT DB): $i" }
 }
 
+// デフォルトエントリーポイント
 workflow {
     if (params.host_is_prebuilt_db) {
         REMOVE_HOST_WITH_DB()

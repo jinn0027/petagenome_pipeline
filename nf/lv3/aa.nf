@@ -6,7 +6,7 @@ include { FASTP_SUB }         from "${params.petagenomeDir}/nf/lv1/fastp.nf"
 include { REMOVE_HOST_SUB } from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
 include { ASSEMBLY_SUB }    from "${params.petagenomeDir}/nf/lv2/assembly.nf"
 include { PRODIGAL_SUB }    from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
-include { ANNOTATE_TAXID_KO_SUB } from "${params.petagenomeDir}/nf/lv2/annotate_taxid_ko_p.nf"
+include { ANNOTATE_TAXID_KO_SUB } from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
 
 
 // ==========================================

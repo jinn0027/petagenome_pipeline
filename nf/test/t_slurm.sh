@@ -77,8 +77,8 @@ args_dbg="\
 
 args+=" ${args_dbg}"
 
-#test=${1:-"remove_host"}
-test=${1:-"aa"}
+test=${1:-"remove_host"}
+#test=${1:-"aa"}
 #test=${1:-"error_correction"}
 #test=${1:-"assembly"}
 #test=${1:-"pool_contigs"}
@@ -89,6 +89,10 @@ nextflow clean -f
 test=${test%.*}
 
 case ${test} in
+    "annotate_p")
+        nextflow run ${nfDir}/lv2/annotate_p.nf ${args} \
+		 --is_annotate_p_prebuilt_db "true" \
+        ;;
     "remove_host")
         nextflow run ${nfDir}/lv2/remove_host.nf ${args} \
 		 --host_removal_tool "bwa_mem2" \
@@ -100,9 +104,8 @@ case ${test} in
         nextflow run ${nfDir}/lv3/aa.nf ${args} \
 		 --host_removal_tool "bwa_mem2" \
 		 --host_is_prebuilt_db "true" \
-		 --host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db \
+		 --host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db" \
                  --test_bacteriome_pipeline_reads "${inPairs}"
-
 #		 --host_is_prebuilt_db "false" \
 #                 --test_bacteriome_pipeline_reads "${longFnqGzPair}"
 #		 --host_ref_fasta_or_db "${dataDir}/ecoli_1K_1.fa.gz" \
