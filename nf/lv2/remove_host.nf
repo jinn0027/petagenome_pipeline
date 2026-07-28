@@ -1,11 +1,3 @@
-remove_host.nf の全体構造、とてもクリアで素晴らしい構成ですね！
-
-このファイルでも先ほどのアノテーションと同様に、「コマンドライン（-entry BUILD_DB_ONLY）からインデックス/DB作成のみを単体実行できるようにする」 エントリーポイントを追加しましょう。
-
-さらに、呼び出しインターフェースを全体で統一・標準化するために、インポート時の名前を BUILD_REF_DB_SUB（または単体テスト用のエイリアス）に揃え、BUILD_DB_ONLY ワークフローを追加します。
-
-修正後の remove_host.nf 全体コード
-Groovy
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
@@ -27,8 +19,7 @@ def use_pzbwa = (params.host_removal_tool == 'pzbwa') && pz_script && file(pz_sc
 def aligner_path = use_pzbwa ? pz_script : "${params.petagenomeDir}/nf/lv1/bwa_mem2.nf"
 
 // 決定したパスからインデックス作成サブワークフローとマッピングサブワークフローをインポート
-// (bwa_mem2.nf や pzbwa.nf 側が BUILD_REF_DB_SUB / BUILD_DB_SUB のどちらでも受容できるようにエイリアス対応)
-include { BUILD_REF_DB_SUB as BUILD_DB_SUB; MAP_SUB } from "${aligner_path}"
+include { BUILD_DB_SUB; MAP_SUB } from "${aligner_path}"
 
 
 // ==========================================
