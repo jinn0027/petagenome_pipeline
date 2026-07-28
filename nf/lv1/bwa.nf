@@ -113,7 +113,7 @@ workflow MAP_SUB {
 // A. DB 作成のみ実行 (-entry BUILD_DB_ONLY)
 workflow BUILD_DB_ONLY {
     p   = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_bwa_ref)
+    ref = createSeqsChannel(params.bwa_ref)
 
     BUILD_DB_SUB(p, ref)
 }
@@ -121,8 +121,8 @@ workflow BUILD_DB_ONLY {
 // B. 作成済み DB を使ってマッピングのみ実行 (-entry MAP_ONLY)
 workflow MAP_ONLY {
     p      = createNullParamsChannel()
-    ref_db = createSeqsChannel(params.test_bwa_db) // 既存のインデックスパス
-    qry    = createSeqsChannel(params.test_bwa_qry)
+    ref_db = createSeqsChannel(params.bwa_db) // 既存のインデックスパス
+    qry    = createSeqsChannel(params.bwa_qry)
 
     out_ch = MAP_SUB(p, ref_db, qry)
     out_ch.out.view { i -> "$i" }
@@ -131,8 +131,8 @@ workflow MAP_ONLY {
 // C. DB作成 〜 マッピングを一括実行 (デフォルト または -entry BWA_ALL)
 workflow BWA_ALL {
     p   = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_bwa_ref)
-    qry = createSeqsChannel(params.test_bwa_qry)
+    ref = createSeqsChannel(params.bwa_ref)
+    qry = createSeqsChannel(params.bwa_qry)
 
     // インデックスを作成してマッピングへ流し込む
     db_ch  = BUILD_DB_SUB(p, ref)

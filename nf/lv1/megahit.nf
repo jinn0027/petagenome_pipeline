@@ -63,7 +63,7 @@ workflow MEGAHIT_SUB {
 // A. メインの実行ワークフロー
 workflow MEGAHIT_ALL {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_megahit_reads)
+    reads = createPairsChannel(params.megahit_reads)
 
     out_ch = MEGAHIT_SUB(p, reads)
     out_ch.out.view { i -> "$i" }

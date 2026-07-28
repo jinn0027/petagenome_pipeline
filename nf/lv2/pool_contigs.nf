@@ -274,8 +274,8 @@ workflow POOL_CONTIGS_SUB {
 // A. メインの実行ワークフロー
 workflow POOL_CONTIGS_ALL {
     p        = createNullParamsChannel()
-    contigs  = createSeqsChannel(params.test_pool_contigs_contigs)
-    l_thresh = params.test_pool_contigs_l_thre
+    contigs  = createSeqsChannel(params.pool_contigs_contigs)
+    l_thresh = params.pool_contigs_l_thre
 
     out_ch = POOL_CONTIGS_SUB(p, contigs, l_thresh)
 

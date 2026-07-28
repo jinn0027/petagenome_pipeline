@@ -71,7 +71,7 @@ workflow METAPHLAN_SUB {
 // A. メインの実行ワークフロー
 workflow METAPHLAN_ALL {
     p    = createNullParamsChannel()
-    read = createSeqsChannel(params.test_metaphlan_read)
+    read = createSeqsChannel(params.metaphlan_read)
 
     out_ch = METAPHLAN_SUB(p, read)
     out_ch.out.view { i -> "$i" }

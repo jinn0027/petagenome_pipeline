@@ -62,7 +62,7 @@ workflow BACTERIOME_PIPELINE_ALL {
     p = createNullParamsChannel()
 
     // 1. 入力リードのチャンネル生成
-    def reads_list = params.test_bacteriome_pipeline_reads.split(';')
+    def reads_list = params.bacteriome_pipeline_reads.split(';')
 
     def individual_channels = reads_list.collect { reads_path ->
         channel.fromFilePairs(reads_path, checkIfExists: true)
@@ -80,8 +80,8 @@ workflow BACTERIOME_PIPELINE_ALL {
     }
 
     // 2. 各種リファレンス・マップファイルの準備
-    host_ref  = createSeqsChannel(params.host_ref_fasta_or_db)
-    ref_or_db = createSeqsChannel(params.annotation_ref_or_db)
+    host_ref  = createSeqsChannel(params.remove_host_ref_fasta_or_db)
+    ref_or_db = createSeqsChannel(params.annotate_p_ref_or_db)
     taxid_map = file(params.taxid_map_path, checkIfExists: true)
     ko_map    = file(params.ko_map_path, checkIfExists: true)
 

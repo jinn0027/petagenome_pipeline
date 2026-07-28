@@ -73,7 +73,7 @@ workflow CDHIT_EST_SUB {
 // A. メインの実行ワークフロー
 workflow CDHIT_EST_ALL {
     p    = createNullParamsChannel()
-    read = createSeqsChannel(params.test_cdhit_read)
+    read = createSeqsChannel(params.cdhit_read)
 
     out_ch = CDHIT_EST_SUB(p, read)
     out_ch.out.view { i -> "$i" }

@@ -120,7 +120,7 @@ workflow SEARCH_SUB {
 // A. DB 作成のみ実行 (-entry BUILD_DB_ONLY)
 workflow BUILD_DB_ONLY {
     p   = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_diamond_ref)
+    ref = createSeqsChannel(params.diamond_ref)
 
     BUILD_DB_SUB(p, ref)
 }
@@ -128,8 +128,8 @@ workflow BUILD_DB_ONLY {
 // B. 作成済み DB を使って検索のみ実行 (-entry SEARCH_ONLY)
 workflow SEARCH_ONLY {
     p      = createNullParamsChannel()
-    ref_db = createSeqsChannel(params.test_diamond_db) // 既存の .dmnd パス
-    qry    = createSeqsChannel(params.test_diamond_qry)
+    ref_db = createSeqsChannel(params.diamond_db) // 既存の .dmnd パス
+    qry    = createSeqsChannel(params.diamond_qry)
 
     out_ch = SEARCH_SUB(p, ref_db, qry)
     out_ch.out.view { i -> "$i" }
@@ -138,8 +138,8 @@ workflow SEARCH_ONLY {
 // C. DB作成 〜 検索を一括実行 (デフォルト または -entry DIAMOND_ALL)
 workflow DIAMOND_ALL {
     p   = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_diamond_ref)
-    qry = createSeqsChannel(params.test_diamond_qry)
+    ref = createSeqsChannel(params.diamond_ref)
+    qry = createSeqsChannel(params.diamond_qry)
 
     // DB を作成して検索処理へ流し込む
     db_ch  = BUILD_DB_SUB(p, ref)

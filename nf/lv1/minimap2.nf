@@ -14,7 +14,7 @@ params.minimap2_ambiguous = "random"
 params.minimap2_minid = 0.95
 params.minimap2_pairlen = 1500
 
-params.test_minimap2_e2e = false
+params.minimap2_e2e = false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -165,7 +165,7 @@ workflow MAP_E2E_SUB {
 // A. DB (Index) 作成のみ実行 (-entry BUILD_DB_ONLY)
 workflow BUILD_DB_ONLY {
     p   = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_minimap2_ref)
+    ref = createSeqsChannel(params.minimap2_ref)
 
     BUILD_DB_SUB(p, ref)
 }
@@ -173,8 +173,8 @@ workflow BUILD_DB_ONLY {
 // B. 作成済み DB を使ってマッピングのみ実行 (-entry MAP_ONLY)
 workflow MAP_ONLY {
     p      = createNullParamsChannel()
-    ref_db = createSeqsChannel(params.test_minimap2_db) // 既存の .mmi パス
-    qry    = createSeqsChannel(params.test_minimap2_qry)
+    ref_db = createSeqsChannel(params.minimap2_db) // 既存の .mmi パス
+    qry    = createSeqsChannel(params.minimap2_qry)
 
     out_ch = MAP_SUB(p, ref_db, qry)
     out_ch.out.view { i -> "$i" }
@@ -183,8 +183,8 @@ workflow MAP_ONLY {
 // C. 直接アライメントのみ実行 (-entry MAP_E2E_ONLY)
 workflow MAP_E2E_ONLY {
     p   = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_minimap2_ref)
-    qry = createSeqsChannel(params.test_minimap2_qry)
+    ref = createSeqsChannel(params.minimap2_ref)
+    qry = createSeqsChannel(params.minimap2_qry)
 
     out_ch = MAP_E2E_SUB(p, ref, qry)
     out_ch.out.view { i -> "$i" }
@@ -193,10 +193,10 @@ workflow MAP_E2E_ONLY {
 // D. フラグ分岐または一括実行 (デフォルト または -entry MINIMAP2_ALL)
 workflow MINIMAP2_ALL {
     p   = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_minimap2_ref)
-    qry = createSeqsChannel(params.test_minimap2_qry)
+    ref = createSeqsChannel(params.minimap2_ref)
+    qry = createSeqsChannel(params.minimap2_qry)
 
-    if (params.test_minimap2_e2e) {
+    if (params.minimap2_e2e) {
         out_ch = MAP_E2E_SUB(p, ref, qry)
         out_ch.out.view { i -> "$i" }
     } else {

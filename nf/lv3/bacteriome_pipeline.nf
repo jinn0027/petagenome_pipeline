@@ -77,10 +77,10 @@ workflow BACTERIOME_PIPELINE_SUB {
 // A. メインの実行ワークフロー
 workflow BACTERIOME_PIPELINE_ALL {
     p      = createNullParamsChannel()
-    l_thre = params.test_bacteriome_pipeline_lthre
+    l_thre = params.bacteriome_pipeline_lthre
 
     // 入力ファイルのパースと Mix 処理
-    def reads_list = params.test_bacteriome_pipeline_reads.split(';')
+    def reads_list = params.bacteriome_pipeline_reads.split(';')
 
     def individual_channels = reads_list.collect { reads_path ->
         channel.fromFilePairs(reads_path, checkIfExists: true)

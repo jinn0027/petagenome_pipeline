@@ -162,8 +162,8 @@ workflow CIRCULAR_CONTIGS_SUB {
     main:
     if (params.use_pzlast) {
         // --- PZLAST モード ---
-        if (params.test_pzlast_cfg1) {
-            cfg1 = Channel.of(file(params.test_pzlast_cfg1))
+        if (params.pzlast_cfg1) {
+            cfg1 = Channel.of(file(params.pzlast_cfg1))
         } else {
             cfg1 = Channel.of('')
         }
@@ -199,8 +199,8 @@ workflow CIRCULAR_CONTIGS_SUB {
         }
 
         // 3. PZLAST DB2 作成 ＋ アライメント 2
-        if (params.test_pzlast_cfg2) {
-            cfg2 = Channel.of(file(params.test_pzlast_cfg2))
+        if (params.pzlast_cfg2) {
+            cfg2 = Channel.of(file(params.pzlast_cfg2))
         } else {
             cfg2 = Channel.of('')
         }
@@ -320,7 +320,7 @@ workflow CIRCULAR_CONTIGS_SUB {
 // A. メインの実行ワークフロー
 workflow CIRCULAR_CONTIGS_ALL {
     p      = createNullParamsChannel()
-    contig = createSeqsChannel(params.test_circular_contigs_contig)
+    contig = createSeqsChannel(params.circular_contigs_contig)
 
     out_ch = CIRCULAR_CONTIGS_SUB(p, contig)
 

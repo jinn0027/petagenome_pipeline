@@ -62,7 +62,7 @@ workflow FALCO_SUB {
 // A. メインの実行ワークフロー
 workflow FALCO_ALL {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_falco_reads)
+    reads = createPairsChannel(params.falco_reads)
 
     out_ch = FALCO_SUB(p, reads)
     out_ch.out.view { i -> "$i" }
@@ -102,7 +102,7 @@ workflow FALCO_SUB {
 // A. メインの実行ワークフロー
 workflow FALCO_ALL {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_falco_reads)
+    reads = createPairsChannel(params.falco_reads)
 
     out_ch = FALCO_SUB(p, reads)
     out_ch.out.view { i -> "$i" }

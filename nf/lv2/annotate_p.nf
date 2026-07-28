@@ -3,7 +3,7 @@ nextflow.enable.dsl=2
 
 // アライナー（mmseqs2 または pzlast）のパスを動的に決定してインポート
 def pzlast_script = (params.containsKey('pzrepoDir') && params.pzrepoDir) ? "${params.pzrepoDir}/nf/lv1/pzlast.nf" : null
-def use_pzlast = (params.annotation_tool == 'pzlast') && pzlast_script && file(pzlast_script).exists()
+def use_pzlast = (params.annotate_p_aligner == 'pzlast') && pzlast_script && file(pzlast_script).exists()
 
 def aligner_path = use_pzlast ? pzlast_script : "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
 include { BUILD_REF_DB_SUB; BUILD_QRY_DB_SUB; SEARCH_SUB } from "${aligner_path}"
@@ -73,7 +73,7 @@ workflow ANNOTATE_TAXID_KO_SUB {
 
     main:
     // A. DB の準備
-    if (params.is_annotate_p_prebuilt_db) {
+    if (params.annotate_p_is_prebuilt_db) {
         db = ref_or_db
     } else {
         db = BUILD_REF_DB_SUB(p, ref_or_db).ref_db
@@ -99,12 +99,12 @@ workflow ANNOTATE_TAXID_KO_SUB {
 // FASTA からリファレンス DB を構築して検索・アノテーションを行うワークフロー
 workflow ANNOTATE_ALL {
     p         = createNullParamsChannel()
-    ref_fasta = createSeqsChannel(params.test_annotate_p_ref_fasta)
-    orfs      = createSeqsChannel(params.test_annotate_p_orfs)
-    taxid_map = file(params.test_annotate_p_taxid_map)
-    ko_map    = file(params.test_annotate_p_ko_map)
+    ref_fasta = createSeqsChannel(params.annotate_p_ref_fasta)
+    orfs      = createSeqsChannel(params.annotate_p_orfs)
+    taxid_map = file(params.annotate_p_taxid_map)
+    ko_map    = file(params.annotate_p_ko_map)
 
-    params.is_annotate_p_prebuilt_db = false
+    params.annotate_p_is_prebuilt_db = false
 
     out_ch = ANNOTATE_TAXID_KO_SUB(p, ref_fasta, orfs, taxid_map, ko_map)
     out_ch.annotated.view { i -> "ANNOTATED RESULT: $i" }
@@ -113,12 +113,12 @@ workflow ANNOTATE_ALL {
 // 事前構築済み DB を使用して検索・アノテーションを行うワークフロー
 workflow ANNOTATE_WITH_DB {
     p         = createNullParamsChannel()
-    ref_db    = createSeqsChannel(params.test_annotate_p_prebuilt_db)
-    orfs      = createSeqsChannel(params.test_annotate_p_orfs)
-    taxid_map = file(params.test_annotate_p_taxid_map)
-    ko_map    = file(params.test_annotate_p_ko_map)
+    ref_db    = createSeqsChannel(params.annotate_p_prebuilt_db)
+    orfs      = createSeqsChannel(params.annotate_p_orfs)
+    taxid_map = file(params.annotate_p_taxid_map)
+    ko_map    = file(params.annotate_p_ko_map)
 
-    params.is_annotate_p_prebuilt_db = true
+    params.annotate_p_is_prebuilt_db = true
 
     out_ch = ANNOTATE_TAXID_KO_SUB(p, ref_db, orfs, taxid_map, ko_map)
     out_ch.annotated.view { i -> "ANNOTATED RESULT (PREBUILT DB): $i" }
@@ -126,7 +126,7 @@ workflow ANNOTATE_WITH_DB {
 
 // メイン・デフォルトエントリーポイント
 workflow {
-    if (params.is_annotate_p_prebuilt_db) {
+    if (params.annotate_p_is_prebuilt_db) {
         ANNOTATE_WITH_DB()
     } else {
         ANNOTATE_ALL()

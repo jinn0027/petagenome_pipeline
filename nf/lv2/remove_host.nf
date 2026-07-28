@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.host_removal_tool = "bwa_mem2"
-params.host_is_prebuilt_db = false
+params.remove_host_aligner = "bwa_mem2"
+params.remove_host_is_prebuilt_db = false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -13,7 +13,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 
 // params.pzrepoDir が安全に設定されており、かつ pzbwa.nf が存在するかチェック
 def pz_script = (params.containsKey('pzrepoDir') && params.pzrepoDir) ? "${params.pzrepoDir}/nf/lv1/pzbwa.nf" : null
-def use_pzbwa = (params.host_removal_tool == 'pzbwa') && pz_script && file(pz_script).exists()
+def use_pzbwa = (params.remove_host_aligner == 'pzbwa') && pz_script && file(pz_script).exists()
 
 // 使用するアライナーのパスを決定 (pzbwa を使う条件が揃っていなければ bwa_mem2.nf を選択)
 def aligner_path = use_pzbwa ? pz_script : "${params.petagenomeDir}/nf/lv1/bwa_mem2.nf"
@@ -62,7 +62,7 @@ workflow REMOVE_HOST_SUB {
 
     main:
     // --- A. DB (インデックス) の準備 ---
-    if (params.host_is_prebuilt_db) {
+    if (params.remove_host_is_prebuilt_db) {
         host_db = host_ref_or_db
     } else {
         // インポート元が動的に切り替わっているため、そのまま呼び出しOK！
@@ -87,22 +87,22 @@ workflow REMOVE_HOST_SUB {
 // A. DB (BWA/PZBWA インデックス) の作成のみを実行 (-entry BUILD_DB_ONLY)
 workflow BUILD_DB_ONLY {
     p        = createNullParamsChannel()
-    host_ref = createSeqsChannel(params.test_host_ref_fasta ?: params.host_ref_fasta)
+    host_ref = createSeqsChannel(params.remove_host_ref_fasta ?: params.host_ref_fasta)
 
     db_out = BUILD_DB_SUB(p, host_ref)
 
     db_out.ref_db.view { id, db_path ->
-        "[BUILD_DB_ONLY] Created Index/DB (${params.host_removal_tool}): ${id} -> ${db_path}"
+        "[BUILD_DB_ONLY] Created Index/DB (${params.remove_host_aligner}): ${id} -> ${db_path}"
     }
 }
 
 // B. 未構築FASTAから全行程を実行 (-entry REMOVE_HOST_ALL)
 workflow REMOVE_HOST_ALL {
     p        = createNullParamsChannel()
-    host_ref = createSeqsChannel(params.test_host_ref_fasta)
-    reads    = createPairsChannel(params.test_host_removal_reads)
+    host_ref = createSeqsChannel(params.remove_host_ref_fasta)
+    reads    = createPairsChannel(params.remove_host_reads)
 
-    params.host_is_prebuilt_db = false
+    params.remove_host_is_prebuilt_db = false
 
     out_ch = REMOVE_HOST_SUB(p, host_ref, reads)
     out_ch.reads.view { i -> "HOST REMOVED READS: $i" }
@@ -111,10 +111,10 @@ workflow REMOVE_HOST_ALL {
 // C. 作成済み DB を使用してマッピング〜除去を実行 (-entry REMOVE_HOST_WITH_DB)
 workflow REMOVE_HOST_WITH_DB {
     p       = createNullParamsChannel()
-    host_db = createSeqsChannel(params.test_host_prebuilt_db)
-    reads   = createPairsChannel(params.test_host_removal_reads)
+    host_db = createSeqsChannel(params.remove_host_prebuilt_db)
+    reads   = createPairsChannel(params.remove_host_reads)
 
-    params.host_is_prebuilt_db = true
+    params.remove_host_is_prebuilt_db = true
 
     out_ch = REMOVE_HOST_SUB(p, host_db, reads)
     out_ch.reads.view { i -> "HOST REMOVED READS (PREBUILT DB): $i" }
@@ -122,7 +122,7 @@ workflow REMOVE_HOST_WITH_DB {
 
 // デフォルトエントリーポイント
 workflow {
-    if (params.host_is_prebuilt_db) {
+    if (params.remove_host_is_prebuilt_db) {
         REMOVE_HOST_WITH_DB()
     } else {
         REMOVE_HOST_ALL()

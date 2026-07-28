@@ -87,7 +87,7 @@ workflow VIRSORTER_SUB {
 // A. メインの実行ワークフロー
 workflow VIRSORTER_ALL {
     p    = createNullParamsChannel()
-    read = createSeqsChannel(params.test_virsorter_read)
+    read = createSeqsChannel(params.virsorter_read)
 
     out_ch = VIRSORTER_SUB(p, read)
     out_ch.out.view { i -> "$i" }

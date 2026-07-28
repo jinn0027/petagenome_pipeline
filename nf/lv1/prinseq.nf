@@ -97,7 +97,7 @@ workflow PRINSEQ_SUB {
 // A. メインの実行ワークフロー
 workflow PRINSEQ_ALL {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_prinseq_reads)
+    reads = createPairsChannel(params.prinseq_reads)
 
     out_ch = PRINSEQ_SUB(p, reads)
     out_ch.out.view { i -> "$i" }

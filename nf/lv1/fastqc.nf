@@ -64,7 +64,7 @@ workflow FASTQC_SUB {
 // A. メインの実行ワークフロー
 workflow FASTQC_ALL {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_fastqc_reads)
+    reads = createPairsChannel(params.fastqc_reads)
 
     out_ch = FASTQC_SUB(p, reads)
     out_ch.out.view { i -> "$i" }

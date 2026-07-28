@@ -15,7 +15,7 @@ params.spades_spades_e2e_threads = params.threads
 
 params.spades_error_correction_threads = params.threads
 params.spades_error_correction_memory = params.memory
-params.test_spades_e2e = false
+params.spades_e2e = false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -204,7 +204,7 @@ workflow SPADES_STEPWISE_SUB {
 // A. End-to-End 実行のみ (-entry SPADES_E2E_ONLY)
 workflow SPADES_E2E_ONLY {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_spades_reads)
+    reads = createPairsChannel(params.spades_reads)
 
     out_ch = SPADES_E2E_SUB(p, reads)
     out_ch.out.view { i -> "$i" }
@@ -213,7 +213,7 @@ workflow SPADES_E2E_ONLY {
 // B. エラー修正〜アセンブリ分割実行のみ (-entry SPADES_STEPWISE_ONLY)
 workflow SPADES_STEPWISE_ONLY {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_spades_reads)
+    reads = createPairsChannel(params.spades_reads)
 
     out_ch = SPADES_STEPWISE_SUB(p, reads)
     out_ch.out.view { i -> "$i" }
@@ -222,9 +222,9 @@ workflow SPADES_STEPWISE_ONLY {
 // C. 条件分岐または一括実行 (デフォルト または -entry SPADES_ALL)
 workflow SPADES_ALL {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_spades_reads)
+    reads = createPairsChannel(params.spades_reads)
 
-    if (params.test_spades_e2e) {
+    if (params.spades_e2e) {
         out_ch = SPADES_E2E_SUB(p, reads)
         out_ch.out.view { i -> "$i" }
     } else {

@@ -86,7 +86,7 @@ workflow PRODIGAL_SUB {
 // A. メインの実行ワークフロー
 workflow PRODIGAL_ALL {
     p    = createNullParamsChannel()
-    read = createSeqsChannel(params.test_prodigal_read)
+    read = createSeqsChannel(params.prodigal_read)
 
     out_ch = PRODIGAL_SUB(p, read)
     out_ch.out.view { i -> "$i" }

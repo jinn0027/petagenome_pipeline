@@ -73,7 +73,7 @@ workflow FASTP_SUB {
 // A. メインの実行ワークフロー
 workflow FASTP_ALL {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_fastp_reads)
+    reads = createPairsChannel(params.fastp_reads)
 
     out_ch = FASTP_SUB(p, reads)
     out_ch.out.view { i -> "$i" }

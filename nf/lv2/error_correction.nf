@@ -83,7 +83,7 @@ workflow ERROR_CORRECTION_SUB {
 // A. メインの実行ワークフロー
 workflow ERROR_CORRECTION_ALL {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_error_correction_reads)
+    reads = createPairsChannel(params.error_correction_reads)
 
     out_ch = ERROR_CORRECTION_SUB(p, reads)
 

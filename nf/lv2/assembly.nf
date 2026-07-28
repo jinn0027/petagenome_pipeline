@@ -155,8 +155,8 @@ workflow ASSEMBLY_SUB {
 // ==========================================
 workflow ASSEMBLY_ALL {
     p      = createNullParamsChannel()
-    reads  = createPairsChannel(params.test_assembly_reads)
-    l_thre = params.containsKey('test_assembly_l_thre') ? params.test_assembly_l_thre : 1000
+    reads  = createPairsChannel(params.assembly_reads)
+    l_thre = params.containsKey('assembly_l_thre') ? params.assembly_l_thre : 1000
 
     out_ch = ASSEMBLY_SUB(p, reads, l_thre)
 

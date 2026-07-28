@@ -144,7 +144,7 @@ workflow SEARCH_SUB {
 // A. DB作成のみ実行 (-entry BUILD_DB_ONLY)
 workflow BUILD_DB_ONLY {
     p   = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_blast_ref)
+    ref = createSeqsChannel(params.blast_ref)
 
     BUILD_DB_SUB(p, ref)
 }
@@ -152,8 +152,8 @@ workflow BUILD_DB_ONLY {
 // B. 作成済みDBで検索のみ実行 (-entry SEARCH_ONLY)
 workflow SEARCH_ONLY {
     p      = createNullParamsChannel()
-    ref_db = createSeqsChannel(params.test_blast_db) // 既存DBのパス指定
-    qry    = createSeqsChannel(params.test_blast_qry)
+    ref_db = createSeqsChannel(params.blast_db) // 既存DBのパス指定
+    qry    = createSeqsChannel(params.blast_qry)
 
     out_ch = SEARCH_SUB(p, ref_db, qry)
     out_ch.out.view { i -> "$i" }
@@ -162,8 +162,8 @@ workflow SEARCH_ONLY {
 // C. 一括実行 (デフォルト または -entry BLAST_ALL)
 workflow BLAST_ALL {
     p   = createNullParamsChannel()
-    ref = createSeqsChannel(params.test_blast_ref)
-    qry = createSeqsChannel(params.test_blast_qry)
+    ref = createSeqsChannel(params.blast_ref)
+    qry = createSeqsChannel(params.blast_qry)
 
     // DBを作成して、その出力を検索処理へ流し込む
     db_ch  = BUILD_DB_SUB(p, ref)

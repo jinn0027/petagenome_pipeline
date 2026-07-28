@@ -69,7 +69,7 @@ workflow CUTADAPT_SUB {
 // A. メインの実行ワークフロー
 workflow CUTADAPT_ALL {
     p     = createNullParamsChannel()
-    reads = createPairsChannel(params.test_cutadapt_reads)
+    reads = createPairsChannel(params.cutadapt_reads)
 
     out_ch = CUTADAPT_SUB(p, reads)
     out_ch.out.view { i -> "$i" }
