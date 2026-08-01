@@ -68,7 +68,7 @@ process bowtie {
 // ==========================================
 
 // Bowtie リファレンス DB (Index) 作成処理の本体
-workflow BUILD_DB_SUB {
+workflow BUILD_REF_DB_SUB {
     take:
     p
     ref
@@ -113,12 +113,12 @@ workflow MAP_SUB {
 // 2. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
 
-// A. DB 作成のみ実行 (-entry BUILD_DB_ONLY)
-workflow BUILD_DB_ONLY {
+// A. DB 作成のみ実行 (-entry BUILD_REF_DB_ONLY)
+workflow BUILD_REF_DB_ONLY {
     p   = createNullParamsChannel()
     ref = createSeqsChannel(params.bowtie_ref)
 
-    BUILD_DB_SUB(p, ref)
+    BUILD_REF_DB_SUB(p, ref)
 }
 
 // B. 作成済み DB を使ってマッピングのみ実行 (-entry MAP_ONLY)
@@ -138,7 +138,7 @@ workflow BOWTIE_ALL {
     qry = createSeqsChannel(params.bowtie_qry)
 
     // インデックスを作成してマッピングへ流し込む
-    db_ch  = BUILD_DB_SUB(p, ref)
+    db_ch  = BUILD_REF_DB_SUB(p, ref)
     out_ch = MAP_SUB(p, db_ch.ref_db, qry)
 
     out_ch.out.view { i -> "$i" }

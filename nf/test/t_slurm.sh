@@ -138,7 +138,7 @@ case ${test} in
                  --bbmap_reads "${shortFnqGzPair}"
         ;;
     "blast")
-        #nextflow run ${nfDir}/lv1/blast.nf -entry BUILD_DB_ONLY ${args} \
+        #nextflow run ${nfDir}/lv1/blast.nf -entry BUILD_REF_DB_ONLY ${args} \
 	    nextflow run ${nfDir}/lv1/blast.nf ${args} \
                  --blast_ref "${longFnaGz1}" \
                  --blast_qry "${shortFna1}"

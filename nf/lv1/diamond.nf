@@ -72,7 +72,7 @@ process diamond_blastp {
 // ==========================================
 
 // DIAMOND DB (.dmnd) 作成処理の本体
-workflow BUILD_DB_SUB {
+workflow BUILD_REF_DB_SUB {
     take:
     p
     ref
@@ -89,7 +89,7 @@ workflow BUILD_DB_SUB {
 }
 
 // DIAMOND 検索処理 (diamond blastp) の本体
-workflow SEARCH_SUB {
+workflow MAP_SUB {
     take:
     p
     ref_db
@@ -117,21 +117,21 @@ workflow SEARCH_SUB {
 // 2. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
 
-// A. DB 作成のみ実行 (-entry BUILD_DB_ONLY)
-workflow BUILD_DB_ONLY {
+// A. DB 作成のみ実行 (-entry BUILD_REF_DB_ONLY)
+workflow BUILD_REF_DB_ONLY {
     p   = createNullParamsChannel()
     ref = createSeqsChannel(params.diamond_ref)
 
-    BUILD_DB_SUB(p, ref)
+    BUILD_REF_DB_SUB(p, ref)
 }
 
-// B. 作成済み DB を使って検索のみ実行 (-entry SEARCH_ONLY)
-workflow SEARCH_ONLY {
+// B. 作成済み DB を使って検索のみ実行 (-entry MAP_ONLY)
+workflow MAP_ONLY {
     p      = createNullParamsChannel()
     ref_db = createSeqsChannel(params.diamond_db) // 既存の .dmnd パス
     qry    = createSeqsChannel(params.diamond_qry)
 
-    out_ch = SEARCH_SUB(p, ref_db, qry)
+    out_ch = MAP_SUB(p, ref_db, qry)
     out_ch.out.view { i -> "$i" }
 }
 
@@ -142,8 +142,8 @@ workflow DIAMOND_ALL {
     qry = createSeqsChannel(params.diamond_qry)
 
     // DB を作成して検索処理へ流し込む
-    db_ch  = BUILD_DB_SUB(p, ref)
-    out_ch = SEARCH_SUB(p, db_ch.ref_db, qry)
+    db_ch  = BUILD_REF_DB_SUB(p, ref)
+    out_ch = MAP_SUB(p, db_ch.ref_db, qry)
 
     out_ch.out.view { i -> "$i" }
 }

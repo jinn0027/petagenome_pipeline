@@ -6,7 +6,7 @@ def pzlast_script = (params.containsKey('pzrepoDir') && params.pzrepoDir) ? "${p
 def use_pzlast = (params.annotate_p_aligner == 'pzlast') && pzlast_script && file(pzlast_script).exists()
 
 def aligner_path = use_pzlast ? pzlast_script : "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
-include { BUILD_REF_DB_SUB; BUILD_QRY_DB_SUB; SEARCH_SUB } from "${aligner_path}"
+include { BUILD_REF_DB_SUB; BUILD_QRY_DB_SUB; MAP_SUB } from "${aligner_path}"
 
 // Python によるアノテーション結合プロセス
 process ANNOTATE_ORFS {
@@ -83,7 +83,7 @@ workflow ANNOTATE_TAXID_KO_SUB {
     qry_db = BUILD_QRY_DB_SUB(p, orfs)
 
     // C. 相同性検索 (fmt6/m8 形式)
-    search_out = SEARCH_SUB(p, db, qry_db.qry_db) // 出力: [ ref_id, qry_id, out.m8 ]
+    search_out = MAP_SUB(p, db, qry_db.qry_db) // 出力: [ ref_id, qry_id, out.m8 ]
 
     // D. TaxID / KO の紐づけ
     annotated_out = ANNOTATE_ORFS(search_out, taxid_map, ko_map)

@@ -99,7 +99,7 @@ process blastn {
 // ==========================================
 
 // DB作成処理の本体
-workflow BUILD_DB_SUB {
+workflow BUILD_REF_DB_SUB {
     take:
     p
     ref
@@ -115,7 +115,7 @@ workflow BUILD_DB_SUB {
 }
 
 // BLAST検索処理の本体
-workflow SEARCH_SUB {
+workflow MAP_SUB {
     take:
     p
     ref_db
@@ -141,21 +141,21 @@ workflow SEARCH_SUB {
 //    ※ take: を持たせず、params からチャンネルを生成する
 // ==========================================
 
-// A. DB作成のみ実行 (-entry BUILD_DB_ONLY)
-workflow BUILD_DB_ONLY {
+// A. DB作成のみ実行 (-entry BUILD_REF_DB_ONLY)
+workflow BUILD_REF_DB_ONLY {
     p   = createNullParamsChannel()
     ref = createSeqsChannel(params.blast_ref)
 
-    BUILD_DB_SUB(p, ref)
+    BUILD_REF_DB_SUB(p, ref)
 }
 
-// B. 作成済みDBで検索のみ実行 (-entry SEARCH_ONLY)
-workflow SEARCH_ONLY {
+// B. 作成済みDBで検索のみ実行 (-entry MAP_ONLY)
+workflow MAP_ONLY {
     p      = createNullParamsChannel()
     ref_db = createSeqsChannel(params.blast_db) // 既存DBのパス指定
     qry    = createSeqsChannel(params.blast_qry)
 
-    out_ch = SEARCH_SUB(p, ref_db, qry)
+    out_ch = MAP_SUB(p, ref_db, qry)
     out_ch.out.view { i -> "$i" }
 }
 
@@ -166,8 +166,8 @@ workflow BLAST_ALL {
     qry = createSeqsChannel(params.blast_qry)
 
     // DBを作成して、その出力を検索処理へ流し込む
-    db_ch  = BUILD_DB_SUB(p, ref)
-    out_ch = SEARCH_SUB(p, db_ch.ref_db, qry)
+    db_ch  = BUILD_REF_DB_SUB(p, ref)
+    out_ch = MAP_SUB(p, db_ch.ref_db, qry)
 
     out_ch.out.view { i -> "$i" }
 }

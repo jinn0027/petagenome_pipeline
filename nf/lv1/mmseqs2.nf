@@ -285,7 +285,7 @@ workflow BUILD_QRY_DB_SUB {
 }
 
 // MMseqs2 Search 処理の本体
-workflow SEARCH_SUB {
+workflow MAP_SUB {
     take:
     p
     ref_db
@@ -330,22 +330,22 @@ workflow CLUSTER_SUB {
 // 2. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
 
-// A. DB 作成のみ実行 (-entry BUILD_DB_ONLY)
-workflow BUILD_DB_ONLY {
+// A. DB 作成のみ実行 (-entry BUILD_REF_DB_ONLY)
+workflow BUILD_REF_DB_ONLY {
     p   = createNullParamsChannel()
     ref = createSeqsChannel(params.mmseqs2_ref)
 
     BUILD_REF_DB_SUB(p, ref)
 }
 
-// B. 作成済み DB を使って Search のみ実行 (-entry SEARCH_ONLY)
-workflow SEARCH_ONLY {
+// B. 作成済み DB を使って Search のみ実行 (-entry MAP_ONLY)
+workflow MAP_ONLY {
     p      = createNullParamsChannel()
     ref_db = createSeqsChannel(params.mmseqs2_db)
     qry    = createSeqsChannel(params.mmseqs2_qry)
 
     qry_db = BUILD_QRY_DB_SUB(p, qry)
-    out_ch = SEARCH_SUB(p, ref_db, qry_db.qry_db)
+    out_ch = MAP_SUB(p, ref_db, qry_db.qry_db)
 
     out_ch.out.view { i -> "$i" }
 }
@@ -370,7 +370,7 @@ workflow MMSEQS2_ALL {
         qry       = createSeqsChannel(params.mmseqs2_qry)
         qry_db_ch = BUILD_QRY_DB_SUB(p, qry)
 
-        out_ch = SEARCH_SUB(p, ref_db_ch.ref_db, qry_db_ch.qry_db)
+        out_ch = MAP_SUB(p, ref_db_ch.ref_db, qry_db_ch.qry_db)
         out_ch.out.view { i -> "$i" }
 
     } else if (params.mmseqs2_module == "cluster") {

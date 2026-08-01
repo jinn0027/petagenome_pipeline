@@ -19,7 +19,7 @@ def use_pzbwa = (params.remove_host_aligner == 'pzbwa') && pz_script && file(pz_
 def aligner_path = use_pzbwa ? pz_script : "${params.petagenomeDir}/nf/lv1/bwa_mem2.nf"
 
 // 決定したパスからインデックス作成サブワークフローとマッピングサブワークフローをインポート
-include { BUILD_DB_SUB; MAP_SUB } from "${aligner_path}"
+include { BUILD_REF_DB_SUB; MAP_SUB } from "${aligner_path}"
 
 
 // ==========================================
@@ -66,7 +66,7 @@ workflow REMOVE_HOST_SUB {
         host_db = host_ref_or_db
     } else {
         // インポート元が動的に切り替わっているため、そのまま呼び出しOK！
-        host_db = BUILD_DB_SUB(p, host_ref_or_db).ref_db
+        host_db = BUILD_REF_DB_SUB(p, host_ref_or_db).ref_db
     }
 
     // --- B. マッピングの実行 ---
@@ -84,15 +84,15 @@ workflow REMOVE_HOST_SUB {
 // 4. テスト・単体実行用エントリーポイント (-entry)
 // ==========================================
 
-// A. DB (BWA/PZBWA インデックス) の作成のみを実行 (-entry BUILD_DB_ONLY)
-workflow BUILD_DB_ONLY {
+// A. DB (BWA/PZBWA インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
+workflow BUILD_REF_DB_ONLY {
     p        = createNullParamsChannel()
     host_ref = createSeqsChannel(params.remove_host_ref_fasta ?: params.host_ref_fasta)
 
-    db_out = BUILD_DB_SUB(p, host_ref)
+    db_out = BUILD_REF_DB_SUB(p, host_ref)
 
     db_out.ref_db.view { id, db_path ->
-        "[BUILD_DB_ONLY] Created Index/DB (${params.remove_host_aligner}): ${id} -> ${db_path}"
+        "[BUILD_REF_DB_ONLY] Created Index/DB (${params.remove_host_aligner}): ${id} -> ${db_path}"
     }
 }
 
