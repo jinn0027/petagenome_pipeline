@@ -1,12 +1,18 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+params.annotate_p_aligner = "mmseqs2"
+params.annotate_p_is_prebuilt_db = false
+
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
+    from "${params.petagenomeDir}/nf/common/utils"
+
 // アライナー（mmseqs2 または pzlast）のパスを動的に決定してインポート
 def pzlast_script = (params.containsKey('pzrepoDir') && params.pzrepoDir) ? "${params.pzrepoDir}/nf/lv1/pzlast.nf" : null
 def use_pzlast = (params.annotate_p_aligner == 'pzlast') && pzlast_script && file(pzlast_script).exists()
 
 def aligner_path = use_pzlast ? pzlast_script : "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
-include { BUILD_REF_DB_SUB; BUILD_QRY_DB_SUB; MAP_SUB } from "${aligner_path}"
+include { BUILD_REF_DB_SUB; MAP_SUB } from "${aligner_path}"
 
 // Python によるアノテーション結合プロセス
 process ANNOTATE_ORFS {
@@ -81,11 +87,8 @@ workflow ANNOTATE_TAXID_KO_SUB {
         db = BUILD_REF_DB_SUB(p, ref_or_db).ref_db
     }
 
-    // B. クエリDBの作成
-    qry_db = BUILD_QRY_DB_SUB(p, orfs)
-
     // C. 相同性検索 (fmt6/m8 形式)
-    search_out = MAP_SUB(p, db, qry_db.qry_db) // 出力: [ ref_id, qry_id, out.m8 ]
+    search_out = MAP_SUB(p, db, orfs) // 出力: [ ref_id, qry_id, out.m8 ]
 
     // D. TaxID / KO の紐づけ
     annotated_out = ANNOTATE_ORFS(search_out, taxid_map, ko_map)
@@ -98,7 +101,19 @@ workflow ANNOTATE_TAXID_KO_SUB {
 // テスト・単体実行用エントリーポイント
 // ==========================================
 
-// FASTA からリファレンス DB を構築して検索・アノテーションを行うワークフロー
+// A. DB (BWA/PZBWA インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
+workflow BUILD_REF_DB_ONLY {
+    p        = createNullParamsChannel()
+    annotate_p_ref = createSeqsChannel(params.annotate_p_ref_fasta ?: params.annotate_p_ref_fasta)
+
+    db_out = BUILD_REF_DB_SUB(p, annotate_p_ref)
+
+    db_out.ref_db.view { id, db_path ->
+        "[BUILD_REF_DB_ONLY] Created Index/DB (${params.annotate_p_aligner}): ${id} -> ${db_path}"
+    }
+}
+
+// B. FASTA からリファレンス DB を構築して検索・アノテーションを行うワークフロー
 workflow ANNOTATE_ALL {
     p         = createNullParamsChannel()
     ref_fasta = createSeqsChannel(params.annotate_p_ref_fasta)
@@ -112,7 +127,7 @@ workflow ANNOTATE_ALL {
     out_ch.annotated.view { i -> "ANNOTATED RESULT: $i" }
 }
 
-// 事前構築済み DB を使用して検索・アノテーションを行うワークフロー
+// C. 事前構築済み DB を使用して検索・アノテーションを行うワークフロー
 workflow ANNOTATE_WITH_DB {
     p         = createNullParamsChannel()
     ref_db    = createSeqsChannel(params.annotate_p_prebuilt_db)

@@ -94,57 +94,67 @@ case ${test} in
                  --fastp_reads "${shortFnqGzPair}"
         ;;
     "remove_host")
-	db=${extDir}/GRCh38/bwa_db
-	if [ ! -d ${db} ] ; then
-	    ref=${extDir}/GRCh38/GCF_000001405.40_GRCh38.p14_genomic.fna.gz
-	    if [ ! -f ${ref} ] ; then
-		echo "Error : ${ref} not found."
-		echo "Please download as:"
+        db=${extDir}/GRCh38/bwa_db
+        if [ ! -d ${db} ] ; then
+            ref=${extDir}/GRCh38/GCF_000001405.40_GRCh38.p14_genomic.fna.gz
+            if [ ! -f ${ref} ] ; then
+                echo "Error : ${ref} not found."
+                echo "Please download as:"
                 echo "wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz"
-		exit 1
-	    fi
+                exit 1
+            fi
             nextflow run ${nfDir}/lv2/remove_host.nf -entry BUILD_REF_DB_ONLY ${args} \
-		     --remove_host_aligner "bwa_mem2" \
+                     --remove_host_aligner "bwa_mem2" \
                      --remove_host_ref_fasta "${ref}"
-	    mv ${outdir}/BUILD_REF_DB_ONLY:BUILD_REF_DB_SUB:bwa_mem2_makerefdb/00_GCF ${db}
-	fi
+            mv ${outdir}/BUILD_REF_DB_ONLY:BUILD_REF_DB_SUB:bwa_mem2_makerefdb/00_GCF ${db}
+        fi
         nextflow run ${nfDir}/lv2/remove_host.nf -entry REMOVE_HOST_WITH_DB ${args} \
-		 --remove_host_aligner "bwa_mem2" \
-		 --remove_host_is_prebuilt_db "true" \
-		 --remove_host_prebuilt_db ${db} \
+                 --remove_host_aligner "bwa_mem2" \
+                 --remove_host_is_prebuilt_db "true" \
+                 --remove_host_prebuilt_db ${db} \
                  --remove_host_reads "${shortFnqGzPair}"
         ;;
     "assembly")
         nextflow run ${nfDir}/lv2/assembly.nf -entry ASSEMBLY_ALL ${args} \
-		 --assembly_assembler "megahit" \
+                 --assembly_assembler "megahit" \
                  --assembly_l_thre 10 \
                  --assembly_reads "${longFnqGzPair}"
         ;;
     "prodigal")
         nextflow run ${nfDir}/lv1/prodigal.nf -entry PRODIGAL_ALL ${args} \
-		 --prodigal_procedure "meta" \
+                 --prodigal_procedure "meta" \
                  --prodigal_read "${longFnaGz1}"
         ;;
     "annotate_p")
-        nextflow run ${nfDir}/lv2/annotate_p.nf ${args} \
-		 --is_annotate_p_prebuilt_db "true" \
-        ;;
-    "remove_host")
-        nextflow run ${nfDir}/lv2/remove_host.nf ${args} \
-		 --remove_host_aligner "bwa_mem2" \
-		 --remove_host_is_prebuilt_db "true" \
-		 --remove_host_prebuilt_db ${extDir}/GRCh38/bwa_db \
-                 --remove_host_reads "${shortFnqGzPair}"
+        db=${extDir}/uniprot_refs/mmseqs2
+        if [ ! -d ${db} ] ; then
+            mkdir -p $(dirname ${db})
+            ref=${extDir}/uniprot_refs/uniprot_sprot.fasta.gz 
+            nextflow run ${nfDir}/lv2/annotate_p.nf -entry BUILD_REF_DB_ONLY ${args} \
+                     --annotate_p_aligner mmseqs2 \
+                     --annotate_p_ref_fasta ${ref} \
+		     --mmseqs2_ref_type 1
+            mv ${outdir}/BUILD_REF_DB_ONLY:BUILD_REF_DB_SUB:mmseqs2_makerefdb/00_uniprot ${db}
+        fi
+        nextflow run ${nfDir}/lv2/annotate_p.nf -entry ANNOTATE_WITH_DB ${args} \
+                 --annotate_p_aligner mmseqs2 \
+                 --annotate_p_is_prebuilt_db "true" \
+                 --annotate_p_prebuilt_db ${db} \
+                 --annotate_p_orfs ${shortFnaGz1} \
+		 --annotate_p_taxid_map ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
+		 --annotate_p_ko_map ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
+                 --mmseqs2_ref_type 1 \
+                 --mmseqs2_qry_type 1
         ;;
     "aa")
         nextflow run ${nfDir}/lv3/aa.nf ${args} \
-		 --remove_host_aligner "bwa_mem2" \
-		 --remove_host_is_prebuilt_db "true" \
-		 --remove_host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db" \
+                 --remove_host_aligner "bwa_mem2" \
+                 --remove_host_is_prebuilt_db "true" \
+                 --remove_host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db" \
          --bacteriome_pipeline_reads "${inPairs}"
-#		 --host_is_prebuilt_db "false" \
+#                 --host_is_prebuilt_db "false" \
 #                 --bacteriome_pipeline_reads "${longFnqGzPair}"
-#		 --host_ref_fasta_or_db "${dataDir}/ecoli_1K_1.fa.gz" \
+#                 --host_ref_fasta_or_db "${dataDir}/ecoli_1K_1.fa.gz" \
         ;;
     "main")
         nextflow run ${nfDir}/toys/main.nf ${args} \
@@ -170,7 +180,7 @@ case ${test} in
         ;;
     "blast")
         #nextflow run ${nfDir}/lv1/blast.nf -entry BUILD_REF_DB_ONLY ${args} \
-	    nextflow run ${nfDir}/lv1/blast.nf ${args} \
+            nextflow run ${nfDir}/lv1/blast.nf ${args} \
                  --blast_ref "${longFnaGz1}" \
                  --blast_qry "${shortFna1}"
         ;;
@@ -282,13 +292,13 @@ if [ -f trace.${date}.txt ] ; then
 
     while read line
     do
-	hash=$(echo $line | awk '{print($2)}')
-	if [ "${hash}" = "hash" ] ; then
-	    echo "hostname" > _
-	    continue
-	fi
-	hostname=$(head -n 1 ${workDir}/${hash}*/.command.log | awk '{print($5)}')
-	echo ${hostname} >> _
+        hash=$(echo $line | awk '{print($2)}')
+        if [ "${hash}" = "hash" ] ; then
+            echo "hostname" > _
+            continue
+        fi
+        hostname=$(head -n 1 ${workDir}/${hash}*/.command.log | awk '{print($5)}')
+        echo ${hostname} >> _
     done<trace.${date}.txt
 
     paste _ trace.${date}.txt > __

@@ -98,6 +98,10 @@ process mmseqs2_makerefdb {
             --dbtype ${getParam(p, 'mmseqs2_ref_type')} \\
             ${ref} \\
             ${ref_id}/ref
+        mmseqs createindex \\
+            ${ref_id}/ref \\
+            tmp \\
+            --threads ${threads}
         """
 }
 
@@ -210,8 +214,8 @@ process mmseqs2_search {
     input:
         tuple val(p), val(ref_id), path(ref_db), val(qry_id), path(qry_db)
     output:
-        // バイナリではなく、fmt6 形式のテキストファイルを出力するように変更
-        tuple val(ref_id), path("${qry_id}/out.m8")
+        // fmt6 形式のテキストファイルを出力する
+        tuple val(ref_id), val(qry_id), path("${qry_id}/out.m8")
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
@@ -293,9 +297,11 @@ workflow MAP_SUB {
     take:
     p
     ref_db
-    qry_db
+    qry
 
     main:
+    qry_db = BUILD_QRY_DB_SUB(p, qry)
+    
     // ref_db と qry_db を結合してフラット化
     in_ch = ref_db.combine(qry_db).map { ref_id, ref_path, qry_id, qry_path ->
         tuple(ref_id, ref_path, qry_id, qry_path)
@@ -348,8 +354,7 @@ workflow MAP_ONLY {
     ref_db = createSeqsChannel(params.mmseqs2_db)
     qry    = createSeqsChannel(params.mmseqs2_qry)
 
-    qry_db = BUILD_QRY_DB_SUB(p, qry)
-    out_ch = MAP_SUB(p, ref_db, qry_db.qry_db)
+    out_ch = MAP_SUB(p, ref_db, qry)
 
     out_ch.out.view { i -> "$i" }
 }
@@ -372,9 +377,7 @@ workflow MMSEQS2_ALL {
 
     if (params.mmseqs2_module == "search") {
         qry       = createSeqsChannel(params.mmseqs2_qry)
-        qry_db_ch = BUILD_QRY_DB_SUB(p, qry)
-
-        out_ch = MAP_SUB(p, ref_db_ch.ref_db, qry_db_ch.qry_db)
+        out_ch = MAP_SUB(p, ref_db_ch.ref_db, qry)
         out_ch.out.view { i -> "$i" }
 
     } else if (params.mmseqs2_module == "cluster") {
