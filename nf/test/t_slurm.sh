@@ -143,6 +143,7 @@ case ${test} in
                  --annotate_p_orfs ${shortFnaGz1} \
 		 --annotate_p_taxid_map ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
 		 --annotate_p_ko_map ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
+                 --prodigal_procedure "meta" \
                  --mmseqs2_ref_type 1 \
                  --mmseqs2_qry_type 1
         ;;
@@ -151,7 +152,16 @@ case ${test} in
                  --remove_host_aligner "bwa_mem2" \
                  --remove_host_is_prebuilt_db "true" \
                  --remove_host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db" \
-         --bacteriome_pipeline_reads "${inPairs}"
+                 --assembly_assembler "megahit" \
+                 --assembly_l_thre 10 \
+                 --annotate_p_aligner mmseqs2 \
+                 --annotate_p_is_prebuilt_db "true" \
+                 --annotate_p_ref_or_db ${extDir}/uniprot_refs/mmseqs2 \
+		 --taxid_map_path ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
+		 --ko_map_path ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
+                 --mmseqs2_ref_type 1 \
+                 --mmseqs2_qry_type 1 \
+                 --bacteriome_pipeline_reads "${inPairs}"
 #                 --host_is_prebuilt_db "false" \
 #                 --bacteriome_pipeline_reads "${longFnqGzPair}"
 #                 --host_ref_fasta_or_db "${dataDir}/ecoli_1K_1.fa.gz" \
