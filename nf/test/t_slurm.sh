@@ -95,7 +95,7 @@ case ${test} in
         ;;
     "remove_host")
 	db=${extDir}/GRCh38/bwa_db
-	if [ ! -d ${db} ] ; then
+	#if [ ! -d ${db} ] ; then
 	    ref=${extDir}/GRCh38/GCF_000001405.40_GRCh38.p14_genomic.fna.gz
 	    if [ ! -f ${ref} ] ; then
 		echo "Error : ${ref} not found."
@@ -106,7 +106,7 @@ case ${test} in
             nextflow run ${nfDir}/lv2/remove_host.nf -entry BUILD_REF_DB_ONLY ${args} \
 		     --remove_host_aligner "bwa_mem2" \
                      --remove_host_ref_fasta "${ref}"
-	fi
+	#fi
         nextflow run ${nfDir}/lv2/remove_host.nf -entry REMOVE_HOST_WITH_DB ${args} \
 		 --remove_host_aligner "bwa_mem2" \
 		 --remove_host_is_prebuilt_db "true" \
