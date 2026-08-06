@@ -33,20 +33,34 @@ process EXTRACT_UNMAPPED_READS {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
 
     input:
-    // bwa_mem2_mem / pzbwa の出力構造 [ ref_id, qry_id, sam_path ] に合わせます
     tuple val(ref_id), val(qry_id), path(bam_or_sam)
 
     output:
-    tuple val(qry_id), path("${qry_id}_host_removed_R*.fastq.gz"), emit: reads
+    // シングル／ペアのどちらでも拾えるようにワイルドカード指定
+    tuple val(qry_id), path("${qry_id}_host_removed*.fastq.gz"), emit: reads
 
     script:
     """
-    # -f 12 : ペアの両リードがホストゲノムに未マッピングのもののみ抽出
-    samtools fastq -f 12 \
-        -1 ${qry_id}_host_removed_R1.fastq.gz \
-        -2 ${qry_id}_host_removed_R2.fastq.gz \
-        -0 /dev/null -s /dev/null \
-        ${bam_or_sam}
+    # BAMファイルのヘッダーから paired-end か single-end かを判定
+    IS_PAIRED=\$(samtools view -H ${bam_or_sam} | grep -c "SO:" || true) # 必要に応じてチェック条件調整
+    
+    # または samtools stats / view で最初の一行のFLAGから判定
+    IS_PAIRED=\$(samtools view ${bam_or_sam} | head -n 1 | awk '{if (and(\$2, 1)) print "paired"; else print "single"}')
+
+    if [ "\$IS_PAIRED" = "paired" ]; then
+        # --- ペアエンド用処理 ---
+        samtools fastq -f 12 \
+            -1 ${qry_id}_host_removed_R1.fastq.gz \
+            -2 ${qry_id}_host_removed_R2.fastq.gz \
+            -0 /dev/null -s /dev/null \
+            ${bam_or_sam}
+    else
+        # --- シングルエンド用処理 ---
+        # -f 4 : 未マッピングリードのみ抽出
+        samtools fastq -f 4 \
+            -0 /dev/null \
+            ${bam_or_sam} | bgzip -c > ${qry_id}_host_removed_single.fastq.gz
+    fi
     """
 }
 

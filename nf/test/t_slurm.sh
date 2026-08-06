@@ -89,6 +89,30 @@ nextflow clean -f
 test=${test%.*}
 
 case ${test} in
+    "fastp")
+        nextflow run ${nfDir}/lv1/fastp.nf -entry FASTP_ALL ${args} \
+                 --fastp_reads "${shortFnqGzPair}"
+        ;;
+    "remove_host")
+	db=${extDir}/GRCh38/bwa_db
+	if [ ! -d ${db} ] ; then
+	    ref=${extDir}/GRCh38/GCF_000001405.40_GRCh38.p14_genomic.fna.gz
+	    if [ ! -f ${ref} ] ; then
+		echo "Error : ${ref} not found."
+		echo "Please download as:"
+                echo "wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz"
+		exit 1
+	    fi
+            nextflow run ${nfDir}/lv2/remove_host.nf -entry BUILD_REF_DB_ONLY ${args} \
+		     --remove_host_aligner "bwa_mem2" \
+                     --remove_host_ref_fasta "${ref}"
+	fi
+        nextflow run ${nfDir}/lv2/remove_host.nf -entry REMOVE_HOST_WITH_DB ${args} \
+		 --remove_host_aligner "bwa_mem2" \
+		 --remove_host_is_prebuilt_db "true" \
+		 --remove_host_prebuilt_db ${extDir}/GRCh38/bwa_db \
+                 --remove_host_reads "${shortFnqGzPair}"
+        ;;
     "annotate_p")
         nextflow run ${nfDir}/lv2/annotate_p.nf ${args} \
 		 --is_annotate_p_prebuilt_db "true" \
@@ -179,10 +203,6 @@ case ${test} in
     "falco")
         nextflow run ${nfDir}/lv1/falco.nf ${args} \
                  --falco_reads "${shortFnqGzPair}"
-        ;;
-    "fastp")
-        nextflow run ${nfDir}/lv1/fastp.nf ${args} \
-                 --fastp_reads "${shortFnqGzPair}"
         ;;
     "fastqc")
         nextflow run ${nfDir}/lv1/fastqc.nf ${args} \
