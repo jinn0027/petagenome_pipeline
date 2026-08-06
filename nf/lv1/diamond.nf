@@ -19,6 +19,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process diamond_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.diamond_diamond_makerefdb_memory}"
     def threads = "${params.diamond_diamond_makerefdb_threads}"
@@ -44,6 +45,7 @@ process diamond_makerefdb {
 process diamond_blastp {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.diamond_diamond_blastp_memory}"
     def threads = "${params.diamond_diamond_blastp_threads}"

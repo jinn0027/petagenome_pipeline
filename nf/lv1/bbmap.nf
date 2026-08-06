@@ -17,6 +17,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process bbmap_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
+    containerOptions = "= ${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.bbmap_bbmap_makerefdb_memory}"
     def threads = "${params.bbmap_bbmap_makerefdb_threads}"
@@ -41,6 +42,7 @@ process bbmap_makerefdb {
 process bbmap {
     tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.bbmap_bbmap_memory}"
     def threads = "${params.bbmap_bbmap_threads}"

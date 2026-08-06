@@ -10,6 +10,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process falco {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/falco/falco.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.falco_falco_memory}"
     def threads = "${params.falco_falco_threads}"

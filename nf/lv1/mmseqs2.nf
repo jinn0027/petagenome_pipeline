@@ -79,6 +79,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process mmseqs2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.mmseqs2_mmseqs2_makerefdb_memory}"
     def threads = "${params.mmseqs2_mmseqs2_makerefdb_threads}"
@@ -103,6 +104,7 @@ process mmseqs2_makerefdb {
 process mmseqs2_makeqrydb {
     tag "${qry_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.mmseqs2_mmseqs2_makeqrydb_memory}"
     def threads = "${params.mmseqs2_mmseqs2_makeqrydb_threads}"
@@ -127,6 +129,7 @@ process mmseqs2_makeqrydb {
 process mmseqs2_cluster {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.mmseqs2_mmseqs2_cluster_memory}"
     def threads = "${params.mmseqs2_mmseqs2_cluster_threads}"
@@ -197,6 +200,7 @@ process mmseqs2_cluster {
 process mmseqs2_search {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.mmseqs2_mmseqs2_search_memory}"
     def threads = "${params.mmseqs2_mmseqs2_search_threads}"

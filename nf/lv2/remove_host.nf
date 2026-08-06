@@ -30,6 +30,7 @@ process EXTRACT_UNMAPPED_READS {
     tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/samtools/samtools.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
 
     input:

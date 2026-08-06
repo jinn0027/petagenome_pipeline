@@ -22,6 +22,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process minimap2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.minimap2_minimap2_makerefdb_memory}"
     def threads = "${params.minimap2_minimap2_makerefdb_threads}"
@@ -46,6 +47,7 @@ process minimap2_makerefdb {
 process minimap2 {
     tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy'
     def gb = "${params.minimap2_minimap2_memory}"
     def threads = "${params.minimap2_minimap2_threads}"
@@ -71,6 +73,7 @@ process minimap2 {
 process minimap2_e2e {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/minimap2/minimap2.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy'
     def gb = "${params.minimap2_minimap2_e2e_memory}"
     def threads = "${params.minimap2_minimap2_e2e_threads}"

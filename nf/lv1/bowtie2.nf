@@ -13,6 +13,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process bowtie2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.bowtie2_bowtie2_makerefdb_memory}"
     def threads = "${params.bowtie2_bowtie2_makerefdb_threads}"
@@ -38,6 +39,7 @@ process bowtie2_makerefdb {
 process bowtie2 {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.bowtie2_bowtie2_memory}"
     def threads = "${params.bowtie2_bowtie2_threads}"

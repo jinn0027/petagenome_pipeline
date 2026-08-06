@@ -31,6 +31,7 @@ if (params.use_pzlast) {
 process classify {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.circular_contigs_classify_memory}"
     def threads = "${params.circular_contigs_classify_threads}"

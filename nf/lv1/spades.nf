@@ -23,6 +23,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process spades_error_correction {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.spades_spades_error_correction_memory}"
     def threads = "${params.spades_spades_error_correction_threads}"
@@ -56,6 +57,7 @@ process spades_error_correction {
 process spades_error_correction_gzip_output {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.spades_spades_error_correction_gzip_output_memory}"
     def threads = "${params.spades_spades_error_correction_gzip_output_threads}"
@@ -88,6 +90,7 @@ process spades_error_correction_gzip_output {
 process spades_assembler {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.spades_spades_assembler_memory}"
     def threads = "${params.spades_spades_assembler_threads}"
@@ -119,6 +122,7 @@ process spades_assembler {
 process spades_e2e {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy'
     def gb = "${params.spades_spades_e2e_memory}"
     def threads = "${params.spades_spades_e2e_threads}"

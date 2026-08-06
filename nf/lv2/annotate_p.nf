@@ -13,6 +13,7 @@ process ANNOTATE_ORFS {
     tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
 
     input:
@@ -26,6 +27,7 @@ process ANNOTATE_ORFS {
     script:
     """
     python3 - << 'EOF'
+
 import sys
 
 taxid_dict = {}

@@ -13,6 +13,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process bwa_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.bwa_bwa_makerefdb_memory}"
     def threads = "${params.bwa_bwa_makerefdb_threads}"
@@ -37,6 +38,7 @@ process bwa_makerefdb {
 process bwa_mem {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.bwa_bwa_mem_memory}"
     def threads = "${params.bwa_bwa_mem_threads}"

@@ -10,6 +10,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process megahit {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/megahit/megahit.sif"
+    containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.megahit_megahit_memory}"
     def threads = "${params.megahit_megahit_threads}"

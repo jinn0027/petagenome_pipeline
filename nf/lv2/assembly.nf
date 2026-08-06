@@ -12,8 +12,7 @@ params.assembly_get_stats_threads = params.threads
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
-include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
-include { spades_assembler } from "${params.petagenomeDir}/nf/lv1/spades.nf"
+include { SPADES_E2E_SUB } from "${params.petagenomeDir}/nf/lv1/spades.nf"
 include { MEGAHIT_SUB      } from "${params.petagenomeDir}/nf/lv1/megahit.nf"
 
 
@@ -47,7 +46,7 @@ process filter_and_rename {
 process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.assembly_get_length_memory}"
     def threads = "${params.assembly_get_length_threads}"
@@ -75,7 +74,7 @@ process get_length {
 process get_stats {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "--bind ${params.petagenomeDir}/scripts"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
     def gb = "${params.assembly_get_stats_memory}"
     def threads = "${params.assembly_get_stats_threads}"
@@ -116,12 +115,12 @@ workflow ASSEMBLY_SUB {
     l_thre
 
     main:
-    def tool = params.containsKey('assembler') ? params.assembler : 'megahit'
+    def tool = params.containsKey('assembly_assembler') ? params.assembly_assembler : 'megahit'
 
     // 1. アセンブラの分岐実行
     if (tool == 'spades') {
         in_ch = p.combine(reads).map { p_val, pair_id, reads_path -> tuple(p_val, pair_id, reads_path) }
-        asm_raw = spades_assembler(in_ch)
+        asm_raw = SPADES_E2E_SUB(in_ch)
         asm = asm_raw.map { id, scaffolds, contigs -> tuple(id, (scaffolds && 0 < scaffolds.size()) ? scaffolds : contigs) }
     } else {
         // MEGAHIT_SUB の出力は [pair_id, contigs]
