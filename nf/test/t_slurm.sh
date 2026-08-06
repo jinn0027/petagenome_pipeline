@@ -95,7 +95,7 @@ case ${test} in
         ;;
     "remove_host")
 	db=${extDir}/GRCh38/bwa_db
-	#if [ ! -d ${db} ] ; then
+	if [ ! -d ${db} ] ; then
 	    ref=${extDir}/GRCh38/GCF_000001405.40_GRCh38.p14_genomic.fna.gz
 	    if [ ! -f ${ref} ] ; then
 		echo "Error : ${ref} not found."
@@ -106,12 +106,24 @@ case ${test} in
             nextflow run ${nfDir}/lv2/remove_host.nf -entry BUILD_REF_DB_ONLY ${args} \
 		     --remove_host_aligner "bwa_mem2" \
                      --remove_host_ref_fasta "${ref}"
-	#fi
+	    mv ${outdir}/BUILD_REF_DB_ONLY:BUILD_REF_DB_SUB:bwa_mem2_makerefdb/00_GCF ${db}
+	fi
         nextflow run ${nfDir}/lv2/remove_host.nf -entry REMOVE_HOST_WITH_DB ${args} \
 		 --remove_host_aligner "bwa_mem2" \
 		 --remove_host_is_prebuilt_db "true" \
-		 --remove_host_prebuilt_db ${extDir}/GRCh38/bwa_db \
+		 --remove_host_prebuilt_db ${db} \
                  --remove_host_reads "${shortFnqGzPair}"
+        ;;
+    "assembly")
+        nextflow run ${nfDir}/lv2/assembly.nf -entry ASSEMBLY_ALL ${args} \
+		 --assembly_assembler "megahit" \
+                 --assembly_l_thre 10 \
+                 --assembly_reads "${longFnqGzPair}"
+        ;;
+    "prodigal")
+        nextflow run ${nfDir}/lv1/prodigal.nf -entry PRODIGAL_ALL ${args} \
+		 --prodigal_procedure "meta" \
+                 --prodigal_read "${longFnaGz1}"
         ;;
     "annotate_p")
         nextflow run ${nfDir}/lv2/annotate_p.nf ${args} \
@@ -141,11 +153,6 @@ case ${test} in
     "error_correction")
         nextflow run ${nfDir}/lv2/error_correction.nf ${args} \
                  --error_correction_reads "${longFnqGzPair}"
-        ;;
-    "assembly")
-        nextflow run ${nfDir}/lv2/assembly.nf ${args} \
-                 --assembly_l_thre 10 \
-                 --assembly_reads "${longFnqGzPair}"
         ;;
     "pool_contigs")
         nextflow run ${nfDir}/lv2/pool_contigs.nf ${args} \
@@ -236,10 +243,6 @@ case ${test} in
     "prinseq")
         nextflow run ${nfDir}/lv1/prinseq.nf ${args} \
                  --prinseq_reads "${shortFnqGzPair}"
-        ;;
-    "prodigal")
-        nextflow run ${nfDir}/lv1/prodigal.nf ${args} \
-                 --prodigal_read "${longFnaGz1}"
         ;;
     "spades")
         nextflow run ${nfDir}/lv1/spades.nf ${args} \

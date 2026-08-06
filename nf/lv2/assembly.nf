@@ -159,10 +159,10 @@ workflow ASSEMBLY_ALL {
 
     out_ch = ASSEMBLY_SUB(p, reads, l_thre)
 
-    out_ch.asm.view     { i -> "ASM: $i" }
-    out_ch.flt_seq.view { i -> "FLT_SEQ: $i" }
-    out_ch.len.view     { i -> "LEN: $i" }
-    out_ch.sts.view     { i -> "STS: $i" }
+    out_ch.asm.view      { i -> "ASM: $i" }
+    out_ch.flt_seqs.view { i -> "FLT_SEQ: $i" }
+    out_ch.len.view      { i -> "LEN: $i" }
+    out_ch.sts.view      { i -> "STS: $i" }
 }
 
 workflow {
