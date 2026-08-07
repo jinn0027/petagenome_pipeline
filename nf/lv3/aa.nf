@@ -2,12 +2,34 @@
 nextflow.enable.dsl=2
 
 include { createNullParamsChannel; createSeqsChannel; getParam } from "${params.petagenomeDir}/nf/common/utils"
-include { FASTP_SUB }         from "${params.petagenomeDir}/nf/lv1/fastp.nf"
-include { REMOVE_HOST_SUB } from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
-include { ASSEMBLY_SUB }    from "${params.petagenomeDir}/nf/lv2/assembly.nf"
-include { PRODIGAL_SUB }    from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
-include { ANNOTATE_TAXID_KO_SUB } from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
+include { FASTP_SUB }                 from "${params.petagenomeDir}/nf/lv1/fastp.nf"
+include { REMOVE_HOST_SUB }           from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
+include { ASSEMBLY_SUB }              from "${params.petagenomeDir}/nf/lv2/assembly.nf"
+include { PRODIGAL_SUB }              from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
+include { ANNOTATE_TAXID_KO_SUB }     from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
+include { ALIGN_CONTIGS_TO_ORFS_SUB } from "${params.petagenomeDir}/nf/lv2/align_contigs_to_orfs.nf"
+include { ANNOTATE_CONTIG_SUB }       from "${params.petagenomeDir}/nf/lv2/annotate_contig.nf"
 
+// 全サンプルの FASTA (.faa や .fna) を 1 つに結合する汎用プロセス
+process MERGE_FASTA {
+    tag "${ext}"
+
+    container = "${params.petagenomeDir}/modules/common/el9.sif"
+    containerOptions = "${params.apptainerRunOptions}"
+    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+
+    input:
+    path fasta_files // collect() から渡される全サンプルの FASTA リスト
+    val ext          // "faa" または "fna"
+
+    output:
+    tuple val("merged_all_samples"), path("combined_orfs.${ext}"), emit: merged_fasta
+
+    script:
+    """
+    cat ${fasta_files} > combined_orfs.${ext}
+    """
+}
 
 // ==========================================
 // 1. サブワークフロー（再利用可能な処理の本体）
@@ -36,21 +58,33 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 4. Prodigal による ORF (遺伝子) 予測
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
-    // 5. Prodigal の出力からアミノ酸配列 (.faa) を抽出 [ qry_id, out.faa ]
-    orf_faa = orf_res.out.map { qry_id, faa, fna, gbk -> tuple(qry_id, faa) }
+    // 5. 全サンプルの .faa (タンパク質) ファイルを集約して結合・アノテーション
+    all_faa_files = orf_res.out.map { qry_id, faa, fna, gbk -> faa }.collect()
+    merged_faa_res = MERGE_FASTA(all_faa_files, "faa")
 
-    // 6. アノテーション・サブワークフローの呼び出し
-    annotation_res = ANNOTATE_TAXID_KO_SUB(p, ref_or_db, orf_faa, taxid_map, ko_map)
+    annotation_res = ANNOTATE_TAXID_KO_SUB(p, ref_or_db, merged_faa_res.merged_fasta, taxid_map, ko_map)
+
+    // 6. 全サンプルの .fna (塩基配列) ファイルを集約して結合・Contig マッピング
+    all_fna_files = orf_res.out.map { qry_id, faa, fna, gbk -> fna }.collect()
+    merged_fna_res = MERGE_FASTA(all_fna_files, "fna")
+
+    // マージした ORF FASTA を DB にビルドし、各サンプルの contig を検索 (PZLAST / MMseqs2)
+    contig_mapping_res = ALIGN_CONTIGS_TO_ORFS_SUB(p, merged_fna_res.merged_fasta, asm_res.flt_seqs)
+
+    // 7. Contig -> TaxID / KO 対応テーブルの構築
+    contig_anno_res = ANNOTATE_CONTIG_SUB(p, contig_mapping_res.out, annotation_res.annotated)
 
     emit:
-    raw_reads            = reads
-    fastp_reads          = fp.out
-    host_removed_reads   = host_removed.reads
-    contigs              = asm_res.asm
-    flt_seqs             = asm_res.flt_seqs
-    stats                = asm_res.sts
-    orfs                 = orf_res.out
-    annotated            = annotation_res.annotated
+    raw_reads          = reads
+    fastp_reads        = fp.out
+    host_removed_reads = host_removed.reads
+    contigs            = asm_res.asm
+    flt_seqs           = asm_res.flt_seqs
+    stats              = asm_res.sts
+    orfs               = orf_res.out
+    annotated          = annotation_res.annotated
+    contig_map_out     = contig_mapping_res.out
+    contig_taxid_ko    = contig_anno_res.contig_anno
 }
 
 
@@ -94,6 +128,8 @@ workflow BACTERIOME_PIPELINE_ALL {
     out_ch.contigs.view            { i -> "ASSEMBLY CONTIGS   : $i" }
     out_ch.orfs.view               { i -> "PRODIGAL ORFS      : $i" }
     out_ch.annotated.view          { i -> "ANNOTATED TSV      : $i" }
+    out_ch.contig_map_out.view     { i -> "CONTIG MAP RESULT  : $i" }
+    out_ch.contig_taxid_ko.view    { i -> "CONTIG TAXID KO TSV: $i" }
 }
 
 // デフォルトエントリーポイント

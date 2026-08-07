@@ -13,8 +13,8 @@ params.mmseqs2_mmseqs2_cluster_threads = params.threads
 params.mmseqs2_mmseqs2_search_memory = params.memory
 params.mmseqs2_mmseqs2_search_threads = params.threads
 
-params.mmseqs2_ref_type = 0 //Database type 0: auto, 1: amino acid 2: nucleotides [0]
-params.mmseqs2_qry_type = 0 //Database type 0: auto, 1: amino acid 2: nucleotides [0]
+params.mmseqs2_ref_type = 0 // Database type 0: auto, 1: amino acid 2: nucleotides [0]
+params.mmseqs2_qry_type = 0 // Database type 0: auto, 1: amino acid 2: nucleotides [0]
 
 //=== search params
 params.mmseqs2_search_type = 0 // Search type 0: auto 1: amino acid, 2: translated, 3: nucleotide, 4: translated nucleotide alignment [0]
@@ -222,17 +222,17 @@ process mmseqs2_search {
         mkdir -p ${qry_id} tmp
         args="\\
              --search-type ${getParam(p, 'mmseqs2_search_type')} \\
-             -s ${getParam(p, 'mmseqs2_cluster_s')} \\
-             -k ${getParam(p, 'mmseqs2_cluster_k')} \\
-             -e ${getParam(p, 'mmseqs2_cluster_e')} \\
-             -c ${getParam(p, 'mmseqs2_cluster_c')} \\
-             --cov-mode ${getParam(p, 'mmseqs2_cluster_cov_mode')} \\
-             --min-seq-id ${getParam(p, 'mmseqs2_cluster_min_seq_id')} \\
-             --min-aln-len ${getParam(p, 'mmseqs2_cluster_min_aln_len')} \\
-             --max-seqs ${getParam(p, 'mmseqs2_cluster_max_seqs')} \\
-             --split ${getParam(p, 'mmseqs2_cluster_split')} \\
-             --split-mode ${getParam(p, 'mmseqs2_cluster_split_mode')} \\
-             --split-memory-limit ${getParam(p, 'mmseqs2_cluster_split_memory_limit')} \\
+             -s ${getParam(p, 'mmseqs2_search_s')} \\
+             -k ${getParam(p, 'mmseqs2_search_k')} \\
+             -e ${getParam(p, 'mmseqs2_search_e')} \\
+             -c ${getParam(p, 'mmseqs2_search_c')} \\
+             --cov-mode ${getParam(p, 'mmseqs2_search_cov_mode')} \\
+             --min-seq-id ${getParam(p, 'mmseqs2_search_min_seq_id')} \\
+             --min-aln-len ${getParam(p, 'mmseqs2_search_min_aln_len')} \\
+             --max-seqs ${getParam(p, 'mmseqs2_search_max_seqs')} \\
+             --split ${getParam(p, 'mmseqs2_search_split')} \\
+             --split-mode ${getParam(p, 'mmseqs2_search_split_mode')} \\
+             --split-memory-limit ${getParam(p, 'mmseqs2_search_split_memory_limit')} \\
              --sort-results ${getParam(p, 'mmseqs2_search_sort_results')} \\
                 "
         
@@ -257,7 +257,7 @@ process mmseqs2_search {
 }
 
 // ==========================================
-// 1. サブワークフロー（再利用可能な処理の本体）
+// 1. サブワークフロー（基幹ロジック）
 // ==========================================
 
 // リファレンス DB 作成処理の本体
@@ -335,12 +335,81 @@ workflow CLUSTER_SUB {
     out = out
 }
 
+// ==========================================
+// 2. 塩基配列用 / タンパク質用 サブワークフロー（型明示型）
+// ==========================================
+
+// --- 塩基配列用 (Nucleotide: 2) ---
+workflow BUILD_REF_DB_NUCL_SUB {
+    take: p; ref
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 2] }
+    out = BUILD_REF_DB_SUB(p_mod, ref)
+    emit: ref_db = out.ref_db
+}
+
+workflow BUILD_QRY_DB_NUCL_SUB {
+    take: p; qry
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_qry_type: 2] }
+    out = BUILD_QRY_DB_SUB(p_mod, qry)
+    emit: qry_db = out.qry_db
+}
+
+workflow MAP_NUCL_SUB {
+    take: p; ref_db; qry
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 2, mmseqs2_qry_type: 2] }
+    out = MAP_SUB(p_mod, ref_db, qry)
+    emit: out = out.out
+}
+
+workflow CLUSTER_NUCL_SUB {
+    take: p; ref_db
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 2] }
+    out = CLUSTER_SUB(p_mod, ref_db)
+    emit: out = out.out
+}
+
+// --- タンパク質用 (Protein: 1) ---
+workflow BUILD_REF_DB_PROT_SUB {
+    take: p; ref
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 1] }
+    out = BUILD_REF_DB_SUB(p_mod, ref)
+    emit: ref_db = out.ref_db
+}
+
+workflow BUILD_QRY_DB_PROT_SUB {
+    take: p; qry
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_qry_type: 1] }
+    out = BUILD_QRY_DB_SUB(p_mod, qry)
+    emit: qry_db = out.qry_db
+}
+
+workflow MAP_PROT_SUB {
+    take: p; ref_db; qry
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 1, mmseqs2_qry_type: 1] }
+    out = MAP_SUB(p_mod, ref_db, qry)
+    emit: out = out.out
+}
+
+workflow CLUSTER_PROT_SUB {
+    take: p; ref_db
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 1] }
+    out = CLUSTER_SUB(p_mod, ref_db)
+    emit: out = out.out
+}
 
 // ==========================================
-// 2. コマンドライン (-entry) 用エントリーポイント
+// 3. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
 
-// A. DB 作成のみ実行 (-entry BUILD_REF_DB_ONLY)
+// --- 汎用 (params.mmseqs2_ref_type / qry_type に依存) ---
 workflow BUILD_REF_DB_ONLY {
     p   = createNullParamsChannel()
     ref = createSeqsChannel(params.mmseqs2_ref)
@@ -348,18 +417,15 @@ workflow BUILD_REF_DB_ONLY {
     BUILD_REF_DB_SUB(p, ref)
 }
 
-// B. 作成済み DB を使って Search のみ実行 (-entry MAP_ONLY)
 workflow MAP_ONLY {
     p      = createNullParamsChannel()
     ref_db = createSeqsChannel(params.mmseqs2_db)
     qry    = createSeqsChannel(params.mmseqs2_qry)
 
     out_ch = MAP_SUB(p, ref_db, qry)
-
     out_ch.out.view { i -> "$i" }
 }
 
-// C. 作成済み DB を使って Cluster のみ実行 (-entry CLUSTER_ONLY)
 workflow CLUSTER_ONLY {
     p      = createNullParamsChannel()
     ref_db = createSeqsChannel(params.mmseqs2_db)
@@ -368,7 +434,6 @@ workflow CLUSTER_ONLY {
     out_ch.out.view { i -> "$i" }
 }
 
-// D. 条件分岐または一括実行 (デフォルト または -entry MMSEQS2_ALL)
 workflow MMSEQS2_ALL {
     p   = createNullParamsChannel()
     ref = createSeqsChannel(params.mmseqs2_ref)
@@ -376,12 +441,48 @@ workflow MMSEQS2_ALL {
     ref_db_ch = BUILD_REF_DB_SUB(p, ref)
 
     if (params.mmseqs2_module == "search") {
-        qry       = createSeqsChannel(params.mmseqs2_qry)
+        qry    = createSeqsChannel(params.mmseqs2_qry)
         out_ch = MAP_SUB(p, ref_db_ch.ref_db, qry)
         out_ch.out.view { i -> "$i" }
 
     } else if (params.mmseqs2_module == "cluster") {
         out_ch = CLUSTER_SUB(p, ref_db_ch.ref_db)
+        out_ch.out.view { i -> "$i" }
+    }
+}
+
+// --- 塩基配列用エントリーポイント ---
+workflow MMSEQS2_NUCL_ALL {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.mmseqs2_ref)
+
+    ref_db_ch = BUILD_REF_DB_NUCL_SUB(p, ref)
+
+    if (params.mmseqs2_module == "search") {
+        qry    = createSeqsChannel(params.mmseqs2_qry)
+        out_ch = MAP_NUCL_SUB(p, ref_db_ch.ref_db, qry)
+        out_ch.out.view { i -> "$i" }
+
+    } else if (params.mmseqs2_module == "cluster") {
+        out_ch = CLUSTER_NUCL_SUB(p, ref_db_ch.ref_db)
+        out_ch.out.view { i -> "$i" }
+    }
+}
+
+// --- タンパク質用エントリーポイント ---
+workflow MMSEQS2_PROT_ALL {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.mmseqs2_ref)
+
+    ref_db_ch = BUILD_REF_DB_PROT_SUB(p, ref)
+
+    if (params.mmseqs2_module == "search") {
+        qry    = createSeqsChannel(params.mmseqs2_qry)
+        out_ch = MAP_PROT_SUB(p, ref_db_ch.ref_db, qry)
+        out_ch.out.view { i -> "$i" }
+
+    } else if (params.mmseqs2_module == "cluster") {
+        out_ch = CLUSTER_PROT_SUB(p, ref_db_ch.ref_db)
         out_ch.out.view { i -> "$i" }
     }
 }

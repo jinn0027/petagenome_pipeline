@@ -3,6 +3,8 @@ nextflow.enable.dsl=2
 
 params.annotate_p_aligner = "mmseqs2"
 params.annotate_p_is_prebuilt_db = false
+params.annotate_p_annotate_orfs_memory = params.memory ?: 16
+params.annotate_p_annotate_orfs_threads = 2
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -12,7 +14,9 @@ def pzlast_script = (params.containsKey('pzrepoDir') && params.pzrepoDir) ? "${p
 def use_pzlast = (params.annotate_p_aligner == 'pzlast') && pzlast_script && file(pzlast_script).exists()
 
 def aligner_path = use_pzlast ? pzlast_script : "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
-include { BUILD_REF_DB_SUB; MAP_SUB } from "${aligner_path}"
+
+// mmseqs2.nf / pzlast.nf で定義されているタンパク質用サブワークフローをインポート
+include { BUILD_REF_DB_PROT_SUB; MAP_PROT_SUB } from "${aligner_path}"
 
 // Python によるアノテーション結合プロセス
 process ANNOTATE_ORFS {
@@ -22,10 +26,16 @@ process ANNOTATE_ORFS {
     containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
 
+    def gb = "${params.annotate_p_annotate_orfs_memory}"
+    def threads = "${params.annotate_p_annotate_orfs_threads}"
+    memory params.executor=="sge" ? null : "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
     input:
     tuple val(ref_id), val(qry_id), path(fmt6_result)
-    path taxid_map
-    path ko_map
+    path taxid_map  // ワークフロー側で channel.value() にして渡す
+    path ko_map     // ワークフロー側で channel.value() にして渡す
 
     output:
     tuple val(qry_id), path("${qry_id}_annotated.tsv"), emit: annotated
@@ -33,7 +43,6 @@ process ANNOTATE_ORFS {
     script:
     """
     python3 - << 'EOF'
-
 import sys
 
 taxid_dict = {}
@@ -76,22 +85,26 @@ workflow ANNOTATE_TAXID_KO_SUB {
     p
     ref_or_db     // リファレンスFASTA または ビルド済みDB
     orfs          // Prodigal等の出力から抽出した [ qry_id, out.faa ]
-    taxid_map     // uniprot_to_taxid.tsv
-    ko_map        // uniprot_to_ko.tsv
+    taxid_map     // uniprot_to_taxid.tsv (File path or Channel)
+    ko_map        // uniprot_to_ko.tsv (File path or Channel)
 
     main:
-    // A. DB の準備
+    // A. DB の準備（タンパク質用サブワークフローを呼び出し）
     if (params.annotate_p_is_prebuilt_db) {
         db = ref_or_db
     } else {
-        db = BUILD_REF_DB_SUB(p, ref_or_db).ref_db
+        db = BUILD_REF_DB_PROT_SUB(p, ref_or_db).ref_db
     }
 
-    // C. 相同性検索 (fmt6/m8 形式)
-    search_out = MAP_SUB(p, db, orfs) // 出力: [ ref_id, qry_id, out.m8 ]
+    // B. 相同性検索 (タンパク質用サブワークフローを呼び出し / 出力: [ ref_id, qry_id, out.m8 ])
+    search_out = MAP_PROT_SUB(p, db, orfs)
+
+    // C. Map ファイルを value チャネル化して全サンプルに再利用可能にする
+    ch_taxid = (taxid_map instanceof Channel) ? taxid_map : Channel.value(taxid_map)
+    ch_ko    = (ko_map instanceof Channel)    ? ko_map    : Channel.value(ko_map)
 
     // D. TaxID / KO の紐づけ
-    annotated_out = ANNOTATE_ORFS(search_out, taxid_map, ko_map)
+    annotated_out = ANNOTATE_ORFS(search_out, ch_taxid, ch_ko)
 
     emit:
     annotated = annotated_out.annotated
@@ -101,12 +114,12 @@ workflow ANNOTATE_TAXID_KO_SUB {
 // テスト・単体実行用エントリーポイント
 // ==========================================
 
-// A. DB (BWA/PZBWA インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
+// A. DB (MMseqs2/PZLAST インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
 workflow BUILD_REF_DB_ONLY {
-    p        = createNullParamsChannel()
-    annotate_p_ref = createSeqsChannel(params.annotate_p_ref_fasta ?: params.annotate_p_ref_fasta)
+    p              = createNullParamsChannel()
+    annotate_p_ref = createSeqsChannel(params.annotate_p_ref_fasta ?: params.ref_fasta)
 
-    db_out = BUILD_REF_DB_SUB(p, annotate_p_ref)
+    db_out = BUILD_REF_DB_PROT_SUB(p, annotate_p_ref)
 
     db_out.ref_db.view { id, db_path ->
         "[BUILD_REF_DB_ONLY] Created Index/DB (${params.annotate_p_aligner}): ${id} -> ${db_path}"

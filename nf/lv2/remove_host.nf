@@ -37,29 +37,24 @@ process EXTRACT_UNMAPPED_READS {
     tuple val(ref_id), val(qry_id), path(bam_or_sam)
 
     output:
-    // シングル／ペアのどちらでも拾えるようにワイルドカード指定
     tuple val(qry_id), path("${qry_id}_host_removed*.fastq.gz"), emit: reads
 
     script:
     """
-    # BAMファイルのヘッダーから paired-end か single-end かを判定
-    IS_PAIRED=\$(samtools view -H ${bam_or_sam} | grep -c "SO:" || true) # 必要に応じてチェック条件調整
-    
-    # または samtools stats / view で最初の一行のFLAGから判定
+    # 最初の一行のSAM FLAG (第2フィールド) から Paired-end (FLAG & 1) かを判定
     IS_PAIRED=\$(samtools view ${bam_or_sam} | head -n 1 | awk '{if (and(\$2, 1)) print "paired"; else print "single"}')
 
     if [ "\$IS_PAIRED" = "paired" ]; then
-        # --- ペアエンド用処理 ---
-        samtools fastq -f 12 \
-            -1 ${qry_id}_host_removed_R1.fastq.gz \
-            -2 ${qry_id}_host_removed_R2.fastq.gz \
-            -0 /dev/null -s /dev/null \
+        # --- ペアエンド用処理 (-f 12 : 両方のリードが未マッピング) ---
+        samtools fastq -f 12 \\
+            -1 ${qry_id}_host_removed_R1.fastq.gz \\
+            -2 ${qry_id}_host_removed_R2.fastq.gz \\
+            -0 /dev/null -s /dev/null \\
             ${bam_or_sam}
     else
-        # --- シングルエンド用処理 ---
-        # -f 4 : 未マッピングリードのみ抽出
-        samtools fastq -f 4 \
-            -0 /dev/null \
+        # --- シングルエンド用処理 (-f 4 : 未マッピングリードのみ抽出) ---
+        # -0 で直接出力先を指定するか、標準出力をパイプで bgzip に渡す
+        samtools fastq -f 4 \\
             ${bam_or_sam} | bgzip -c > ${qry_id}_host_removed_single.fastq.gz
     fi
     """

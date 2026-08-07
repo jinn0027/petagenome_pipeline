@@ -8,6 +8,7 @@ params.blast_blastn_memory = params.memory
 params.blast_blastn_threads = params.threads
 
 params.blast_dbtype = "nucl"
+params.blast_program = "blastn"
 params.blast_task = "megablast"
 params.blast_num_alignments = "1"
 params.blast_perc_identity = "95"
@@ -90,14 +91,55 @@ process blastn {
                 -evalue ${getParam(p, 'blast_evalue')} \\
                 -outfmt ${getParam(p, 'blast_outfmt')} \\
                 -num_alignments ${getParam(p, 'blast_num_alignments')} \\
-                -strand  ${getParam(p, 'blast_strand')} \\
+                -strand ${getParam(p, 'blast_strand')} \\
+                -out ${qry_id}/out
+        fi
+        """
+}
+
+process blastp {
+    tag "${ref_id}_@_${qry_id}"
+    container = "${params.petagenomeDir}/modules/blast/blast.sif"
+    containerOptions = "${params.apptainerRunOptions}"
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    def gb = "${params.blast_blastn_memory}"
+    def threads = "${params.blast_blastn_threads}"
+    memory params.executor=="sge" ? null : "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+    input:
+        tuple val(p), val(ref_id), path(ref_db, arity: '1'), val(qry_id), path(qry, arity: '1')
+    output:
+        tuple val(ref_id), val(qry_id), path("${qry_id}/out", arity: '1')
+    script:
+        """
+        echo "${processProfile(task)}" | tee prof.txt
+        qry_=${qry}
+        echo ${qry} | grep -e ".gz\$" >& /dev/null && :
+        if [ \$? -eq 0 ] ; then
+            qry_=\${qry_%%.gz}
+            unpigz -c ${qry} > \${qry_}
+        fi
+        mkdir -p ${qry_id}
+        touch ${qry_id}/out
+        qry_siz=\$( du -b \$(readlink -f \${qry_}) | awk '{print(\$1)}' )
+        db_siz=\$(ls ${ref_db} 2>/dev/null | wc -l)
+        if [ \${qry_siz} -gt 0 ] && [ \${db_siz} -gt 0 ]; then
+            blastp \\
+                -num_threads ${threads} \\
+                -query \${qry_} \\
+                -db ${ref_db}/ref \\
+                -perc_identity ${getParam(p, 'blast_perc_identity')} \\
+                -evalue ${getParam(p, 'blast_evalue')} \\
+                -outfmt ${getParam(p, 'blast_outfmt')} \\
+                -num_alignments ${getParam(p, 'blast_num_alignments')} \\
                 -out ${qry_id}/out
         fi
         """
 }
 
 // ==========================================
-// 1. サブワークフロー（再利用可能な処理の本体）
+// 1. サブワークフロー（基幹ロジック）
 // ==========================================
 
 // DB作成処理の本体
@@ -131,19 +173,62 @@ workflow MAP_SUB {
         tuple(p_val, ref_id, ref_path, qry_id, qry_path)
     }
 
-    out = blastn(in_ch)
+    // p 内の blast_program の値に応じてプロセス分岐
+    prog = p.map { map -> getParam(map, 'blast_program') }.first()
+
+    if (prog == "blastp") {
+        out = blastp(in_ch)
+    } else {
+        out = blastn(in_ch)
+    }
 
     emit:
     out = out
 }
 
-
 // ==========================================
-// 2. コマンドライン（-entry）用エントリーポイント
-//    ※ take: を持たせず、params からチャンネルを生成する
+// 2. 塩基配列用 / タンパク質用 サブワークフロー（型明示型）
 // ==========================================
 
-// A. DB作成のみ実行 (-entry BUILD_REF_DB_ONLY)
+// --- 塩基配列用 (Nucleotide: nucl / blastn) ---
+workflow BUILD_REF_DB_NUCL_SUB {
+    take: p; ref
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [blast_dbtype: "nucl"] }
+    out = BUILD_REF_DB_SUB(p_mod, ref)
+    emit: ref_db = out.ref_db
+}
+
+workflow MAP_NUCL_SUB {
+    take: p; ref_db; qry
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [blast_dbtype: "nucl", blast_program: "blastn"] }
+    out = MAP_SUB(p_mod, ref_db, qry)
+    emit: out = out.out
+}
+
+// --- タンパク質用 (Protein: prot / blastp) ---
+workflow BUILD_REF_DB_PROT_SUB {
+    take: p; ref
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [blast_dbtype: "prot"] }
+    out = BUILD_REF_DB_SUB(p_mod, ref)
+    emit: ref_db = out.ref_db
+}
+
+workflow MAP_PROT_SUB {
+    take: p; ref_db; qry
+    main:
+    p_mod = p.map { map -> (map ?: [:]) + [blast_dbtype: "prot", blast_program: "blastp"] }
+    out = MAP_SUB(p_mod, ref_db, qry)
+    emit: out = out.out
+}
+
+// ==========================================
+// 3. コマンドライン (-entry) 用エントリーポイント
+// ==========================================
+
+// --- 汎用 (params に依存) ---
 workflow BUILD_REF_DB_ONLY {
     p   = createNullParamsChannel()
     ref = createSeqsChannel(params.blast_ref)
@@ -151,25 +236,46 @@ workflow BUILD_REF_DB_ONLY {
     BUILD_REF_DB_SUB(p, ref)
 }
 
-// B. 作成済みDBで検索のみ実行 (-entry MAP_ONLY)
 workflow MAP_ONLY {
     p      = createNullParamsChannel()
-    ref_db = createSeqsChannel(params.blast_db) // 既存DBのパス指定
+    ref_db = createSeqsChannel(params.blast_db)
     qry    = createSeqsChannel(params.blast_qry)
 
     out_ch = MAP_SUB(p, ref_db, qry)
     out_ch.out.view { i -> "$i" }
 }
 
-// C. 一括実行 (デフォルト または -entry BLAST_ALL)
 workflow BLAST_ALL {
     p   = createNullParamsChannel()
     ref = createSeqsChannel(params.blast_ref)
     qry = createSeqsChannel(params.blast_qry)
 
-    // DBを作成して、その出力を検索処理へ流し込む
     db_ch  = BUILD_REF_DB_SUB(p, ref)
     out_ch = MAP_SUB(p, db_ch.ref_db, qry)
+
+    out_ch.out.view { i -> "$i" }
+}
+
+// --- 塩基配列用エントリーポイント ---
+workflow BLAST_NUCL_ALL {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.blast_ref)
+    qry = createSeqsChannel(params.blast_qry)
+
+    db_ch  = BUILD_REF_DB_NUCL_SUB(p, ref)
+    out_ch = MAP_NUCL_SUB(p, db_ch.ref_db, qry)
+
+    out_ch.out.view { i -> "$i" }
+}
+
+// --- タンパク質用エントリーポイント ---
+workflow BLAST_PROT_ALL {
+    p   = createNullParamsChannel()
+    ref = createSeqsChannel(params.blast_ref)
+    qry = createSeqsChannel(params.blast_qry)
+
+    db_ch  = BUILD_REF_DB_PROT_SUB(p, ref)
+    out_ch = MAP_PROT_SUB(p, db_ch.ref_db, qry)
 
     out_ch.out.view { i -> "$i" }
 }
