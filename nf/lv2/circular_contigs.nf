@@ -32,7 +32,7 @@ process classify {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.circular_contigs_classify_memory}"
     def threads = "${params.circular_contigs_classify_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -121,7 +121,7 @@ process classify {
 process deduplicate {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.circular_contigs_deduplicate_memory}"
     def threads = "${params.circular_contigs_deduplicate_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

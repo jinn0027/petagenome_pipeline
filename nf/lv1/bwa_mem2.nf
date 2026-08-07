@@ -14,7 +14,7 @@ process bwa_mem2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bwa_mem2_bwa_mem2_makerefdb_memory}"
     def threads = "${params.bwa_mem2_bwa_mem2_makerefdb_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -39,7 +39,7 @@ process bwa_mem2_mem {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bwa_mem2_bwa_mem2_mem_memory}"
     def threads = "${params.bwa_mem2_bwa_mem2_mem_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

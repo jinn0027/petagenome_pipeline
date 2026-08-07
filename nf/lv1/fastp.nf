@@ -14,7 +14,7 @@ process fastp {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastp/fastp.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.fastp_fastp_memory}"
     def threads = "${params.fastp_fastp_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

@@ -13,7 +13,7 @@ process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.error_correction_get_length_memory}"
     def threads = "${params.error_correction_get_length_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

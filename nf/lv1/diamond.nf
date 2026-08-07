@@ -27,7 +27,7 @@ process diamond_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.diamond_diamond_makerefdb_memory}"
     def threads = "${params.diamond_diamond_makerefdb_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -54,7 +54,7 @@ process diamond_blastp {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.diamond_diamond_blastp_memory}"
     def threads = "${params.diamond_diamond_blastp_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -82,7 +82,7 @@ process diamond_blastx {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.diamond_diamond_blastx_memory}"
     def threads = "${params.diamond_diamond_blastx_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

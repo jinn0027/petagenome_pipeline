@@ -11,7 +11,7 @@ process fastqc {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastqc/fastqc.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.fastqc_fastqc_memory}"
     def threads = "${params.fastqc_fastqc_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

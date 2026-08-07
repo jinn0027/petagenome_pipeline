@@ -29,7 +29,7 @@ process merge_contigs {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.pool_contigs_mergs_contigs_memory}"
     def threads = "${params.pool_contigs_mergs_contigs_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -64,7 +64,7 @@ process filter_and_rename {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.pool_contigs_filter_and_rename_memory}"
     def threads = "${params.pool_contigs_filter_and_rename_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -87,7 +87,7 @@ process summarize_name {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.pool_contigs_summarize_name_memory}"
     def threads = "${params.pool_contigs_summarize_name_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -125,7 +125,7 @@ process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.pool_contigs_get_length_memory}"
     def threads = "${params.pool_contigs_get_length_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -153,7 +153,7 @@ process get_stats {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.pool_contigs_get_stats_memory}"
     def threads = "${params.pool_contigs_get_stats_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

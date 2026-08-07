@@ -16,7 +16,7 @@ process MERGE_FASTA {
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     input:
     tuple path(fasta_files), val(ext) // (配列ファイル群, 拡張子) のペアとして受け取る

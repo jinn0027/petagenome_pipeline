@@ -31,7 +31,7 @@ process EXTRACT_UNMAPPED_READS {
 
     container = "${params.petagenomeDir}/modules/samtools/samtools.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     input:
     tuple val(ref_id), val(qry_id), path(bam_or_sam)

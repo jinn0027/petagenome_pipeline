@@ -17,7 +17,7 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb = "${params.memory ?: 8}"
     def threads = "${params.cpus ?: 2}"

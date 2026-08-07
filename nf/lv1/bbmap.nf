@@ -18,7 +18,7 @@ process bbmap_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     containerOptions = "= ${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bbmap_bbmap_makerefdb_memory}"
     def threads = "${params.bbmap_bbmap_makerefdb_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -43,7 +43,7 @@ process bbmap {
     tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bbmap_bbmap_memory}"
     def threads = "${params.bbmap_bbmap_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

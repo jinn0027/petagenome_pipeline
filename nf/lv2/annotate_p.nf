@@ -24,7 +24,7 @@ process ANNOTATE_ORFS {
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb = "${params.annotate_p_annotate_orfs_memory}"
     def threads = "${params.annotate_p_annotate_orfs_threads}"

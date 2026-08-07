@@ -23,7 +23,7 @@ process blast_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.blast_blast_makerefdb_memory}"
     def threads = "${params.blast_blast_makerefdb_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -58,7 +58,7 @@ process blastn {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.blast_blastn_memory}"
     def threads = "${params.blast_blastn_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
@@ -101,7 +101,7 @@ process blastp {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.blast_blastn_memory}"
     def threads = "${params.blast_blastn_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

@@ -13,7 +13,7 @@ process virsorter2 {
     container = "${params.petagenomeDir}/modules/virsorter2/virsorter2.sif"
     containerOptions = "${params.apptainerRunOptions} -B ${params.virsorter2_db}:${local_db}"
     //containerOptions = "${params.apptainerRunOptions} -B ${params.virsorter2_db}:${local_db} --writable-tmpfs"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.virsorter2_virsorter2_memory}"
     def threads = "${params.virsorter2_virsorter2_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

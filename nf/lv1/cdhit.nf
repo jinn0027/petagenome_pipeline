@@ -17,7 +17,7 @@ process cdhit_est {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.cdhit_cdhit_est_memory}"
     def threads = "${params.cdhit_cdhit_est_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"

@@ -17,7 +17,7 @@ process prodigal {
     tag "${read_id}"
     container = "${params.petagenomeDir}/modules/prodigal/prodigal.sif"
     containerOptions = "${params.apptainerRunOptions}"
-    publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.prodigal_prodigal_memory}"
     def threads = "${params.prodigal_prodigal_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
