@@ -2,13 +2,13 @@
 nextflow.enable.dsl=2
 
 include { createNullParamsChannel; createSeqsChannel; getParam } from "${params.petagenomeDir}/nf/common/utils"
-include { FASTP_SUB }                 from "${params.petagenomeDir}/nf/lv1/fastp.nf"
-include { REMOVE_HOST_SUB }           from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
-include { ASSEMBLY_SUB }              from "${params.petagenomeDir}/nf/lv2/assembly.nf"
-include { PRODIGAL_SUB }              from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
-include { ANNOTATE_TAXID_KO_SUB }     from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
+include { FASTP_SUB }                from "${params.petagenomeDir}/nf/lv1/fastp.nf"
+include { REMOVE_HOST_SUB }          from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
+include { ASSEMBLY_SUB }             from "${params.petagenomeDir}/nf/lv2/assembly.nf"
+include { PRODIGAL_SUB }             from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
+include { ANNOTATE_TAXID_KO_SUB }    from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
 include { ALIGN_CONTIGS_TO_ORFS_SUB } from "${params.petagenomeDir}/nf/lv2/align_contigs_to_orfs.nf"
-include { ANNOTATE_CONTIG_SUB }       from "${params.petagenomeDir}/nf/lv2/annotate_contig.nf"
+include { ANNOTATE_CONTIG_SUB }      from "${params.petagenomeDir}/nf/lv2/annotate_contig.nf"
 
 // 全サンプルの FASTA (.faa や .fna) を 1 つに結合する汎用プロセス
 process MERGE_FASTA {
@@ -19,8 +19,7 @@ process MERGE_FASTA {
     publishDir "${params.output}/${task.process}", mode: 'copy', enabled: params.publish_output
 
     input:
-    path fasta_files // collect() から渡される全サンプルの FASTA リスト
-    val ext          // "faa" または "fna"
+    tuple path(fasta_files), val(ext) // (配列ファイル群, 拡張子) のペアとして受け取る
 
     output:
     tuple val("merged_all_samples"), path("combined_orfs.${ext}"), emit: merged_fasta
@@ -58,20 +57,28 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 4. Prodigal による ORF (遺伝子) 予測
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
-    // 5. 全サンプルの .faa (タンパク質) ファイルを集約して結合・アノテーション
+    // 5. 全サンプルの .faa / .fna を並列で結合処理
     all_faa_files = orf_res.out.map { qry_id, faa, fna, gbk -> faa }.collect()
-    merged_faa_res = MERGE_FASTA(all_faa_files, "faa")
-
-    annotation_res = ANNOTATE_TAXID_KO_SUB(p, ref_or_db, merged_faa_res.merged_fasta, taxid_map, ko_map)
-
-    // 6. 全サンプルの .fna (塩基配列) ファイルを集約して結合・Contig マッピング
     all_fna_files = orf_res.out.map { qry_id, faa, fna, gbk -> fna }.collect()
-    merged_fna_res = MERGE_FASTA(all_fna_files, "fna")
 
-    // マージした ORF FASTA を DB にビルドし、各サンプルの contig を検索 (PZLAST / MMseqs2)
-    contig_mapping_res = ALIGN_CONTIGS_TO_ORFS_SUB(p, merged_fna_res.merged_fasta, asm_res.flt_seqs)
+    // .faa と .fna の2つのタスクを生成する Channel にまとめる
+    merge_inputs_ch = all_faa_files.map { faa -> tuple(faa, "faa") }
+                       .mix(all_fna_files.map { fna -> tuple(fna, "fna") })
 
-    // 7. Contig -> TaxID / KO 対応テーブルの構築
+    // MERGE_FASTA を 1 度呼び出し（内部で並列 2 タスクが起動）
+    merged_fastas = MERGE_FASTA(merge_inputs_ch)
+
+    // 出力結果を .faa と .fna に分岐
+    merged_faa_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.faa') }
+    merged_fna_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.fna') }
+
+    // アノテーション（タンパク質 .faa 側）
+    annotation_res = ANNOTATE_TAXID_KO_SUB(p, ref_or_db, merged_faa_fasta, taxid_map, ko_map)
+
+    // Contig マッピング（塩基配列 .fna 側）
+    contig_mapping_res = ALIGN_CONTIGS_TO_ORFS_SUB(p, merged_fna_fasta, asm_res.flt_seqs)
+
+    // 6. Contig -> TaxID / KO 対応テーブルの構築
     contig_anno_res = ANNOTATE_CONTIG_SUB(p, contig_mapping_res.out, annotation_res.annotated)
 
     emit:
