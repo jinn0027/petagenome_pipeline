@@ -58,14 +58,9 @@ workflow BACTERIOME_PIPELINE_SUB {
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
     // 5. 全サンプルの .faa / .fna を並列で結合処理
-    // moveToで固有のファイル名 (例: 01_ERR1620258.faa) としてステージングする
-    all_faa_files = orf_res.out.map { qry_id, faa, fna, gbk -> 
-        return faa.moveTo("${qry_id}.faa") 
-    }.collect()
-
-    all_fna_files = orf_res.out.map { qry_id, faa, fna, gbk -> 
-        return fna.moveTo("${qry_id}.fna") 
-    }.collect()
+    // .moveTo() を廃止し、そのまま Path オブジェクトを集約する
+    all_faa_files = orf_res.out.map { qry_id, faa, fna, gbk -> faa }.collect()
+    all_fna_files = orf_res.out.map { qry_id, faa, fna, gbk -> fna }.collect()
 
     // .faa と .fna の2つのタスクを生成する Channel にまとめる
     merge_inputs_ch = all_faa_files.map { faa -> tuple(faa, "faa") }

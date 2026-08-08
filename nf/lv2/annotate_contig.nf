@@ -51,7 +51,7 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
         orf_id   = \$1
         sseqid   = \$2
         pident   = \$3
-        length   = \$4
+        aln_len  = \$4
         mismatch = \$5
         gapopen  = \$6
         qstart   = \$7
@@ -84,7 +84,7 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
         contig_id   = \$1
         orf_id      = \$2
         c_pident    = \$3
-        c_length    = \$4
+        c_aln_len   = \$4
         c_mismatch  = \$5
         c_gapopen   = \$6
         c_qstart    = \$7
