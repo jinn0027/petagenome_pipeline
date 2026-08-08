@@ -13,7 +13,7 @@ include { createNullParamsChannel; clusterOptions; processProfile } \
 // ==========================================
 
 process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
-    tag "${sample_id}"
+    tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions}"
@@ -26,10 +26,11 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-    tuple val(sample_id), path(contig_map_m8), path(annotated_tsv)
+    // ref_id, qry_id, contig_map_m8, annotated_tsv の 4 要素を受け取る
+    tuple val(ref_id), val(qry_id), path(contig_map_m8), path(annotated_tsv)
 
     output:
-    tuple val(sample_id), path("${sample_id}_contig_taxid_ko.tsv"), emit: contig_anno
+    tuple val(qry_id), path("${qry_id}_contig_taxid_ko.tsv"), emit: contig_anno
 
     script:
     def map_top_n  = params.annotate_contig_top_n_contig
@@ -128,9 +129,9 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
     }
     ' "${annotated_tsv}" "${contig_map_m8}" > temp_body.tsv
 
-    # ヘッダーを付与して出力
-    echo -e "contig_id\\torf_id\\tmap_pident\\tmap_evalue\\tmap_bitscore\\tref_sseqid\\ttaxid\\tko\\tanno_pident\\tanno_evalue\\tanno_bitscore" > "${sample_id}_contig_taxid_ko.tsv"
-    cat temp_body.tsv >> "${sample_id}_contig_taxid_ko.tsv"
+    # ヘッダーを付与して出力 (${qry_id} を使用)
+    echo -e "contig_id\\torf_id\\tmap_pident\\tmap_evalue\\tmap_bitscore\\tref_sseqid\\ttaxid\\tko\\tanno_pident\\tanno_evalue\\tanno_bitscore" > "${qry_id}_contig_taxid_ko.tsv"
+    cat temp_body.tsv >> "${qry_id}_contig_taxid_ko.tsv"
     rm -f temp_body.tsv
     """
 }
@@ -142,11 +143,12 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
 workflow ANNOTATE_CONTIG_SUB {
     take:
     p
-    contig_map_out // tuple(sample_id, path_m8)
-    annotated_res  // tuple(sample_id, path_tsv)
+    contig_map_out // tuple(ref_id, qry_id, path_m8)
+    annotated_res  // tuple(ref_id, path_tsv)
 
     main:
-    // sample_id (要素0) をキーにして 2 つのチャンネルを結合
+    // ref_id (要素0) をキーにして 2 つのチャンネルを結合
+    // 結合結果: tuple(ref_id, qry_id, path_m8, path_tsv)
     joined_ch = contig_map_out.join(annotated_res, by: 0)
 
     res = ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N(joined_ch)
@@ -164,9 +166,12 @@ workflow ANNOTATE_CONTIG_ALL {
 
     // テスト入力チャンネル（単独テスト時用）
     contig_map_ch = Channel.fromPath(params.annotate_contig_m8_path)
-                           .map { f -> tuple(f.name.replaceAll(/_contig_map\.m8\$/, ''), f) }
+                            .map { f -> 
+                                def qry_id = f.name.replaceAll(/_contig_map\.m8\$/, '')
+                                tuple('merged_all_samples', qry_id, f) 
+                            }
     annotated_ch  = Channel.fromPath(params.annotate_contig_tsv_path)
-                           .map { f -> tuple(f.name.replaceAll(/_annotated\.tsv\$/, ''), f) }
+                            .map { f -> tuple('merged_all_samples', f) }
 
     out_ch = ANNOTATE_CONTIG_SUB(p, contig_map_ch, annotated_ch)
     out_ch.contig_anno.view { i -> "CONTIG ANNO TSV: $i" }
