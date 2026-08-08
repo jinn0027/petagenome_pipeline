@@ -19,7 +19,7 @@ params.mmseqs2_qry_type = 0 // Database type 0: auto, 1: amino acid 2: nucleotid
 //=== search params
 params.mmseqs2_search_type = 0 // Search type 0: auto 1: amino acid, 2: translated, 3: nucleotide, 4: translated nucleotide alignment [0]
 params.mmseqs2_search_s = 5.7 // Sensitivity: 1.0 faster; 4.0 fast; 7.5 sensitive [5.700]
-params.mmseqs2_search_k = 15 // k-mer length (0: automatically set to optimum) [0]->[15]?
+params.mmseqs2_search_k = 0 // k-mer length (0: automatically set to optimum) [0]->[15]?
 params.mmseqs2_search_e = "1.000e-03"
 params.mmseqs2_search_c = 0.0 // List matches above this fraction of aligned (covered) residues (see --cov-mode) [0.800]->[0.0]?
 params.mmseqs2_search_cov_mode = 0 // 0: coverage of query and target
@@ -41,7 +41,7 @@ params.mmseqs2_cluster_mode = "cluster" // cluster or linclust
 
 //=== cluster [cluster]
 params.mmseqs2_cluster_s = 4.0 // Sensitivity: 1.0 faster; 4.0 fast; 7.5 sensitive [4.000]
-params.mmseqs2_cluster_k = 15 // k-mer length (0: automatically set to optimum) [0]->[15]?
+params.mmseqs2_cluster_k = 0 // k-mer length (0: automatically set to optimum) [0]->[15]?
 params.mmseqs2_cluster_e = "1.000e-03"
 params.mmseqs2_cluster_c = 0.8 // List matches above this fraction of aligned (covered) residues (see --cov-mode) [0.800]
 params.mmseqs2_cluster_cov_mode = 0 // 0: coverage of query and target
@@ -101,6 +101,7 @@ process mmseqs2_makerefdb {
         mmseqs createindex \\
             ${ref_id}/ref \\
             tmp \\
+            --search-type ${getParam(p, 'mmseqs2_search_type')} \
             --threads ${threads}
         """
 }
@@ -343,7 +344,7 @@ workflow CLUSTER_SUB {
 workflow BUILD_REF_DB_NUCL_SUB {
     take: p; ref
     main:
-    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 2] }
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 2, mmseqs2_search_type: 3] }
     out = BUILD_REF_DB_SUB(p_mod, ref)
     emit: ref_db = out.ref_db
 }
@@ -351,7 +352,7 @@ workflow BUILD_REF_DB_NUCL_SUB {
 workflow BUILD_QRY_DB_NUCL_SUB {
     take: p; qry
     main:
-    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_qry_type: 2] }
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_qry_type: 2, mmseqs2_search_type: 3] }
     out = BUILD_QRY_DB_SUB(p_mod, qry)
     emit: qry_db = out.qry_db
 }
@@ -359,7 +360,7 @@ workflow BUILD_QRY_DB_NUCL_SUB {
 workflow MAP_NUCL_SUB {
     take: p; ref_db; qry
     main:
-    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 2, mmseqs2_qry_type: 2] }
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 2, mmseqs2_qry_type: 2, mmseqs2_search_type: 3] }
     out = MAP_SUB(p_mod, ref_db, qry)
     emit: out = out.out
 }
@@ -367,7 +368,7 @@ workflow MAP_NUCL_SUB {
 workflow CLUSTER_NUCL_SUB {
     take: p; ref_db
     main:
-    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 2] }
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 2, mmseqs2_search_type: 3] }
     out = CLUSTER_SUB(p_mod, ref_db)
     emit: out = out.out
 }
@@ -376,7 +377,7 @@ workflow CLUSTER_NUCL_SUB {
 workflow BUILD_REF_DB_PROT_SUB {
     take: p; ref
     main:
-    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 1] }
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 1, mmseqs2_search_type: 1] }
     out = BUILD_REF_DB_SUB(p_mod, ref)
     emit: ref_db = out.ref_db
 }
@@ -384,7 +385,7 @@ workflow BUILD_REF_DB_PROT_SUB {
 workflow BUILD_QRY_DB_PROT_SUB {
     take: p; qry
     main:
-    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_qry_type: 1] }
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_qry_type: 1, mmseqs2_search_type: 1] }
     out = BUILD_QRY_DB_SUB(p_mod, qry)
     emit: qry_db = out.qry_db
 }
@@ -392,7 +393,7 @@ workflow BUILD_QRY_DB_PROT_SUB {
 workflow MAP_PROT_SUB {
     take: p; ref_db; qry
     main:
-    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 1, mmseqs2_qry_type: 1] }
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 1, mmseqs2_qry_type: 1, mmseqs2_search_type: 1] }
     out = MAP_SUB(p_mod, ref_db, qry)
     emit: out = out.out
 }
@@ -400,7 +401,7 @@ workflow MAP_PROT_SUB {
 workflow CLUSTER_PROT_SUB {
     take: p; ref_db
     main:
-    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 1] }
+    p_mod = p.map { map -> (map ?: [:]) + [mmseqs2_ref_type: 1, mmseqs2_search_type: 1] }
     out = CLUSTER_SUB(p_mod, ref_db)
     emit: out = out.out
 }
