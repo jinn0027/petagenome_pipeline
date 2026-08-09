@@ -57,15 +57,27 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 4. Prodigal による ORF (遺伝子) 予測
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
-    // 5. 全サンプルの .faa / .fna を並列で結合処理
-    // .moveTo() を廃止し、そのまま Path オブジェクトを集約する
-    all_faa_files = orf_res.out.map { qry_id, faa, fna, gbk -> faa }.collect()
-    all_fna_files = orf_res.out.map { qry_id, faa, fna, gbk -> fna }.collect()
+    // 5. PRODIGALのサンプル毎の結果をまとめる
 
-    // .faa と .fna の2つのタスクを生成する Channel にまとめる
-    merge_inputs_ch = all_faa_files.map { faa -> tuple(faa, "faa") }
-                       .mix(all_fna_files.map { fna -> tuple(fna, "fna") })
+    // PRODIGAL の出力チャンネル: [qry_id, faa_path, fna_path, gbk_path]
+    // .faa ファイルのリストを作成（この時、qry_id を使ってユニークな名前へリネーム）
+    all_faa_files = orf_res.out
+        .map { qry_id, faa, fna, gbk -> 
+            // パスオブジェクトに対して qry_id 名のシンボリックリンク/名前変更を割り当て
+            return faa.moveTo("${faa.parent}/${qry_id}.faa")
+        }
+        .collect()
 
+    // .fna ファイルのリストを作成（同様にユニーク名へリネーム）
+    all_fna_files = orf_res.out
+        .map { qry_id, faa, fna, gbk -> 
+            return fna.moveTo("${fna.parent}/${qry_id}.fna")
+        }
+        .collect()
+
+    // MERGE_FASTA への入力チャンネル作成
+    merge_inputs_ch = all_faa_files.map { faa_list -> tuple(faa_list, "faa") }
+        .mix(all_fna_files.map { fna_list -> tuple(fna_list, "fna") })
     // MERGE_FASTA を 1 度呼び出し（内部で並列 2 タスクが起動）
     merged_fastas = MERGE_FASTA(merge_inputs_ch)
 
