@@ -26,7 +26,6 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-    // ref_id, qry_id, contig_map_m8, annotated_tsv の 4 要素を受け取る
     tuple val(ref_id), val(qry_id), path(contig_map_m8), path(annotated_tsv)
 
     output:
@@ -51,13 +50,6 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
         orf_id   = \$1
         sseqid   = \$2
         pident   = \$3
-        aln_len  = \$4
-        mismatch = \$5
-        gapopen  = \$6
-        qstart   = \$7
-        qend     = \$8
-        sstart   = \$9
-        send     = \$10
         evalue   = \$11
         bitscore = \$12
         taxid    = \$13
@@ -81,18 +73,11 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
     # 2. Contig -> ORF マッピング結果 (m8) の処理
     # -------------------------------------------------------------
     {
-        contig_id   = \$1
-        orf_id      = \$2
-        c_pident    = \$3
-        c_aln_len   = \$4
-        c_mismatch  = \$5
-        c_gapopen   = \$6
-        c_qstart    = \$7
-        c_qend      = \$8
-        c_sstart    = \$9
-        c_send      = \$10
-        c_evalue    = \$11
-        c_bitscore  = \$12
+        contig_id  = \$1
+        orf_id     = \$2
+        c_pident   = \$3
+        c_evalue   = \$11
+        c_bitscore = \$12
 
         if (map_count[contig_id] < MAP_TOP_N) {
             map_count[contig_id]++
@@ -129,7 +114,7 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
     }
     ' "${annotated_tsv}" "${contig_map_m8}" > temp_body.tsv
 
-    # ヘッダーを付与して出力 (${qry_id} を使用)
+    # ヘッダーを付与して出力
     echo -e "contig_id\\torf_id\\tmap_pident\\tmap_evalue\\tmap_bitscore\\tref_sseqid\\ttaxid\\tko\\tanno_pident\\tanno_evalue\\tanno_bitscore" > "${qry_id}_contig_taxid_ko.tsv"
     cat temp_body.tsv >> "${qry_id}_contig_taxid_ko.tsv"
     rm -f temp_body.tsv
@@ -147,9 +132,11 @@ workflow ANNOTATE_CONTIG_SUB {
     annotated_res  // tuple(ref_id, path_tsv)
 
     main:
-    // ref_id (要素0) をキーにして 2 つのチャンネルを結合
-    // 結合結果: tuple(ref_id, qry_id, path_m8, path_tsv)
-    joined_ch = contig_map_out.join(annotated_res, by: 0)
+    // combine を使用して 1 (annotated_res) : N (contig_map_out) の全サンプルとの組み合わせを作る
+    joined_ch = contig_map_out.combine(annotated_res)
+        .map { map_tuple, anno_tuple -> 
+            tuple(map_tuple[0], map_tuple[1], map_tuple[2], anno_tuple[1])
+        }
 
     res = ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N(joined_ch)
 
@@ -164,7 +151,6 @@ workflow ANNOTATE_CONTIG_SUB {
 workflow ANNOTATE_CONTIG_ALL {
     p = createNullParamsChannel()
 
-    // テスト入力チャンネル（単独テスト時用）
     contig_map_ch = Channel.fromPath(params.annotate_contig_m8_path)
                             .map { f -> 
                                 def qry_id = f.name.replaceAll(/_contig_map\.m8\$/, '')
