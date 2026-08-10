@@ -132,10 +132,11 @@ workflow ANNOTATE_CONTIG_SUB {
     annotated_res  // tuple(ref_id, path_tsv)
 
     main:
-    // combine を使用して 1 (annotated_res) : N (contig_map_out) の全サンプルとの組み合わせを作る
+    // combine されたフラットなリスト[ref_id, qry_id, path_m8, ref_id, path_tsv]
+    // から必要な要素 [ref_id, qry_id, m8, tsv]を抽出
     joined_ch = contig_map_out.combine(annotated_res)
-        .map { map_tuple, anno_tuple -> 
-            tuple(map_tuple[0], map_tuple[1], map_tuple[2], anno_tuple[1])
+        .map { list -> 
+            tuple(list[0], list[1], list[2], list[4])
         }
 
     res = ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N(joined_ch)
