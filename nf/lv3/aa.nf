@@ -2,13 +2,14 @@
 nextflow.enable.dsl=2
 
 include { createNullParamsChannel; createSeqsChannel; getParam } from "${params.petagenomeDir}/nf/common/utils"
-include { FASTP_SUB }                from "${params.petagenomeDir}/nf/lv1/fastp.nf"
-include { REMOVE_HOST_SUB }          from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
-include { ASSEMBLY_SUB }             from "${params.petagenomeDir}/nf/lv2/assembly.nf"
-include { PRODIGAL_SUB }             from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
-include { ANNOTATE_TAXID_KO_SUB }    from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
+include { FASTP_SUB }                 from "${params.petagenomeDir}/nf/lv1/fastp.nf"
+include { REMOVE_HOST_SUB }           from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
+include { ASSEMBLY_SUB }              from "${params.petagenomeDir}/nf/lv2/assembly.nf"
+include { PRODIGAL_SUB }              from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
+include { ANNOTATE_TAXID_KO_SUB }     from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
 include { ALIGN_CONTIGS_TO_ORFS_SUB } from "${params.petagenomeDir}/nf/lv2/align_contigs_to_orfs.nf"
-include { ANNOTATE_CONTIG_SUB }      from "${params.petagenomeDir}/nf/lv2/annotate_contig.nf"
+include { ANNOTATE_CONTIG_SUB }       from "${params.petagenomeDir}/nf/lv2/annotate_contig.nf"
+include { SUMMARIZE_KO_TAXID_SUB }    from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
 
 // 全サンプルの FASTA (.faa や .fna) を 1 つに結合する汎用プロセス
 process MERGE_FASTA {
@@ -57,13 +58,17 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 4. Prodigal による ORF (遺伝子) 予測
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
+    // --------------------------------------------------------------------------
+    // 各サンプル固有の ORF 塩基配列 (.fna) チャンネルを作成
+    // orf_res.out: tuple(qry_id, faa_path, fna_path, gbk_path)
+    // --------------------------------------------------------------------------
+    sample_orf_fna_ch = orf_res.out.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
+
     // 5. PRODIGALのサンプル毎の結果をまとめる
 
-    // PRODIGAL の出力チャンネル: [qry_id, faa_path, fna_path, gbk_path]
     // .faa ファイルのリストを作成（この時、qry_id を使ってユニークな名前へリネーム）
     all_faa_files = orf_res.out
         .map { qry_id, faa, fna, gbk -> 
-            // パスオブジェクトに対して qry_id 名のシンボリックリンク/名前変更を割り当て
             return faa.moveTo("${faa.parent}/${qry_id}.faa")
         }
         .collect()
@@ -85,14 +90,18 @@ workflow BACTERIOME_PIPELINE_SUB {
     merged_faa_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.faa') }
     merged_fna_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.fna') }
 
+    // 6. Contig/ORF -> TaxID / KO 対応テーブルの構築
+
     // アノテーション（タンパク質 .faa 側）
     annotation_res = ANNOTATE_TAXID_KO_SUB(p, ref_or_db, merged_faa_fasta, taxid_map, ko_map)
 
-    // Contig マッピング（塩基配列 .fna 側）
-    contig_mapping_res = ALIGN_CONTIGS_TO_ORFS_SUB(p, merged_fna_fasta, asm_res.flt_seqs)
+    // クエリにsample_orf_fna_ch (ORF) を渡す
+    contig_mapping_res = ALIGN_CONTIGS_TO_ORFS_SUB(p, merged_fna_fasta, sample_orf_fna_ch)
 
-    // 6. Contig -> TaxID / KO 対応テーブルの構築
     contig_anno_res = ANNOTATE_CONTIG_SUB(p, contig_mapping_res.out, annotation_res.annotated)
+
+    // 7. サンプルごとの KO / TaxID 比率の集計処理
+    summary_res = SUMMARIZE_KO_TAXID_SUB(p, contig_anno_res.contig_anno)
 
     emit:
     raw_reads          = reads
@@ -105,6 +114,8 @@ workflow BACTERIOME_PIPELINE_SUB {
     annotated          = annotation_res.annotated
     contig_map_out     = contig_mapping_res.out
     contig_taxid_ko    = contig_anno_res.contig_anno
+    ko_summary         = summary_res.ko_summary
+    tax_summary        = summary_res.tax_summary
 }
 
 
@@ -150,6 +161,8 @@ workflow BACTERIOME_PIPELINE_ALL {
     out_ch.annotated.view          { i -> "ANNOTATED TSV      : $i" }
     out_ch.contig_map_out.view     { i -> "CONTIG MAP RESULT  : $i" }
     out_ch.contig_taxid_ko.view    { i -> "CONTIG TAXID KO TSV: $i" }
+    out_ch.ko_summary.view         { i -> "KO SUMMARY TSV     : $i" }
+    out_ch.tax_summary.view        { i -> "TAXID SUMMARY TSV  : $i" }
 }
 
 // デフォルトエントリーポイント
