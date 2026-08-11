@@ -42,6 +42,8 @@ if [ ! -f uniprot_to_taxid.tsv  ] || [ ! -f uniprot_to_ko.tsv ] ; then
 	wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz
     fi
     zcat idmapping_selected.tab.gz | awk -F'\t' ' { print $1 "\t" $12 > "uniprot_to_ko.tsv"; print $1 "\t" $3 > "uniprot_to_taxid.tsv"; } '
+    sed -i 's#; #;#g' uniprot_to_ko.tsv
+    sed -i 's#; #;#g' uniprot_to_taxid.tsv
 fi
 popd
 popd
