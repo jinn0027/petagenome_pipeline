@@ -2,14 +2,14 @@
 nextflow.enable.dsl=2
 
 include { createNullParamsChannel; createSeqsChannel; getParam } from "${params.petagenomeDir}/nf/common/utils"
-include { FASTP_SUB }                 from "${params.petagenomeDir}/nf/lv1/fastp.nf"
-include { REMOVE_HOST_SUB }           from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
-include { ASSEMBLY_SUB }              from "${params.petagenomeDir}/nf/lv2/assembly.nf"
-include { PRODIGAL_SUB }              from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
-include { ANNOTATE_TAXID_KO_SUB }     from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
+include { FASTP_SUB }                from "${params.petagenomeDir}/nf/lv1/fastp.nf"
+include { REMOVE_HOST_SUB }          from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
+include { ASSEMBLY_SUB }             from "${params.petagenomeDir}/nf/lv2/assembly.nf"
+include { PRODIGAL_SUB }             from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
+include { ANNOTATE_TAXID_KO_SUB }    from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
 include { ALIGN_CONTIGS_TO_ORFS_SUB } from "${params.petagenomeDir}/nf/lv2/align_contigs_to_orfs.nf"
-include { ANNOTATE_CONTIG_SUB }       from "${params.petagenomeDir}/nf/lv2/annotate_contig.nf"
-include { SUMMARIZE_KO_TAXID_SUB }    from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
+include { ANNOTATE_CONTIG_SUB }      from "${params.petagenomeDir}/nf/lv2/annotate_contig.nf"
+include { SUMMARIZE_KO_TAXID_SUB }   from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
 
 // 全サンプルの FASTA (.faa や .fna) を 1 つに結合する汎用プロセス
 process MERGE_FASTA {
@@ -58,31 +58,26 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 4. Prodigal による ORF (遺伝子) 予測
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
-    // --------------------------------------------------------------------------
-    // 各サンプル固有の ORF 塩基配列 (.fna) チャンネルを作成
-    // orf_res.out: tuple(qry_id, faa_path, fna_path, gbk_path)
-    // --------------------------------------------------------------------------
-    sample_orf_fna_ch = orf_res.out.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
+    // 5. PRODIGALのサンプル毎の結果の整理
 
-    // 5. PRODIGALのサンプル毎の結果をまとめる
+    // moveTo() によるファイル消失(競合)を防ぐため、1つの .map ブロックでまとめて処理
+    renamed_orfs = orf_res.out.map { qry_id, faa, fna, gbk ->
+        def new_faa = faa.moveTo("${faa.parent}/${qry_id}.faa")
+        def new_fna = fna.moveTo("${fna.parent}/${qry_id}.fna")
+        return tuple(qry_id, new_faa, new_fna, gbk)
+    }
 
-    // .faa ファイルのリストを作成（この時、qry_id を使ってユニークな名前へリネーム）
-    all_faa_files = orf_res.out
-        .map { qry_id, faa, fna, gbk -> 
-            return faa.moveTo("${faa.parent}/${qry_id}.faa")
-        }
-        .collect()
+    // 各サンプル固有の ORF 塩基配列 (.fna) チャンネル（クエリ用）
+    sample_orf_fna_ch = renamed_orfs.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
 
-    // .fna ファイルのリストを作成（同様にユニーク名へリネーム）
-    all_fna_files = orf_res.out
-        .map { qry_id, faa, fna, gbk -> 
-            return fna.moveTo("${fna.parent}/${qry_id}.fna")
-        }
-        .collect()
+    // MERGE_FASTA 用に全サンプルの faa / fna リストを集約
+    all_faa_files = renamed_orfs.map { qry_id, faa, fna, gbk -> faa }.collect()
+    all_fna_files = renamed_orfs.map { qry_id, faa, fna, gbk -> fna }.collect()
 
     // MERGE_FASTA への入力チャンネル作成
     merge_inputs_ch = all_faa_files.map { faa_list -> tuple(faa_list, "faa") }
         .mix(all_fna_files.map { fna_list -> tuple(fna_list, "fna") })
+    
     // MERGE_FASTA を 1 度呼び出し（内部で並列 2 タスクが起動）
     merged_fastas = MERGE_FASTA(merge_inputs_ch)
 
@@ -90,14 +85,13 @@ workflow BACTERIOME_PIPELINE_SUB {
     merged_faa_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.faa') }
     merged_fna_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.fna') }
 
-    // 6. Contig/ORF -> TaxID / KO 対応テーブルの構築
-
     // アノテーション（タンパク質 .faa 側）
     annotation_res = ANNOTATE_TAXID_KO_SUB(p, ref_or_db, merged_faa_fasta, taxid_map, ko_map)
 
-    // クエリにsample_orf_fna_ch (ORF) を渡す
+    // ORF マッピング（各サンプルの ORF vs 統合 ORF カタログ）
     contig_mapping_res = ALIGN_CONTIGS_TO_ORFS_SUB(p, merged_fna_fasta, sample_orf_fna_ch)
 
+    // 6. ORF -> TaxID / KO 対応テーブルの構築
     contig_anno_res = ANNOTATE_CONTIG_SUB(p, contig_mapping_res.out, annotation_res.annotated)
 
     // 7. サンプルごとの KO / TaxID 比率の集計処理
