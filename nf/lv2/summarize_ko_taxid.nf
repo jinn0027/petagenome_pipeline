@@ -27,20 +27,28 @@ process SUMMARIZE_KO_TAXID {
 
     input:
     tuple val(qry_id), path(contig_anno_tsv)
+    path ko_name_map     // params.ko_name_map から渡す (任意)
+    path taxid_name_map  // params.taxid_name_map から渡す (任意)
 
     output:
     tuple val(qry_id), path("${qry_id}.ko_summary.tsv")   , emit: ko_summary
     tuple val(qry_id), path("${qry_id}.taxid_summary.tsv"), emit: tax_summary
 
     script:
-    def py_script  = "${params.petagenomeDir}/scripts/Python/summarize_ko_taxid.py"
-    def min_pident = params.summarize_min_anno_pident
+    def py_script   = "${params.petagenomeDir}/scripts/Python/summarize_ko_taxid.py"
+    def min_pident  = params.summarize_min_anno_pident
+    
+    // マッピングファイルが存在する場合は引数を組み立てる
+    def ko_opt  = (ko_name_map.name != 'NO_FILE') ? "--ko_name_map ${ko_name_map}" : ""
+    def tax_opt = (taxid_name_map.name != 'NO_FILE') ? "--taxid_name_map ${taxid_name_map}" : ""
 
     """
     python3 ${py_script} \\
         -i ${contig_anno_tsv} \\
         -o ${qry_id} \\
-        -p ${min_pident}
+        -p ${min_pident} \\
+        ${ko_opt} \\
+        ${tax_opt}
     """
 }
 
@@ -52,9 +60,11 @@ workflow SUMMARIZE_KO_TAXID_SUB {
     take:
     p
     contig_anno_ch // tuple(qry_id, path_tsv)
+    ko_name_map    // path (または file('NO_FILE'))
+    taxid_name_map // path (または file('NO_FILE'))
 
     main:
-    res = SUMMARIZE_KO_TAXID(contig_anno_ch)
+    res = SUMMARIZE_KO_TAXID(contig_anno_ch, ko_name_map, taxid_name_map)
 
     emit:
     ko_summary  = res.ko_summary
@@ -75,7 +85,11 @@ workflow SUMMARIZE_KO_TAXID_ALL {
             tuple(qry_id, f)
         }
 
-    out_ch = SUMMARIZE_KO_TAXID_SUB(p, contig_anno_ch)
+    // パラメータ指定の有無を判定してファイルパスを取得
+    ko_map_file  = (params.containsKey('ko_name_map_path') && params.ko_name_map_path) ? file(params.ko_name_map_path, checkIfExists: true) : file('NO_FILE')
+    tax_map_file = (params.containsKey('taxid_name_map_path') && params.taxid_name_map_path) ? file(params.taxid_name_map_path, checkIfExists: true) : file('NO_FILE')
+
+    out_ch = SUMMARIZE_KO_TAXID_SUB(p, contig_anno_ch, ko_map_file, tax_map_file)
     
     out_ch.ko_summary.view { i -> "KO SUMMARY TSV: $i" }
     out_ch.tax_summary.view { i -> "TAXID SUMMARY TSV: $i" }

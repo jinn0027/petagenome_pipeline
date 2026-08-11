@@ -38,11 +38,13 @@ process MERGE_FASTA {
 workflow BACTERIOME_PIPELINE_SUB {
     take:
     p
-    host_ref      // ホストゲノム(FASTAまたはDB)
-    ref_or_db     // アノテーション用リファレンス
-    taxid_map     // uniprot_to_taxid.tsv
-    ko_map        // uniprot_to_ko.tsv
-    reads         // 入力リードペア [ pair_id, [R1, R2] ]
+    host_ref       // ホストゲノム(FASTAまたはDB)
+    ref_or_db      // アノテーション用リファレンス
+    taxid_map      // uniprot_to_taxid.tsv
+    ko_map         // uniprot_to_ko.tsv
+    ko_name_map    // ko_to_name.tsv (任意)
+    taxid_name_map // taxid_to_name.tsv (任意)
+    reads          // 入力リードペア [ pair_id, [R1, R2] ]
 
     main:
     // 1. FASTP による QC・トリミング
@@ -59,8 +61,6 @@ workflow BACTERIOME_PIPELINE_SUB {
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
     // 5. PRODIGALのサンプル毎の結果の整理
-
-    // moveTo() によるファイル消失(競合)を防ぐため、1つの .map ブロックでまとめて処理
     renamed_orfs = orf_res.out.map { qry_id, faa, fna, gbk ->
         def new_faa = faa.moveTo("${faa.parent}/${qry_id}.faa")
         def new_fna = fna.moveTo("${fna.parent}/${qry_id}.fna")
@@ -94,8 +94,8 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 6. ORF -> TaxID / KO 対応テーブルの構築
     contig_anno_res = ANNOTATE_CONTIG_SUB(p, contig_mapping_res.out, annotation_res.annotated)
 
-    // 7. サンプルごとの KO / TaxID 比率の集計処理
-    summary_res = SUMMARIZE_KO_TAXID_SUB(p, contig_anno_res.contig_anno)
+    // 7. サンプルごとの KO / TaxID 比率の集計処理 
+    summary_res = SUMMARIZE_KO_TAXID_SUB(p, contig_anno_res.contig_anno, ko_name_map, taxid_name_map)
 
     emit:
     raw_reads          = reads
@@ -144,8 +144,12 @@ workflow BACTERIOME_PIPELINE_ALL {
     taxid_map = file(params.taxid_map_path, checkIfExists: true)
     ko_map    = file(params.ko_map_path, checkIfExists: true)
 
+    // 名称マッピングファイル (未指定の場合は NO_FILE ダミーを渡す)
+    ko_name_map    = (params.containsKey('ko_name_map_path') && params.ko_name_map_path) ? file(params.ko_name_map_path, checkIfExists: true) : file('NO_FILE')
+    taxid_name_map = (params.containsKey('taxid_name_map_path') && params.taxid_name_map_path) ? file(params.taxid_name_map_path, checkIfExists: true) : file('NO_FILE')
+
     // 3. パイプライン本体の呼び出し
-    out_ch = BACTERIOME_PIPELINE_SUB(p, host_ref, ref_or_db, taxid_map, ko_map, reads)
+    out_ch = BACTERIOME_PIPELINE_SUB(p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads)
 
     // 結果の確認
     out_ch.fastp_reads.view        { i -> "FASTP PASSED READS : $i" }
