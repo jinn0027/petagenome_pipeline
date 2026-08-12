@@ -49,16 +49,18 @@ import sys
 taxid_dict = {}
 with open("${taxid_map}", 'r', encoding='utf-8') as f:
     for line in f:
-        if '\t' in line:
-            parts = line.rstrip('\r\n').split('\t', 1)
+        line_clean = line.rstrip('\r\n')
+        if '\t' in line_clean:
+            parts = line_clean.split('\t', 1)
             if len(parts) == 2 and parts[1]:
                 taxid_dict[parts[0]] = parts[1]
 
 ko_dict = {}
 with open("${ko_map}", 'r', encoding='utf-8') as f:
     for line in f:
-        if '\t' in line:
-            parts = line.rstrip('\r\n').split('\t', 1)
+        line_clean = line.rstrip('\r\n')
+        if '\t' in line_clean:
+            parts = line_clean.split('\t', 1)
             if len(parts) == 2 and parts[1]:
                 ko_dict[parts[0]] = parts[1]
 
