@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1コンティグ・1ORFあたりの保持上限数のデフォルト値
-params.annotate_contig_top_n_contig = 3  // 1 Contig に対して保持する ORF の上限
-params.annotate_contig_top_n_anno   = 3  // 1 ORF に対して保持する DB Hit (TaxID/KO) の上限
+params.annotate_contig_top_n_contig = 3  // 1 ORF に対して保持する merged ORF の上限
+params.annotate_contig_top_n_anno   = 3  // 1 merged ORF に対して保持する DB Hit (TaxID/KO) の上限
 
 include { createNullParamsChannel; clusterOptions; processProfile } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -72,6 +72,11 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
         # フィールドが存在し、かつ空文字列・空白でなければその値を使い、それ以外は "N/A"
         taxid    = (NF >= c_taxid  && \$c_taxid  != "" && \$c_taxid  != " ") ? \$c_taxid  : "N/A"
         ko       = (NF >= c_ko     && \$c_ko     != "" && \$c_ko     != " ") ? \$c_ko     : "N/A"
+
+        # 【追加】taxid と ko の両方が "N/A" (または空) の場合は Top N 枠を消費せずスキップ
+        if ((taxid == "N/A" || taxid == "") && (ko == "N/A" || ko == "")) {
+            next
+        }
 
         if (anno_count[orf_id] < ANNO_TOP_N) {
             anno_count[orf_id]++
