@@ -159,8 +159,10 @@ case ${test} in
                  --annotate_p_aligner mmseqs2 \
                  --annotate_p_is_prebuilt_db "true" \
                  --annotate_p_ref_or_db ${extDir}/uniprot_refs/mmseqs2 \
-		 --taxid_map_path ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
-		 --ko_map_path ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
+                 --taxid_map_path ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
+                 --ko_map_path ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
+                 --taxid_map_path ${extDir}/uniprot_refs/taxid_to_name.tsv \
+                 --ko_map_path ${extDir}/uniprot_refs/ko_to_name.tsv \
                  --mmseqs2_ref_type 1 \
                  --mmseqs2_qry_type 1 \
                  --bacteriome_pipeline_reads "${inPairs}"

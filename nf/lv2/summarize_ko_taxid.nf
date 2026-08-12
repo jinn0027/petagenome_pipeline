@@ -27,8 +27,8 @@ process SUMMARIZE_KO_TAXID {
 
     input:
     tuple val(qry_id), path(contig_anno_tsv)
-    path ko_name_map     // params.ko_name_map から渡す (任意)
-    path taxid_name_map  // params.taxid_name_map から渡す (任意)
+    path ko_name_map, stageAs: 'ko_map.tsv'     // params.ko_name_map から渡す (任意)
+    path taxid_name_map, stageAs: 'taxid_map.tsv'  // params.taxid_name_map から渡す (任意)
 
     output:
     tuple val(qry_id), path("${qry_id}.ko_summary.tsv")   , emit: ko_summary
