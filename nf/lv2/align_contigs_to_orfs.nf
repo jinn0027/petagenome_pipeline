@@ -1,8 +1,15 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.align_ref_aligner = "mmseqs2"
-params.align_ref_is_prebuilt_db = false
+// ==========================================
+// 0. グローバルフォールバックの設定
+// ==========================================
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// アライナーパラメータの初期化
+params.align_ref_aligner        = params.align_ref_aligner ?: "mmseqs2"
+params.align_ref_is_prebuilt_db = params.align_ref_is_prebuilt_db ?: false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -11,15 +18,16 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 // 1. インポートパスの動的決定
 // ==========================================
 
-// params.pzrepoDir が設定されており、かつ pzlast.nf が存在するかチェック
-def pz_script = (params.containsKey('pzrepoDir') && params.pzrepoDir) ? "${params.pzrepoDir}/nf/lv1/pzlast.nf" : null
+// PZLAST のリポジトリパスとスクリプト存在確認
+def pz_script  = params.pzrepoDir ? "${params.pzrepoDir}/nf/lv1/pzlast.nf" : null
 def use_pzlast = (params.align_ref_aligner == 'pzlast') && pz_script && file(pz_script).exists()
 
-// 使用するアライナーのパスを決定 (pzlast を使う条件が揃っていなければ mmseqs2.nf を選択)
+// 使用するアライナーのパスを決定 (pzlast の条件が揃わなければ mmseqs2.nf を選択)
 def aligner_path = use_pzlast ? pz_script : "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
 
 // 塩基配列（ヌクレオチド）用のサブワークフローをインポート
 include { BUILD_REF_DB_NUCL_SUB; MAP_NUCL_SUB } from "${aligner_path}"
+
 
 // ==========================================
 // 2. マッピングサブワークフロー（処理の本体）

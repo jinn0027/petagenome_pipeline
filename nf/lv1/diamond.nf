@@ -1,14 +1,26 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.diamond_diamond_makerefdb_memory = params.memory
-params.diamond_diamond_makerefdb_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
 
-params.diamond_diamond_blastp_memory = params.memory
-params.diamond_diamond_blastp_threads = params.threads
+// 2. DIAMOND 固有の上限値定義
+def DIAMOND_MAKEREFDB_MAX_MEMORY  = 32 // GB (バイナリインデックス構築用)
+def DIAMOND_MAKEREFDB_MAX_THREADS = 8  // インデックス構築の並列化飽和点
 
-params.diamond_diamond_blastx_memory = params.memory
-params.diamond_diamond_blastx_threads = params.threads
+def DIAMOND_SEARCH_MAX_MEMORY     = 64 // GB (ブロックキャッシュ・高速バッチ検索用)
+def DIAMOND_SEARCH_MAX_THREADS    = 16 // メモリ帯域とスレッド並列効率の上限
+
+// 3. 上限値による動的クリッピング
+params.diamond_diamond_makerefdb_memory  = Math.min((params.diamond_diamond_makerefdb_memory  ?: params.memory) as Integer, DIAMOND_MAKEREFDB_MAX_MEMORY)
+params.diamond_diamond_makerefdb_threads = Math.min((params.diamond_diamond_makerefdb_threads ?: params.threads) as Integer, DIAMOND_MAKEREFDB_MAX_THREADS)
+
+params.diamond_diamond_blastp_memory  = Math.min((params.diamond_diamond_blastp_memory  ?: params.memory) as Integer, DIAMOND_SEARCH_MAX_MEMORY)
+params.diamond_diamond_blastp_threads = Math.min((params.diamond_diamond_blastp_threads ?: params.threads) as Integer, DIAMOND_SEARCH_MAX_THREADS)
+
+params.diamond_diamond_blastx_memory  = Math.min((params.diamond_diamond_blastx_memory  ?: params.memory) as Integer, DIAMOND_SEARCH_MAX_MEMORY)
+params.diamond_diamond_blastx_threads = Math.min((params.diamond_diamond_blastx_threads ?: params.threads) as Integer, DIAMOND_SEARCH_MAX_THREADS)
 
 params.diamond_task = "megadiamond"
 params.diamond_num_alignments = "1"

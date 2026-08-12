@@ -1,134 +1,166 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.circular_contigs_classify_memory = params.memory
-params.circular_contigs_classify_threads = params.threads
-params.circular_contigs_deduplicate_memory = params.memory
-params.circular_contigs_deduplicate_threads = params.threads
+// ==========================================
+// 0. グローバルフォールバックと上限値（Clipping）定義
+// ==========================================
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
 
-params.circular_contigs_e_thre = "1e-10"        // E-value cutoff for circular formation
-params.circular_contigs_pi_thre = "100"         // identity for circular formation
-params.circular_contigs_al_thre = "50"          // minimum alignment length for circular formation
-params.circular_contigs_pi_thre_rd = "95"       // identity for removal of redundancy
-params.circular_contigs_qc_thre_rd = "95"       // query coverage for removal of redundancy
-params.circular_contigs_len_l = "5000"          // minimum length for linear contigs
-params.circular_contigs_len_c = "1500"          // minimum length for circular contigs
-params.circular_contigs_pi_self = 100           // identity for circular formation
-params.circular_contigs_al_self = 50            // alignment length for circular formation
-params.circular_contigs_blast1_num_alignments=5
-params.circular_contigs_blast2_num_alignments=50
+// スイッチ・各種しきい値デフォルト設定
+params.use_pzlast           = params.use_pzlast           ?: false
+params.pzlast_cfg1          = params.pzlast_cfg1          ?: null
+params.pzlast_cfg2          = params.pzlast_cfg2          ?: null
+
+params.circular_contigs_e_thre     = params.circular_contigs_e_thre     ?: "1e-10"
+params.circular_contigs_pi_thre    = params.circular_contigs_pi_thre    ?: "100"
+params.circular_contigs_al_thre    = params.circular_contigs_al_thre    ?: "50"
+params.circular_contigs_pi_thre_rd = params.circular_contigs_pi_thre_rd ?: "95"
+params.circular_contigs_qc_thre_rd = params.circular_contigs_qc_thre_rd ?: "95"
+params.circular_contigs_len_l      = params.circular_contigs_len_l      ?: "5000"
+params.circular_contigs_len_c      = params.circular_contigs_len_c      ?: "1500"
+params.circular_contigs_pi_self    = params.circular_contigs_pi_self    ?: 100
+params.circular_contigs_al_self    = params.circular_contigs_al_self    ?: 50
+
+params.circular_contigs_blast1_num_alignments = params.circular_contigs_blast1_num_alignments ?: 5
+params.circular_contigs_blast2_num_alignments = params.circular_contigs_blast2_num_alignments ?: 50
+
+// プロセス固有の上限設定
+def CLASSIFY_MAX_MEMORY     = 16
+def CLASSIFY_MAX_THREADS    = 8
+def DEDUPLICATE_MAX_MEMORY  = 8
+def DEDUPLICATE_MAX_THREADS = 4
+
+// パラメータ割り当てと上限適応
+params.circular_contigs_classify_memory     = Math.min((params.circular_contigs_classify_memory    ?: params.memory) as Integer, CLASSIFY_MAX_MEMORY)
+params.circular_contigs_classify_threads    = Math.min((params.circular_contigs_classify_threads   ?: params.threads) as Integer, CLASSIFY_MAX_THREADS)
+params.circular_contigs_deduplicate_memory  = Math.min((params.circular_contigs_deduplicate_memory ?: params.memory) as Integer, DEDUPLICATE_MAX_MEMORY)
+params.circular_contigs_deduplicate_threads = Math.min((params.circular_contigs_deduplicate_threads?: params.threads) as Integer, DEDUPLICATE_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
-include { blast_makerefdb as blast_makerefdb1; blastn as blastn1} from "${params.petagenomeDir}/nf/lv1/blast"
-include { blast_makerefdb as blast_makerefdb2; blastn as blastn2} from "${params.petagenomeDir}/nf/lv1/blast"
+include { blast_makerefdb as blast_makerefdb1; blastn as blastn1 } from "${params.petagenomeDir}/nf/lv1/blast"
+include { blast_makerefdb as blast_makerefdb2; blastn as blastn2 } from "${params.petagenomeDir}/nf/lv1/blast"
 
 if (params.use_pzlast) {
-  include { pzlast_makerefdb as pzlast_makerefdb1; pzlastn as pzlastn1} from "${params.pzrepoDir}/nf/lv1/pzlast"
-  include { pzlast_makerefdb as pzlast_makerefdb2; pzlastn as pzlastn2} from "${params.pzrepoDir}/nf/lv1/pzlast"
+    include { pzlast_makerefdb as pzlast_makerefdb1; pzlastn as pzlastn1 } from "${params.pzrepoDir}/nf/lv1/pzlast"
+    include { pzlast_makerefdb as pzlast_makerefdb2; pzlastn as pzlastn2 } from "${params.pzrepoDir}/nf/lv1/pzlast"
 }
+
+// ==========================================
+// 1. プロセス定義
+// ==========================================
 
 process classify {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
     containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
-    def gb = "${params.circular_contigs_classify_memory}"
+
+    def gb      = "${params.circular_contigs_classify_memory}"
     def threads = "${params.circular_contigs_classify_threads}"
-    memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
     input:
         tuple val(p), val(ref_id), val(qry_id), path(in_tsv, arity: '1')
         tuple val(qry_id), path(qry, arity: '1')
+
     output:
-        tuple val(ref_id),
-        path("${qry_id}/circular.cut.fa"),
-        path("${qry_id}/circular.extended.fa"),
-        path("${qry_id}/circular.fa"),
-        path("${qry_id}/linear.fa"),
-        path("${qry_id}/selfhit.tsv", arity: '1')
+        tuple val(qry_id),
+              path("${qry_id}/circular.cut.fa"),
+              path("${qry_id}/circular.extended.fa"),
+              path("${qry_id}/circular.fa"),
+              path("${qry_id}/linear.fa"),
+              path("${qry_id}/selfhit.tsv", arity: '1')
+
     script:
-        """
-        echo "${processProfile(task)}" | tee prof.txt
-        qry_=${qry}
-        echo ${qry} | grep -e ".gz\$" >& /dev/null && :
-        if [ \$? -eq 0 ] ; then
-            qry_=\${qry_%%.gz}
-            unpigz -c ${qry} > \${qry_}
-        fi
-        mkdir -p ${qry_id}
+    """
+    echo "${processProfile(task)}" | tee prof.txt
+    qry_=${qry}
+    echo \${qry} | grep -e ".gz\$" >& /dev/null && :
+    if [ \$? -eq 0 ] ; then
+        qry_=\${qry_%%.gz}
+        unpigz -c ${qry} > \${qry_}
+    fi
+    mkdir -p ${qry_id}
 
-        # 自己ヒットしたもののみを選ぶ
-        awk -F "\t" '{OFS="\t"}  {
-             if (\$1==\$2) {
-                 print \$0
-             }
-        }' ${in_tsv} > ${qry_id}/selfhit.tsv 
+    # 自己ヒットしたもののみを選ぶ
+    awk -F "\\t" '{OFS="\\t"} {
+        if (\$1==\$2) {
+            print \$0
+        }
+    }' ${in_tsv} > ${qry_id}/selfhit.tsv 
 
-        # 完全に一致する断片（自己アライメント）を除外し、
-        # 残ったヒット（環状オーバーラップまたはリピート）を抽出
-        awk -F "\t" '{OFS="\t"} {
-            q1 = \$7 < \$8 ? \$7 : \$8;
-            q2 = \$7 < \$8 ? \$8 : \$7;
-            t1 = \$9 < \$(10) ? \$9 : \$(10);
-            t2 = \$9 < \$(10) ? \$(10) : \$9;
-            if (q1 != t1 || q2 != t2) {
-                print \$0
-            }
-        }' ${qry_id}/selfhit.tsv > ${qry_id}/non_self_aligned_hits.tsv
+    # 完全に一致する断片（自己アライメント）を除外し、
+    # 残ったヒット（環状オーバーラップまたはリピート）を抽出
+    awk -F "\\t" '{OFS="\\t"} {
+        q1 = \$7 < \$8 ? \$7 : \$8;
+        q2 = \$7 < \$8 ? \$8 : \$7;
+        t1 = \$9 < \$(10) ? \$9 : \$(10);
+        t2 = \$9 < \$(10) ? \$(10) : \$9;
+        if (q1 != t1 || q2 != t2) {
+            print \$0
+        }
+    }' ${qry_id}/selfhit.tsv > ${qry_id}/non_self_aligned_hits.tsv
 
-        # 配列IDごとにヒットを分割
-        awk -F "\t" -v qry_id="${qry_id}" '{OFS="\t"} {
-            f=\$1; gsub("/", "__", f);
-            print \$0 >> qry_id"/selfhit"f".tsv"
-        }' ${qry_id}/non_self_aligned_hits.tsv
+    # 配列IDごとにヒットを分割
+    awk -F "\\t" -v qry_id="${qry_id}" '{OFS="\\t"} {
+        f=\$1; gsub("/", "__", f);
+        print \$0 >> qry_id"/selfhit"f".tsv"
+    }' ${qry_id}/non_self_aligned_hits.tsv
 
-        touch ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa ${qry_id}/circular.fa ${qry_id}/linear.fa
+    touch ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa ${qry_id}/circular.fa ${qry_id}/linear.fa
 
-        # 配列IDごとにFASTAファイル分割
-        seqkit split -i \${qry_} --by-id-prefix @ -O ${qry_id}
+    # 配列IDごとにFASTAファイル分割
+    seqkit split -i \${qry_} --by-id-prefix @ -O ${qry_id}
 
-        seqkit fx2tab -j ${params.circular_contigs_classify_threads} -n -i -l \${qry_} | while read -r id len; do
-            f="\$(echo \${id} | sed 's#/#__#g')"
-            each_fa="${qry_id}/@\${f}.fa"
-            each_selfhit="${qry_id}/selfhit"\${f}".tsv"
-            if [ -f \${each_selfhit} ] ; then
-                pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '1p' | \\
-                           awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} '{ \\
-                               if (\$1==id && \$4!=len && \$4>=al_self) { \\
-                                   q1 = \$7 < \$8 ? \$7 : \$8; \\
-                                   t1 = \$9 < \$(10) ? \$9 : \$(10); \\
-                                   if (q1==1) {print(t1)} \\
-                                   else if (t1==1) {print(q1)}; \\
-                               } \\
-                           }')
-                if [ "\${pos_end}" != "" ] && [ "\${pos_end}" -gt 1 ] ; then
-                    cat \${each_fa} | seqkit subseq -r 1:\${pos_end} > _fa
-                    cat _fa >> ${qry_id}/circular.cut.fa
-                    tail -n +2 \${each_fa} >> _fa
-                    cat _fa >> ${qry_id}/circular.extended.fa
-                    rm -f _fa
-                    cat \${each_fa} >> ${qry_id}/circular.fa
-                else
-                    cat \${each_fa} >> ${qry_id}/linear.fa
-                fi
+    seqkit fx2tab -j ${threads} -n -i -l \${qry_} | while read -r id len; do
+        f="\$(echo \${id} | sed 's#/#__#g')"
+        each_fa="${qry_id}/@\${f}.fa"
+        each_selfhit="${qry_id}/selfhit"\${f}".tsv"
+        if [ -f \${each_selfhit} ] ; then
+            pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '1p' | \\
+                       awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} '{ \\
+                           if (\$1==id && \$4!=len && \$4>=al_self) { \\
+                               q1 = \$7 < \$8 ? \$7 : \$8; \\
+                               t1 = \$9 < \$(10) ? \$9 : \$(10); \\
+                               if (q1==1) {print(t1)} \\
+                               else if (t1==1) {print(q1)}; \\
+                           } \\
+                       }')
+            if [ "\${pos_end}" != "" ] && [ "\${pos_end}" -gt 1 ] ; then
+                cat \${each_fa} | seqkit subseq -r 1:\${pos_end} > _fa
+                cat _fa >> ${qry_id}/circular.cut.fa
+                tail -n +2 \${each_fa} >> _fa
+                cat _fa >> ${qry_id}/circular.extended.fa
+                rm -f _fa
+                cat \${each_fa} >> ${qry_id}/circular.fa
+            else
+                cat \${each_fa} >> ${qry_id}/linear.fa
             fi
-        done
-        """
+        fi
+    done
+    """
 }
 
 process deduplicate {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
-    def gb = "${params.circular_contigs_deduplicate_memory}"
+
+    def gb      = "${params.circular_contigs_deduplicate_memory}"
     def threads = "${params.circular_contigs_deduplicate_threads}"
-    memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
     input:
         tuple val(p), val(id), path(circular_cut), path(circular_ext), path(circular), path(blst_out_tsv, arity: '1')
+
     output:
         tuple val(id),
               path("${id}/circular.cut.fa"),
@@ -136,25 +168,25 @@ process deduplicate {
               path("${id}/circular.fa"),
               path("${id}/otherhit.tsv", arity: '1'),
               path("${id}/*.txt", arity: '3')
+
     script:
-        """
-        echo "${processProfile(task)}" | tee prof.txt
-        mkdir -p ${id}
-        awk -F "\t" '{OFS="\t"}  { if (\$1 != \$2) print \$0 }' ${blst_out_tsv} > ${id}/otherhit.tsv
-        python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py ${circular_cut} > ${id}/circular_cut.all.length.txt
-        ruby ${params.petagenomeDir}/scripts/Ruby/extract_contig_redundancy.3.rb -b ${id}/otherhit.tsv -l ${id}/circular_cut.all.length.txt -c ${params.circular_contigs_qc_thre_rd}  -d 6  -i ${id}/out_rd_info.txt  -o ${id}/out_ex_config.txt
-        touch ${id}/circular.cut.fa ${id}/circular.extended.fa ${id}/circular.fa
-        python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular_cut} | sed '/^\$/d'  > ${id}/circular.cut.fa
-        python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular_ext} | sed '/^\$/d'  > ${id}/circular.extended.fa
-        python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular} | sed '/^\$/d' > ${id}/circular.fa
-        """
+    """
+    echo "${processProfile(task)}" | tee prof.txt
+    mkdir -p ${id}
+    awk -F "\\t" '{OFS="\\t"} { if (\$1 != \$2) print \$0 }' ${blst_out_tsv} > ${id}/otherhit.tsv
+    python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py ${circular_cut} > ${id}/circular_cut.all.length.txt
+    ruby ${params.petagenomeDir}/scripts/Ruby/extract_contig_redundancy.3.rb -b ${id}/otherhit.tsv -l ${id}/circular_cut.all.length.txt -c ${params.circular_contigs_qc_thre_rd} -d 6 -i ${id}/out_rd_info.txt -o ${id}/out_ex_config.txt
+    touch ${id}/circular.cut.fa ${id}/circular.extended.fa ${id}/circular.fa
+    python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular_cut} | sed '/^\$/d' > ${id}/circular.cut.fa
+    python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular_ext} | sed '/^\$/d' > ${id}/circular.extended.fa
+    python ${params.petagenomeDir}/scripts/Python/filter_fasta_by_id.py -f ${id}/out_ex_config.txt ${circular} | sed '/^\$/d' > ${id}/circular.fa
+    """
 }
 
 // ==========================================
-// 1. サブワークフロー（再利用可能な処理の本体）
+// 2. サブワークフロー（本体）
 // ==========================================
 
-// 環状コンティグ検出・重複除去の一連処理
 workflow CIRCULAR_CONTIGS_SUB {
     take:
     p
@@ -163,11 +195,7 @@ workflow CIRCULAR_CONTIGS_SUB {
     main:
     if (params.use_pzlast) {
         // --- PZLAST モード ---
-        if (params.pzlast_cfg1) {
-            cfg1 = Channel.of(file(params.pzlast_cfg1))
-        } else {
-            cfg1 = Channel.of('')
-        }
+        cfg1 = params.pzlast_cfg1 ? Channel.of(file(params.pzlast_cfg1)) : Channel.of('')
 
         // 1. PZLAST DB1 作成 ＋ アライメント 1
         db1_in = p.combine(contig).combine(cfg1).map { p_val, id, seq, cfg ->
@@ -191,20 +219,16 @@ workflow CIRCULAR_CONTIGS_SUB {
 
         // 2. 分類 (Classify)
         clsfy_p_in = p.combine(aln1).map { p_val, ref_id, qry_id, tsv, cfg ->
-            tuple(p_val, ref_id, qry_id, tsv, cfg)
+            tuple(p_val, ref_id, qry_id, tsv)
         }
         clsfy = classify(clsfy_p_in, contig)
 
-        circular_cut = clsfy.map { id, cut, ext, circular, linear, selfhit_tsv ->
-            tuple(id, cut)
+        circular_cut = clsfy.map { qry_id, cut, ext, circular, linear, selfhit_tsv ->
+            tuple(qry_id, cut)
         }
 
         // 3. PZLAST DB2 作成 ＋ アライメント 2
-        if (params.pzlast_cfg2) {
-            cfg2 = Channel.of(file(params.pzlast_cfg2))
-        } else {
-            cfg2 = Channel.of('')
-        }
+        cfg2 = params.pzlast_cfg2 ? Channel.of(file(params.pzlast_cfg2)) : Channel.of('')
 
         db2_in = p.combine(circular_cut).combine(cfg2).map { p_val, id, seq, cfg ->
             tuple(p_val, id, seq, cfg)
@@ -225,14 +249,18 @@ workflow CIRCULAR_CONTIGS_SUB {
         aln2 = pzlastn2(aln2_in).combine(cfg2)
 
         // 4. 重複除去 (Deduplicate)
-        ch_new = aln2.merge(clsfy).map {
-            ref_id, qry_id, pzlst2_tsv, cfg,
-            id, cut, ext, circular, linear, selfhit_tsv
-            -> tuple(id, cut, ext, circular, pzlst2_tsv)
+        // 判定をキーベースの join に変更して非同期処理の安全性を確保
+        // aln2:  [ref_id, qry_id, pzlst2_tsv, cfg]
+        // clsfy: [qry_id, cut, ext, circular, linear, selfhit_tsv]
+        aln2_key = aln2.map { ref_id, qry_id, tsv, cfg -> tuple(qry_id, tsv) }
+        clsfy_key = clsfy.map { qry_id, cut, ext, circular, linear, selfhit_tsv -> tuple(qry_id, cut, ext, circular) }
+
+        ch_new = clsfy_key.join(aln2_key).map { qry_id, cut, ext, circular, aln2_tsv ->
+            tuple(qry_id, cut, ext, circular, aln2_tsv)
         }
 
-        dedupl_in = p.combine(ch_new).map { p_val, id, cut, ext, circular, aln2_tsv ->
-            tuple(p_val, id, cut, ext, circular, aln2_tsv)
+        dedupl_in = p.combine(ch_new).map { p_val, qry_id, cut, ext, circular, aln2_tsv ->
+            tuple(p_val, qry_id, cut, ext, circular, aln2_tsv)
         }
         dedupl = deduplicate(dedupl_in)
 
@@ -267,8 +295,8 @@ workflow CIRCULAR_CONTIGS_SUB {
         }
         clsfy = classify(clsfy_p_in, contig)
 
-        circular_cut = clsfy.map { id, cut, ext, circular, linear, selfhit_tsv ->
-            tuple(id, cut)
+        circular_cut = clsfy.map { qry_id, cut, ext, circular, linear, selfhit_tsv ->
+            tuple(qry_id, cut)
         }
 
         // 3. BLAST DB2 作成 ＋ アライメント 2
@@ -294,14 +322,15 @@ workflow CIRCULAR_CONTIGS_SUB {
         aln2 = blastn2(aln2_in)
 
         // 4. 重複除去 (Deduplicate)
-        ch_new = aln2.merge(clsfy).map {
-            ref_id, qry_id, blst2_tsv,
-            id, cut, ext, circular, linear, selfhit_tsv
-            -> tuple(id, cut, ext, circular, blst2_tsv)
+        aln2_key = aln2.map { ref_id, qry_id, tsv -> tuple(qry_id, tsv) }
+        clsfy_key = clsfy.map { qry_id, cut, ext, circular, linear, selfhit_tsv -> tuple(qry_id, cut, ext, circular) }
+
+        ch_new = clsfy_key.join(aln2_key).map { qry_id, cut, ext, circular, blst2_tsv ->
+            tuple(qry_id, cut, ext, circular, blst2_tsv)
         }
 
-        dedupl_in = p.combine(ch_new).map { p_val, id, cut, ext, circular, aln2_tsv ->
-            tuple(p_val, id, cut, ext, circular, aln2_tsv)
+        dedupl_in = p.combine(ch_new).map { p_val, qry_id, cut, ext, circular, aln2_tsv ->
+            tuple(p_val, qry_id, cut, ext, circular, aln2_tsv)
         }
         dedupl = deduplicate(dedupl_in)
     }
@@ -313,26 +342,22 @@ workflow CIRCULAR_CONTIGS_SUB {
     dedupl = dedupl
 }
 
-
 // ==========================================
-// 2. コマンドライン (-entry) 用エントリーポイント
+// 3. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
 
-// A. メインの実行ワークフロー
 workflow CIRCULAR_CONTIGS_ALL {
     p      = createNullParamsChannel()
     contig = createSeqsChannel(params.circular_contigs_contig)
 
     out_ch = CIRCULAR_CONTIGS_SUB(p, contig)
 
-    // 各出力チャンネルの確認
     out_ch.aln1.view   { i -> "ALN1: $i" }
     out_ch.clsfy.view  { i -> "CLSFY: $i" }
     out_ch.aln2.view   { i -> "ALN2: $i" }
     out_ch.dedupl.view { i -> "DEDUPL: $i" }
 }
 
-// デフォルトエントリーポイント
 workflow {
     CIRCULAR_CONTIGS_ALL()
 }

@@ -1,8 +1,22 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// 低相同性アノテーションを除外するためのデフォルト閾値 (例: 0.0)
-params.summarize_min_anno_pident = 0.0
+// ==========================================
+// 0. グローバルフォールバックと上限値（Clipping）定義
+// ==========================================
+params.memory  = params.memory  ?: 4
+params.threads = params.threads ?: (params.cpus ?: 1)
+
+// 低相同性アノテーションを除外するためのデフォルト閾値
+params.summarize_min_anno_pident = params.summarize_min_anno_pident ?: 0.0
+
+// プロセス固有の上限設定 (Clipping)
+def SUMMARIZE_MAX_MEMORY  = 8
+def SUMMARIZE_MAX_THREADS = 2
+
+// リソース割り当てと上限適応
+params.summarize_ko_taxid_memory  = Math.min((params.summarize_ko_taxid_memory  ?: params.memory)  as Integer, SUMMARIZE_MAX_MEMORY)
+params.summarize_ko_taxid_threads = Math.min((params.summarize_ko_taxid_threads ?: params.threads) as Integer, SUMMARIZE_MAX_THREADS)
 
 include { createNullParamsChannel; clusterOptions; processProfile } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -15,36 +29,35 @@ process SUMMARIZE_KO_TAXID {
     tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    // Pythonスクリプトが配置されているディレクトリを参照できるよう petagenomeDir をマウント(bind)
-    containerOptions = "${params.apptainerRunOptions} -B ${params.petagenomeDir}"
+    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb = "${params.memory ?: 4}"
-    def threads = "${params.cpus ?: 1}"
-    memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+    def gb      = "${params.summarize_ko_taxid_memory}"
+    def threads = "${params.summarize_ko_taxid_threads}"
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-    tuple val(qry_id), path(contig_anno_tsv)
-    path ko_name_map, stageAs: 'ko_map.tsv'     // params.ko_name_map から渡す (任意)
-    path taxid_name_map, stageAs: 'taxid_map.tsv'  // params.taxid_name_map から渡す (任意)
+        tuple val(qry_id), path(contig_anno_tsv)
+        path ko_name_map, stageAs: 'ko_map.tsv'       // params.ko_name_map から渡す (任意)
+        path taxid_name_map, stageAs: 'taxid_map.tsv' // params.taxid_name_map から渡す (任意)
 
     output:
-    tuple val(qry_id), path("${qry_id}.ko_summary.tsv")   , emit: ko_summary
-    tuple val(qry_id), path("${qry_id}.taxid_summary.tsv"), emit: tax_summary
+        tuple val(qry_id), path("${qry_id}.ko_summary.tsv"),    emit: ko_summary
+        tuple val(qry_id), path("${qry_id}.taxid_summary.tsv"), emit: tax_summary
 
     script:
-    def py_script   = "${params.petagenomeDir}/scripts/Python/summarize_ko_taxid.py"
-    def min_pident  = params.summarize_min_anno_pident
-    
+    def py_script  = "${params.petagenomeDir}/scripts/Python/summarize_ko_taxid.py"
+    def min_pident = params.summarize_min_anno_pident
+
     // stageAs で指定されたファイル名を用いてオプションを組み立て
     def ko_opt  = (ko_name_map.name != 'NO_FILE') ? "--ko_name_map ko_map.tsv" : ""
     def tax_opt = (taxid_name_map.name != 'NO_FILE') ? "--taxid_name_map taxid_map.tsv" : ""
 
     """
-    #!/usr/bin/env bash
-    set -euo pipefail
+    echo "${processProfile(task)}" | tee prof.txt
 
     python3 "${py_script}" \\
         -i "${contig_anno_tsv}" \\
@@ -93,7 +106,7 @@ workflow SUMMARIZE_KO_TAXID_ALL {
     tax_map_file = (params.containsKey('taxid_name_map_path') && params.taxid_name_map_path) ? file(params.taxid_name_map_path, checkIfExists: true) : file('NO_FILE')
 
     out_ch = SUMMARIZE_KO_TAXID_SUB(p, contig_anno_ch, ko_map_file, tax_map_file)
-    
+
     out_ch.ko_summary.view { i -> "KO SUMMARY TSV: $i" }
     out_ch.tax_summary.view { i -> "TAXID SUMMARY TSV: $i" }
 }

@@ -1,8 +1,22 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.remove_host_aligner = "bwa_mem2"
-params.remove_host_is_prebuilt_db = false
+// ==========================================
+// 0. グローバルフォールバックと上限値（Clipping）定義
+// ==========================================
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+params.remove_host_aligner          = params.remove_host_aligner          ?: "bwa_mem2"
+params.remove_host_is_prebuilt_db   = params.remove_host_is_prebuilt_db   ?: false
+
+// プロセス固有の上限設定 (Clipping)
+def EXTRACT_MAX_MEMORY  = 8
+def EXTRACT_MAX_THREADS = 4
+
+// リソース割り当てと上限適応
+params.remove_host_extract_memory  = Math.min((params.remove_host_extract_memory  ?: params.memory)  as Integer, EXTRACT_MAX_MEMORY)
+params.remove_host_extract_threads = Math.min((params.remove_host_extract_threads ?: params.threads) as Integer, EXTRACT_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -33,29 +47,37 @@ process EXTRACT_UNMAPPED_READS {
     containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
+    def gb      = "${params.remove_host_extract_memory}"
+    def threads = "${params.remove_host_extract_threads}"
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
     input:
-    tuple val(ref_id), val(qry_id), path(bam_or_sam)
+        tuple val(ref_id), val(qry_id), path(bam_or_sam)
 
     output:
-    tuple val(qry_id), path("${qry_id}_host_removed*.fastq.gz"), emit: reads
+        tuple val(qry_id), path("${qry_id}_host_removed*.fastq.gz"), emit: reads
 
     script:
     """
+    echo "${processProfile(task)}" | tee prof.txt
+
     # 最初の一行のSAM FLAG (第2フィールド) から Paired-end (FLAG & 1) かを判定
     IS_PAIRED=\$(samtools view ${bam_or_sam} | head -n 1 | awk '{if (and(\$2, 1)) print "paired"; else print "single"}')
 
     if [ "\$IS_PAIRED" = "paired" ]; then
         # --- ペアエンド用処理 (-f 12 : 両方のリードが未マッピング) ---
-        samtools fastq -f 12 \\
+        samtools fastq -f 12 -@ ${threads} \\
             -1 ${qry_id}_host_removed_R1.fastq.gz \\
             -2 ${qry_id}_host_removed_R2.fastq.gz \\
             -0 /dev/null -s /dev/null \\
             ${bam_or_sam}
     else
         # --- シングルエンド用処理 (-f 4 : 未マッピングリードのみ抽出) ---
-        # -0 で直接出力先を指定するか、標準出力をパイプで bgzip に渡す
-        samtools fastq -f 4 \\
-            ${bam_or_sam} | bgzip -c > ${qry_id}_host_removed_single.fastq.gz
+        samtools fastq -f 4 -@ ${threads} \\
+            ${bam_or_sam} | bgzip -@ ${threads} -c > ${qry_id}_host_removed_single.fastq.gz
     fi
     """
 }
@@ -75,7 +97,7 @@ workflow REMOVE_HOST_SUB {
     if (params.remove_host_is_prebuilt_db) {
         host_db = host_ref_or_db
     } else {
-        // インポート元が動的に切り替わっているため、そのまま呼び出しOK！
+        // インポート元が動的に切り替わっているため、そのまま呼び出しOK
         host_db = BUILD_REF_DB_SUB(p, host_ref_or_db).ref_db
     }
 

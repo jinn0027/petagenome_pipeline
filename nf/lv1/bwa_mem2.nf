@@ -1,11 +1,23 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.bwa_mem2_bwa_mem2_makerefdb_memory = params.memory
-params.bwa_mem2_bwa_mem2_makerefdb_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
 
-params.bwa_mem2_bwa_mem2_mem_memory = params.memory
-params.bwa_mem2_bwa_mem2_mem_threads = params.threads
+// 2. BWA-MEM2 固有の上限値定義
+def BWA_MEM2_MAKEREFDB_MAX_MEMORY  = 64 // GB (BWA-MEM2 の大容量インデックス構築用)
+def BWA_MEM2_MAKEREFDB_MAX_THREADS = 8  // インデックス構築の並列化飽和点
+
+def BWA_MEM2_MEM_MAX_MEMORY        = 64 // GB (巨大インデックスのオンメモリ展開用)
+def BWA_MEM2_MEM_MAX_THREADS       = 16 // マッピング・SIMD並列とI/Oバランスの上限
+
+// 3. 上限値による動的クリッピング
+params.bwa_mem2_bwa_mem2_makerefdb_memory  = Math.min((params.bwa_mem2_bwa_mem2_makerefdb_memory  ?: params.memory) as Integer, BWA_MEM2_MAKEREFDB_MAX_MEMORY)
+params.bwa_mem2_bwa_mem2_makerefdb_threads = Math.min((params.bwa_mem2_bwa_mem2_makerefdb_threads ?: params.threads) as Integer, BWA_MEM2_MAKEREFDB_MAX_THREADS)
+
+params.bwa_mem2_bwa_mem2_mem_memory  = Math.min((params.bwa_mem2_bwa_mem2_mem_memory  ?: params.memory) as Integer, BWA_MEM2_MEM_MAX_MEMORY)
+params.bwa_mem2_bwa_mem2_mem_threads = Math.min((params.bwa_mem2_bwa_mem2_mem_threads ?: params.threads) as Integer, BWA_MEM2_MEM_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

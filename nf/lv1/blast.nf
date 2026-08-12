@@ -1,11 +1,21 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.blast_blast_makerefdb_memory = params.memory
-params.blast_blast_makerefdb_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
 
-params.blast_blastn_memory = params.memory
-params.blast_blastn_threads = params.threads
+// 2. blast上限値定義
+def BLAST_MAKEREFDB_MAX_MEMORY  = 16 // GB (makeblastdb は低メモリ消費)
+def BLAST_MAKEREFDB_MAX_THREADS = 4  // makeblastdb はスレッド並列化のスケール効率が低い
+def BLASTN_MAX_MEMORY  = 64 // GB (大規模DBのオンメモリロードを考慮)
+def BLASTN_MAX_THREADS = 16 // スレッド並列化のスケール効率・I/O競合を考慮
+
+// 3. 上限値による動的クリッピング
+params.blast_blast_makerefdb_memory  = Math.min((params.blast_blast_makerefdb_memory  ?: params.memory) as Integer, BLAST_MAKEREFDB_MAX_MEMORY)
+params.blast_blast_makerefdb_threads = Math.min((params.blast_blast_makerefdb_threads ?: params.threads) as Integer, BLAST_MAKEREFDB_MAX_THREADS)
+params.blast_blastn_memory  = Math.min((params.blast_blastn_memory  ?: params.memory) as Integer, BLASTN_MAX_MEMORY)
+params.blast_blastn_threads = Math.min((params.blast_blastn_threads ?: params.threads) as Integer, BLASTN_MAX_THREADS)
 
 params.blast_dbtype = "nucl"
 params.blast_program = "blastn"

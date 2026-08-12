@@ -1,14 +1,26 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.minimap2_minimap2_makerefdb_memory = params.memory
-params.minimap2_minimap2_makerefdb_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
 
-params.minimap2_minimap2_memory = params.memory
-params.minimap2_minimap2_threads = params.threads
+// 2. Minimap2 固有の上限値定義
+def MINIMAP2_MAKEREFDB_MAX_MEMORY  = 32 // GB (ミニマイザーインデックス構築用)
+def MINIMAP2_MAKEREFDB_MAX_THREADS = 4  // インデックス構築の並列化飽和点
 
-params.minimap2_minimap2_e2e_memory = params.memory
-params.minimap2_minimap2_e2e_threads = params.threads
+def MINIMAP2_ALIGN_MAX_MEMORY      = 64 // GB (インデックス展開＋マッピングバッファ用)
+def MINIMAP2_ALIGN_MAX_THREADS     = 16 // スレッド並列化と I/O スケールの上限
+
+// 3. 上限値による動的クリッピング
+params.minimap2_minimap2_makerefdb_memory  = Math.min((params.minimap2_minimap2_makerefdb_memory  ?: params.memory) as Integer, MINIMAP2_MAKEREFDB_MAX_MEMORY)
+params.minimap2_minimap2_makerefdb_threads = Math.min((params.minimap2_minimap2_makerefdb_threads ?: params.threads) as Integer, MINIMAP2_MAKEREFDB_MAX_THREADS)
+
+params.minimap2_minimap2_memory  = Math.min((params.minimap2_minimap2_memory  ?: params.memory) as Integer, MINIMAP2_ALIGN_MAX_MEMORY)
+params.minimap2_minimap2_threads = Math.min((params.minimap2_minimap2_threads ?: params.threads) as Integer, MINIMAP2_ALIGN_MAX_THREADS)
+
+params.minimap2_minimap2_e2e_memory  = Math.min((params.minimap2_minimap2_e2e_memory  ?: params.memory) as Integer, MINIMAP2_ALIGN_MAX_MEMORY)
+params.minimap2_minimap2_e2e_threads = Math.min((params.minimap2_minimap2_e2e_threads ?: params.threads) as Integer, MINIMAP2_ALIGN_MAX_THREADS)
 
 params.minimap2_ambiguous = "random"
 params.minimap2_minid = 0.95

@@ -1,8 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.megahit_megahit_memory = params.memory
-params.megahit_megahit_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// 2. MEGAHIT 固有の上限値定義
+def MEGAHIT_MAX_MEMORY  = 128 // GB (大規模メタゲノム Graph 構築用の高メモリ上限)
+def MEGAHIT_MAX_THREADS = 16  // アセンブリスケール効率とメモリバス競合のバランス上限
+
+// 3. 上限値による動的クリッピング
+params.megahit_megahit_memory  = Math.min((params.megahit_megahit_memory  ?: params.memory) as Integer, MEGAHIT_MAX_MEMORY)
+params.megahit_megahit_threads = Math.min((params.megahit_megahit_threads ?: params.threads) as Integer, MEGAHIT_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

@@ -1,15 +1,30 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-include { createNullParamsChannel; createSeqsChannel; getParam } from "${params.petagenomeDir}/nf/common/utils"
-include { FASTP_SUB }                from "${params.petagenomeDir}/nf/lv1/fastp.nf"
-include { REMOVE_HOST_SUB }          from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
-include { ASSEMBLY_SUB }             from "${params.petagenomeDir}/nf/lv2/assembly.nf"
-include { PRODIGAL_SUB }             from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
-include { ANNOTATE_TAXID_KO_SUB }    from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
+// ==========================================
+// 0. グローバルフォールバックと上限値（Clipping）定義
+// ==========================================
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// プロセス固有の上限設定 (Clipping)
+def MERGE_FASTA_MAX_MEMORY  = 16
+def MERGE_FASTA_MAX_THREADS = 4
+
+// リソース割り当てと上限適応
+params.merge_fasta_memory  = Math.min((params.merge_fasta_memory  ?: params.memory)  as Integer, MERGE_FASTA_MAX_MEMORY)
+params.merge_fasta_threads = Math.min((params.merge_fasta_threads ?: params.threads) as Integer, MERGE_FASTA_MAX_THREADS)
+
+include { createNullParamsChannel; createSeqsChannel; getParam; clusterOptions; processProfile } \
+    from "${params.petagenomeDir}/nf/common/utils"
+include { FASTP_SUB }                 from "${params.petagenomeDir}/nf/lv1/fastp.nf"
+include { REMOVE_HOST_SUB }           from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
+include { ASSEMBLY_SUB }              from "${params.petagenomeDir}/nf/lv2/assembly.nf"
+include { PRODIGAL_SUB }              from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
+include { ANNOTATE_TAXID_KO_SUB }     from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
 include { ALIGN_CONTIGS_TO_ORFS_SUB } from "${params.petagenomeDir}/nf/lv2/align_contigs_to_orfs.nf"
 include { ANNOTATE_CONTIG_SUB }      from "${params.petagenomeDir}/nf/lv2/annotate_contig.nf"
-include { SUMMARIZE_KO_TAXID_SUB }   from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
+include { SUMMARIZE_KO_TAXID_SUB }    from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
 
 // 全サンプルの FASTA (.faa や .fna) を 1 つに結合する汎用プロセス
 process MERGE_FASTA {
@@ -19,14 +34,22 @@ process MERGE_FASTA {
     containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
+    def gb      = "${params.merge_fasta_memory}"
+    def threads = "${params.merge_fasta_threads}"
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
     input:
-    tuple path(fasta_files), val(ext) // (配列ファイル群, 拡張子) のペアとして受け取る
+        tuple path(fasta_files), val(ext) // (配列ファイル群, 拡張子)
 
     output:
-    tuple val("merged_all_samples"), path("combined_orfs.${ext}"), emit: merged_fasta
+        tuple val("merged_all_samples"), path("combined_orfs.${ext}"), emit: merged_fasta
 
     script:
     """
+    echo "${processProfile(task)}" | tee prof.txt
     cat ${fasta_files} > combined_orfs.${ext}
     """
 }
@@ -60,24 +83,17 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 4. Prodigal による ORF (遺伝子) 予測
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
-    // 5. PRODIGALのサンプル毎の結果の整理
-    renamed_orfs = orf_res.out.map { qry_id, faa, fna, gbk ->
-        def new_faa = faa.moveTo("${faa.parent}/${qry_id}.faa")
-        def new_fna = fna.moveTo("${fna.parent}/${qry_id}.fna")
-        return tuple(qry_id, new_faa, new_fna, gbk)
-    }
-
     // 各サンプル固有の ORF 塩基配列 (.fna) チャンネル（クエリ用）
-    sample_orf_fna_ch = renamed_orfs.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
+    sample_orf_fna_ch = orf_res.out.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
 
-    // MERGE_FASTA 用に全サンプルの faa / fna リストを集約
-    all_faa_files = renamed_orfs.map { qry_id, faa, fna, gbk -> faa }.collect()
-    all_fna_files = renamed_orfs.map { qry_id, faa, fna, gbk -> fna }.collect()
+    // 5. MERGE_FASTA 用に全サンプルの faa / fna リストを集約
+    all_faa_files = orf_res.out.map { qry_id, faa, fna, gbk -> faa }.collect()
+    all_fna_files = orf_res.out.map { qry_id, faa, fna, gbk -> fna }.collect()
 
     // MERGE_FASTA への入力チャンネル作成
     merge_inputs_ch = all_faa_files.map { faa_list -> tuple(faa_list, "faa") }
         .mix(all_fna_files.map { fna_list -> tuple(fna_list, "fna") })
-    
+
     // MERGE_FASTA を 1 度呼び出し（内部で並列 2 タスクが起動）
     merged_fastas = MERGE_FASTA(merge_inputs_ch)
 
@@ -124,12 +140,14 @@ workflow BACTERIOME_PIPELINE_ALL {
     def reads_list = params.bacteriome_pipeline_reads.split(';')
 
     def individual_channels = reads_list.collect { reads_path ->
-        channel.fromFilePairs(reads_path, checkIfExists: true)
+        Channel.fromFilePairs(reads_path, checkIfExists: true)
     }
 
     def reads_mixed = individual_channels.first()
-    individual_channels.tail().each { ch ->
-        reads_mixed = reads_mixed.mix(ch)
+    if (individual_channels.size() > 1) {
+        individual_channels.tail().each { ch ->
+            reads_mixed = reads_mixed.mix(ch)
+        }
     }
 
     def index = 0

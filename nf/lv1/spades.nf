@@ -1,20 +1,26 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.spades_spades_error_correction_memory = params.memory
-params.spades_spades_error_correction_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
 
-params.spades_spades_error_correction_gzip_output_memory = params.memory
-params.spades_spades_error_correction_gzip_output_threads = params.threads
+// 2. SPAdes 固有の上限値定義
+def SPADES_EC_MAX_MEMORY         = 128 // GB (k-mer エラー訂正テーブル保持用)
+def SPADES_EC_MAX_THREADS        = 16  // エラー訂正・Gzip 圧縮の並列飽和点
 
-params.spades_spades_assembler_memory = params.memory
-params.spades_spades_assembler_threads = params.threads
+def SPADES_ASSEMBLY_MAX_MEMORY   = 250 // GB (De Bruijn Graph 構築用の高メモリ上限)
+def SPADES_ASSEMBLY_MAX_THREADS  = 16  // グラフ走査・並列化効率の上限
 
-params.spades_spades_e2e_memory = params.memory
-params.spades_spades_e2e_threads = params.threads
+// 3. 上限値による動的クリッピング
 
-params.spades_error_correction_threads = params.threads
-params.spades_error_correction_memory = params.memory
+// --- Error Correction モジュール ---
+params.spades_spades_error_correction_memory             = Math.min((params.spades_spades_error_correction_memory             ?: params.memory) as Integer, SPADES_EC_MAX_MEMORY)
+params.spades_spades_error_correction_threads            = Math.min((params.spades_spades_error_correction_threads            ?: params.threads) as Integer, SPADES_EC_MAX_THREADS)
+
+params.spades_spades_error_correction_gzip_output_memory = Math.min((params.spades_spades_error_correction_gzip_output_memory ?: params.memory) as Integer, SPADES_EC_MAX_MEMORY)
+params.spades_spades_error_correction_gzip_output_threads= Math.min((params.spades_spades_error_correction_gzip_output_threads?: params.threads) as Integer, SPADES_EC_MAX_THREADS)
+
 params.spades_e2e = false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \

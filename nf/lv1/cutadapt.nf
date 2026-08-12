@@ -1,8 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.cutadapt_cutadapt_memory = params.memory
-params.cutadapt_cutadapt_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// 2. Cutadapt 固有の上限値定義
+def CUTADAPT_MAX_MEMORY  = 8 // GB (ストリーミング処理のため低メモリで十分)
+def CUTADAPT_MAX_THREADS = 8 // Gzip 圧縮/解凍パイプラインの並列化飽和点
+
+// 3. 上限値による動的クリッピング
+params.cutadapt_cutadapt_memory  = Math.min((params.cutadapt_cutadapt_memory  ?: params.memory) as Integer, CUTADAPT_MAX_MEMORY)
+params.cutadapt_cutadapt_threads = Math.min((params.cutadapt_cutadapt_threads ?: params.threads) as Integer, CUTADAPT_MAX_THREADS)
 
 params.cutadapt_fwd = "AATGATACGGCGACCACCGAGAUCTACAC"
 params.cutadapt_rev = "CAAGCAGAAGACGGCATACGAGAT"

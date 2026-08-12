@@ -1,8 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.metaphlan_metaphlan_memory = params.memory
-params.metaphlan_metaphlan_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// 2. MetaPhlAn 固有の上限値定義
+def METAPHLAN_MAX_MEMORY  = 32 // GB (ChocoPhlAn DB のオンメモリロード用)
+def METAPHLAN_MAX_THREADS = 16 // Bowtie2 並列マッピングと I/O スケールの限界点
+
+// 3. 上限値による動的クリッピング
+params.metaphlan_metaphlan_memory  = Math.min((params.metaphlan_metaphlan_memory  ?: params.memory) as Integer, METAPHLAN_MAX_MEMORY)
+params.metaphlan_metaphlan_threads = Math.min((params.metaphlan_metaphlan_threads ?: params.threads) as Integer, METAPHLAN_MAX_THREADS)
 
 params.metaphlan_input_type = "fastq"
 //fastq,fasta,bowtie2out,sam

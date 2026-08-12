@@ -1,8 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.virsorter2_virsorter2_memory = params.memory
-params.virsorter2_virsorter2_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// 2. VirSorter2 固有の上限値定義
+def VIRSORTER2_MAX_MEMORY  = 64 // GB (HMM DB・機械学習モデル特徴量抽出用)
+def VIRSORTER2_MAX_THREADS = 16 // HMMER・マルチプロセス並列化の I/O スケール上限
+
+// 3. 上限値による動的クリッピング
+params.virsorter2_virsorter2_memory  = Math.min((params.virsorter2_virsorter2_memory  ?: params.memory) as Integer, VIRSORTER2_MAX_MEMORY)
+params.virsorter2_virsorter2_threads = Math.min((params.virsorter2_virsorter2_threads ?: params.threads) as Integer, VIRSORTER2_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

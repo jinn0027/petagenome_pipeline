@@ -1,8 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.cdhit_cdhit_est_memory = params.memory
-params.cdhit_cdhit_est_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// 2. CD-HIT-EST 固有の上限値定義
+def CDHIT_EST_MAX_MEMORY  = 64 // GB (大量の代表配列インデックス保持用)
+def CDHIT_EST_MAX_THREADS = 16 // OpenMP並列化の競合・飽和点を考慮
+
+// 3. 上限値による動的クリッピング
+params.cdhit_cdhit_est_memory  = Math.min((params.cdhit_cdhit_est_memory  ?: params.memory) as Integer, CDHIT_EST_MAX_MEMORY)
+params.cdhit_cdhit_est_threads = Math.min((params.cdhit_cdhit_est_threads ?: params.threads) as Integer, CDHIT_EST_MAX_THREADS)
 
 params.cdhit_identity_threshold = 0.95
 params.cdhit_global_sequence_identity = 1

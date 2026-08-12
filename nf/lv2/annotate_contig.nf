@@ -1,9 +1,23 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+// ==========================================
+// 0. グローバルフォールバックと上限値（Clipping）定義
+// ==========================================
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
 // 1コンティグ・1ORFあたりの保持上限数のデフォルト値
-params.annotate_contig_top_n_contig = 3  // 1 ORF に対して保持する merged ORF の上限
-params.annotate_contig_top_n_anno   = 3  // 1 merged ORF に対して保持する DB Hit (TaxID/KO) の上限
+params.annotate_contig_top_n_contig = params.annotate_contig_top_n_contig ?: 3  // 1 ORF に対して保持する merged ORF の上限
+params.annotate_contig_top_n_anno   = params.annotate_contig_top_n_anno   ?: 3  // 1 merged ORF に対して保持する DB Hit (TaxID/KO) の上限
+
+// プロセス固有の上限設定
+def ANNOTATE_CONTIG_MAX_MEMORY  = 8 // GB (AWK 連想配列でのアノテーション保持用)
+def ANNOTATE_CONTIG_MAX_THREADS = 2 // AWK 処理および I/O の上限
+
+// パラメータ割り当てと上限適応
+params.annotate_contig_memory  = Math.min((params.annotate_contig_memory  ?: params.memory) as Integer, ANNOTATE_CONTIG_MAX_MEMORY)
+params.annotate_contig_threads = Math.min((params.annotate_contig_threads ?: params.threads) as Integer, ANNOTATE_CONTIG_MAX_THREADS)
 
 include { createNullParamsChannel; clusterOptions; processProfile } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -19,17 +33,18 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
     containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb = "${params.memory ?: 8}"
-    def threads = "${params.cpus ?: 2}"
-    memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+    def gb      = "${params.annotate_contig_memory}"
+    def threads = "${params.annotate_contig_threads}"
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-    tuple val(ref_id), val(qry_id), path(contig_map_m8), path(annotated_tsv)
+        tuple val(ref_id), val(qry_id), path(contig_map_m8), path(annotated_tsv)
 
     output:
-    tuple val(qry_id), path("${qry_id}_contig_taxid_ko.tsv"), emit: contig_anno
+        tuple val(qry_id), path("${qry_id}_contig_taxid_ko.tsv"), emit: contig_anno
 
     script:
     def map_top_n  = params.annotate_contig_top_n_contig
@@ -51,17 +66,15 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
             for (i = 1; i <= NF; i++) {
                 col[\$i] = i
             }
+            c_qseqid   = ("qseqid" in col   ? col["qseqid"]   : 1)
+            c_sseqid   = ("sseqid" in col   ? col["sseqid"]   : 2)
+            c_pident   = ("pident" in col   ? col["pident"]   : 3)
+            c_evalue   = ("evalue" in col   ? col["evalue"]   : 11)
+            c_bitscore = ("bitscore" in col ? col["bitscore"] : 12)
+            c_taxid    = ("taxid" in col    ? col["taxid"]    : 13)
+            c_ko       = ("ko" in col       ? col["ko"]       : 14)
             next
         }
-
-        # 動的インデックス取得（列が存在しない場合はデフォルト位置を割り当て）
-        c_qseqid   = (col["qseqid"]   ? col["qseqid"]   : 1)
-        c_sseqid   = (col["sseqid"]   ? col["sseqid"]   : 2)
-        c_pident   = (col["pident"]   ? col["pident"]   : 3)
-        c_evalue   = (col["evalue"]   ? col["evalue"]   : 11)
-        c_bitscore = (col["bitscore"] ? col["bitscore"] : 12)
-        c_taxid    = (col["taxid"]    ? col["taxid"]    : 13)
-        c_ko       = (col["ko"]       ? col["ko"]       : 14)
 
         orf_id   = \$c_qseqid
         sseqid   = \$c_sseqid
@@ -73,7 +86,7 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
         taxid    = (NF >= c_taxid  && \$c_taxid  != "" && \$c_taxid  != " ") ? \$c_taxid  : "N/A"
         ko       = (NF >= c_ko     && \$c_ko     != "" && \$c_ko     != " ") ? \$c_ko     : "N/A"
 
-        # 【追加】taxid と ko の両方が "N/A" (または空) の場合は Top N 枠を消費せずスキップ
+        # taxid と ko の両方が "N/A" (または空) の場合は Top N 枠を消費せずスキップ
         if ((taxid == "N/A" || taxid == "") && (ko == "N/A" || ko == "")) {
             next
         }
@@ -155,11 +168,11 @@ workflow ANNOTATE_CONTIG_SUB {
     annotated_res  // tuple(ref_id, path_tsv)
 
     main:
-    // combine されたフラットなリスト[ref_id, qry_id, path_m8, ref_id, path_tsv]
-    // から必要な要素 [ref_id, qry_id, m8, tsv]を抽出
-    joined_ch = contig_map_out.combine(annotated_res)
-        .map { list -> 
-            tuple(list[0], list[1], list[2], list[4])
+    // ref_id をキーにして join で確実に紐付け
+    joined_ch = contig_map_out
+        .join(annotated_res, by: 0)
+        .map { ref_id, qry_id, map_m8, anno_tsv ->
+            tuple(ref_id, qry_id, map_m8, anno_tsv)
         }
 
     res = ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N(joined_ch)
@@ -177,7 +190,7 @@ workflow ANNOTATE_CONTIG_ALL {
 
     contig_map_ch = Channel.fromPath(params.annotate_contig_m8_path)
                             .map { f -> 
-                                def qry_id = f.name.replaceAll(/_contig_map\.m8\$/, '')
+                                def qry_id = f.name.replaceAll(/_contig_map\.m8$/, '')
                                 tuple('merged_all_samples', qry_id, f) 
                             }
     annotated_ch  = Channel.fromPath(params.annotate_contig_tsv_path)

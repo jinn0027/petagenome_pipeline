@@ -1,8 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.falco_falco_memory = params.memory
-params.falco_falco_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// 2. Falco 固有の上限値定義
+def FALCO_MAX_MEMORY  = 8 // GB (C++実装で非常に軽量なため8GBで十分)
+def FALCO_MAX_THREADS = 8 // I/O および FASTQ 解凍処理の並列化飽和点
+
+// 3. 上限値による動的クリッピング
+params.falco_falco_memory  = Math.min((params.falco_falco_memory  ?: params.memory) as Integer, FALCO_MAX_MEMORY)
+params.falco_falco_threads = Math.min((params.falco_falco_threads ?: params.threads) as Integer, FALCO_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

@@ -1,8 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.fastqc_fastqc_memory = params.memory
-params.fastqc_fastqc_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// 2. FastQC 固有の上限値定義
+def FASTQC_MAX_MEMORY  = 16 // GB (JVMメモリ＋複数ファイル同時処理用)
+def FASTQC_MAX_THREADS = 8  // ファイル並列数・ディスク I/O 競合の限界点
+
+// 3. 上限値による動的クリッピング
+params.fastqc_fastqc_memory  = Math.min((params.fastqc_fastqc_memory  ?: params.memory) as Integer, FASTQC_MAX_MEMORY)
+params.fastqc_fastqc_threads = Math.min((params.fastqc_fastqc_threads ?: params.threads) as Integer, FASTQC_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

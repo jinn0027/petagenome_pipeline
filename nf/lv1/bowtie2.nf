@@ -1,11 +1,23 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.bowtie2_bowtie2_makerefdb_memory = params.memory
-params.bowtie2_bowtie2_makerefdb_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
 
-params.bowtie2_bowtie2_memory = params.memory
-params.bowtie2_bowtie2_threads = params.threads
+// 2. Bowtie2 固有の上限値定義
+def BOWTIE2_MAKEREFDB_MAX_MEMORY  = 32 // GB (FM-index 構築時のメモリ消費を考慮)
+def BOWTIE2_MAKEREFDB_MAX_THREADS = 8  // bowtie2-build の並列化飽和点を考慮
+
+def BOWTIE2_ALIGN_MAX_MEMORY      = 32 // GB (インデックス保持＋I/Oバッファ用)
+def BOWTIE2_ALIGN_MAX_THREADS     = 16 // マッピング処理・FASTQ解凍I/Oのスケール上限
+
+// 3. 上限値による動的クリッピング
+params.bowtie2_bowtie2_makerefdb_memory  = Math.min((params.bowtie2_bowtie2_makerefdb_memory  ?: params.memory) as Integer, BOWTIE2_MAKEREFDB_MAX_MEMORY)
+params.bowtie2_bowtie2_makerefdb_threads = Math.min((params.bowtie2_bowtie2_makerefdb_threads ?: params.threads) as Integer, BOWTIE2_MAKEREFDB_MAX_THREADS)
+
+params.bowtie2_bowtie2_memory  = Math.min((params.bowtie2_bowtie2_memory  ?: params.memory) as Integer, BOWTIE2_ALIGN_MAX_MEMORY)
+params.bowtie2_bowtie2_threads = Math.min((params.bowtie2_bowtie2_threads ?: params.threads) as Integer, BOWTIE2_ALIGN_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

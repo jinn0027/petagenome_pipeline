@@ -1,8 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.prinseq_prinseq_memory = params.memory
-params.prinseq_prinseq_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// 2. PRINSEQ 固有の上限値定義
+def PRINSEQ_MAX_MEMORY  = 8 // GB (ストリーミング処理のため低メモリで十分)
+def PRINSEQ_MAX_THREADS = 8 // I/O およびパース処理の並列化飽和点
+
+// 3. 上限値による動的クリッピング
+params.prinseq_prinseq_memory  = Math.min((params.prinseq_prinseq_memory  ?: params.memory) as Integer, PRINSEQ_MAX_MEMORY)
+params.prinseq_prinseq_threads = Math.min((params.prinseq_prinseq_threads ?: params.threads) as Integer, PRINSEQ_MAX_THREADS)
 
 params.prinseq_trim_right = 10
 params.prinseq_trim_left = 10

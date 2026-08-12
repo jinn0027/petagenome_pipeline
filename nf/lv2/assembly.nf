@@ -1,19 +1,38 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.assembly_filter_and_rename_memory = params.memory
-params.assembly_filter_and_rename_threads = params.threads
+// ==========================================
+// 0. グローバルフォールバックと上限値（Clipping）定義
+// ==========================================
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
 
-params.assembly_get_length_memory = params.memory
-params.assembly_get_length_threads = params.threads
+// 各プロセスの特性に応じた上限設定
+def FILTER_RENAME_MAX_MEMORY  = 8 // GB (Python テキスト処理)
+def FILTER_RENAME_MAX_THREADS = 2
 
-params.assembly_get_stats_memory = params.memory
-params.assembly_get_stats_threads = params.threads
+def GET_LENGTH_MAX_MEMORY     = 8 // GB (FASTA 走査)
+def GET_LENGTH_MAX_THREADS    = 2
 
+def GET_STATS_MAX_MEMORY      = 4 // GB (R 集計)
+def GET_STATS_MAX_THREADS     = 1 // シングルスレッド処理
+
+// パラメータ割り当てと上限適応
+params.assembly_filter_and_rename_memory  = Math.min((params.assembly_filter_and_rename_memory  ?: params.memory) as Integer, FILTER_RENAME_MAX_MEMORY)
+params.assembly_filter_and_rename_threads = Math.min((params.assembly_filter_and_rename_threads ?: params.threads) as Integer, FILTER_RENAME_MAX_THREADS)
+
+params.assembly_get_length_memory  = Math.min((params.assembly_get_length_memory  ?: params.memory) as Integer, GET_LENGTH_MAX_MEMORY)
+params.assembly_get_length_threads = Math.min((params.assembly_get_length_threads ?: params.threads) as Integer, GET_LENGTH_MAX_THREADS)
+
+params.assembly_get_stats_memory   = Math.min((params.assembly_get_stats_memory   ?: params.memory) as Integer, GET_STATS_MAX_MEMORY)
+params.assembly_get_stats_threads  = Math.min((params.assembly_get_stats_threads  ?: params.threads) as Integer, GET_STATS_MAX_THREADS)
+
+
+// モジュールのインポート
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { SPADES_E2E_SUB } from "${params.petagenomeDir}/nf/lv1/spades.nf"
-include { MEGAHIT_SUB      } from "${params.petagenomeDir}/nf/lv1/megahit.nf"
+include { MEGAHIT_SUB    } from "${params.petagenomeDir}/nf/lv1/megahit.nf"
 
 
 // ==========================================
@@ -25,11 +44,14 @@ process filter_and_rename {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
-    def gb = "${params.assembly_filter_and_rename_memory}"
+
+    def gb      = "${params.assembly_filter_and_rename_memory}"
     def threads = "${params.assembly_filter_and_rename_threads}"
-    memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
     input:
         tuple val(id), path(read, arity: '1'), val(l_thre)
     output:
@@ -48,11 +70,14 @@ process get_length {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
-    def gb = "${params.assembly_get_length_memory}"
+
+    def gb      = "${params.assembly_get_length_memory}"
     def threads = "${params.assembly_get_length_threads}"
-    memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
     input:
         tuple val(id), path(reads, arity: '0..*')
     output:
@@ -76,11 +101,14 @@ process get_stats {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
-    def gb = "${params.assembly_get_stats_memory}"
+
+    def gb      = "${params.assembly_get_stats_memory}"
     def threads = "${params.assembly_get_stats_threads}"
-    memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
     input:
         tuple val(id), path(lengths, arity: '1..*')
     output:
@@ -115,7 +143,7 @@ workflow ASSEMBLY_SUB {
     l_thre
 
     main:
-    def tool = params.containsKey('assembly_assembler') ? params.assembly_assembler : 'megahit'
+    def tool = params.assembly_assembler ?: 'megahit'
 
     // 1. アセンブラの分岐実行
     if (tool == 'spades') {
@@ -152,10 +180,11 @@ workflow ASSEMBLY_SUB {
 // ==========================================
 // 3. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
+
 workflow ASSEMBLY_ALL {
     p      = createNullParamsChannel()
     reads  = createPairsChannel(params.assembly_reads)
-    l_thre = params.containsKey('assembly_l_thre') ? params.assembly_l_thre : 1000
+    l_thre = params.assembly_l_thre ?: 1000
 
     out_ch = ASSEMBLY_SUB(p, reads, l_thre)
 

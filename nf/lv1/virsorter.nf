@@ -1,8 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.virsorter_virsorter_memory = params.memory
-params.virsorter_virsorter_threads = params.threads
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+// 2. VirSorter 固有の上限値定義
+def VIRSORTER_MAX_MEMORY  = 32 // GB (HMM DB 検索・アノテーションバッファ用)
+def VIRSORTER_MAX_THREADS = 16 // HMMER パイプライン並列化と I/O スケールの上限
+
+// 3. 上限値による動的クリッピング
+params.virsorter_virsorter_memory  = Math.min((params.virsorter_virsorter_memory  ?: params.memory) as Integer, VIRSORTER_MAX_MEMORY)
+params.virsorter_virsorter_threads = Math.min((params.virsorter_virsorter_threads ?: params.threads) as Integer, VIRSORTER_MAX_THREADS)
 
 params.virsorter_db_type = "refseq"
 //params.virsorter_db = "virome"

@@ -2,17 +2,16 @@
 nextflow.enable.dsl=2
 
 include { createNullParamsChannel; getParam } from "${params.petagenomeDir}/nf/common/utils"
-include { fastp } from "${params.petagenomeDir}/nf/lv1/fastp"
-include { error_correction } from "${params.petagenomeDir}/nf/lv2/error_correction"
-include { assembly } from "${params.petagenomeDir}/nf/lv2/assembly"
-include { pool_contigs } from "${params.petagenomeDir}/nf/lv2/pool_contigs"
-include { circular_contigs } from "${params.petagenomeDir}/nf/lv2/circular_contigs"
+include { FASTP_SUB }                         from "${params.petagenomeDir}/nf/lv1/fastp"
+include { ERROR_CORRECTION_SUB }              from "${params.petagenomeDir}/nf/lv2/error_correction"
+include { ASSEMBLY_SUB }                      from "${params.petagenomeDir}/nf/lv2/assembly"
+include { POOL_CONTIGS_SUB }                  from "${params.petagenomeDir}/nf/lv2/pool_contigs"
+include { CIRCULAR_CONTIGS_SUB }              from "${params.petagenomeDir}/nf/lv2/circular_contigs"
 
 // ==========================================
 // 1. サブワークフロー（再利用可能な処理の本体）
 // ==========================================
 
-// バクテリオーム解析パイプライン全体の本体
 workflow BACTERIOME_PIPELINE_SUB {
     take:
     p
@@ -35,19 +34,14 @@ workflow BACTERIOME_PIPELINE_SUB {
     as_out = ASSEMBLY_SUB(p, ec_paired, l_thre)
 
     // 4. アセンブリ後のコンティグ収集 (Pool Contigs 用の前処理)
-    if (true) {
-        flt_collected = as_out.flt.collect(flat: false, sort: true)
-        flt_all = flt_collected.map { list_of_tuples ->
-            def first_key = list_of_tuples[0][0] // 最初のタプルのIDをキーにする
-            def all_contigs = []
-            list_of_tuples.each { key, contigs ->
-                all_contigs << contigs
-            }
+    // 全サンプルの Contig パスを集約し、最初のサンプル ID を代表キーとしてタプル化
+    flt_all = as_out.flt
+        .collect()
+        .map { list_of_tuples ->
+            def first_key   = list_of_tuples[0][0]
+            def all_contigs = list_of_tuples.collect { key, contigs -> contigs }
             tuple(first_key, all_contigs)
         }
-    } else {
-        flt_all = as_out.flt.groupTuple()
-    }
 
     // 5. Pool Contigs (複数サンプルの統合・重複除去)
     pc = POOL_CONTIGS_SUB(p, flt_all, l_thre)
@@ -69,12 +63,10 @@ workflow BACTERIOME_PIPELINE_SUB {
     cc_ded = cc.dedupl
 }
 
-
 // ==========================================
 // 2. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
 
-// A. メインの実行ワークフロー
 workflow BACTERIOME_PIPELINE_ALL {
     p      = createNullParamsChannel()
     l_thre = params.bacteriome_pipeline_lthre
@@ -83,21 +75,23 @@ workflow BACTERIOME_PIPELINE_ALL {
     def reads_list = params.bacteriome_pipeline_reads.split(';')
 
     def individual_channels = reads_list.collect { reads_path ->
-        channel.fromFilePairs(reads_path, checkIfExists: true)
+        Channel.fromFilePairs(reads_path, checkIfExists: true)
     }
 
     // 全チャンネルの結合
     def reads_mixed = individual_channels.first()
-    individual_channels.tail().each { ch ->
-        reads_mixed = reads_mixed.mix(ch)
+    if (individual_channels.size() > 1) {
+        individual_channels.tail().each { ch ->
+            reads_mixed = reads_mixed.mix(ch)
+        }
     }
 
-    // インデックス付与による連番 ID 化
-    index = 0
-    reads = reads_mixed.map { id, pair ->
-        def new_id = "${String.format('%02d', index)}_${id}"
-        index += 1
-        return tuple(new_id, pair)
+    // mapWithIndex を使用した安全な連番 ID 化（並列実行時の競合回避）
+    reads = reads_mixed.mapWithIndex { tuple_item, idx ->
+        def id   = tuple_item[0]
+        def pair = tuple_item[1]
+        def new_id = "${String.format('%02d', idx)}_${id}"
+        tuple(new_id, pair)
     }
 
     // パイプライン本体の呼び出し

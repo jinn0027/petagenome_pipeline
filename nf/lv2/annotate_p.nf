@@ -1,24 +1,39 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.annotate_p_aligner = "mmseqs2"
-params.annotate_p_is_prebuilt_db = false
-params.annotate_p_annotate_orfs_memory = params.memory ?: 16
-params.annotate_p_annotate_orfs_threads = 2
+// ==========================================
+// 0. グローバルフォールバックと上限値（Clipping）定義
+// ==========================================
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
+params.annotate_p_aligner        = params.annotate_p_aligner        ?: "mmseqs2"
+params.annotate_p_is_prebuilt_db = params.annotate_p_is_prebuilt_db ?: false
+
+// プロセス固有の上限設定（巨大な TaxID/KO マッピング辞書をメモリ保持するため上限は 32GB を確保）
+def ANNOTATE_ORFS_MAX_MEMORY  = 32 
+def ANNOTATE_ORFS_MAX_THREADS = 4
+
+// パラメータ割り当てと上限適応
+params.annotate_p_annotate_orfs_memory  = Math.min((params.annotate_p_annotate_orfs_memory  ?: params.memory) as Integer, ANNOTATE_ORFS_MAX_MEMORY)
+params.annotate_p_annotate_orfs_threads = Math.min((params.annotate_p_annotate_orfs_threads ?: params.threads) as Integer, ANNOTATE_ORFS_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 // アライナー（mmseqs2 または pzlast）のパスを動的に決定してインポート
 def pzlast_script = (params.containsKey('pzrepoDir') && params.pzrepoDir) ? "${params.pzrepoDir}/nf/lv1/pzlast.nf" : null
-def use_pzlast = (params.annotate_p_aligner == 'pzlast') && pzlast_script && file(pzlast_script).exists()
+def use_pzlast    = (params.annotate_p_aligner == 'pzlast') && pzlast_script && file(pzlast_script).exists()
 
-def aligner_path = use_pzlast ? pzlast_script : "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
+def aligner_path  = use_pzlast ? pzlast_script : "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
 
 // mmseqs2.nf / pzlast.nf で定義されているタンパク質用サブワークフローをインポート
 include { BUILD_REF_DB_PROT_SUB; MAP_PROT_SUB } from "${aligner_path}"
 
-// Python によるアノテーション結合プロセス
+// ==========================================
+// 1. プロセス定義
+// ==========================================
+
 process ANNOTATE_ORFS {
     tag "${qry_id}"
 
@@ -26,43 +41,41 @@ process ANNOTATE_ORFS {
     containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb = "${params.annotate_p_annotate_orfs_memory}"
+    def gb      = "${params.annotate_p_annotate_orfs_memory}"
     def threads = "${params.annotate_p_annotate_orfs_threads}"
-    memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-    tuple val(ref_id), val(qry_id), path(fmt6_result)
-    path taxid_map  // ワークフロー側で channel.value() にして渡す
-    path ko_map     // ワークフロー側で channel.value() にして渡す
+        tuple val(ref_id), val(qry_id), path(fmt6_result)
+        path taxid_map
+        path ko_map
 
     output:
-    tuple val(qry_id), path("${qry_id}_annotated.tsv"), emit: annotated
+        tuple val(qry_id), path("${qry_id}_annotated.tsv"), emit: annotated
 
     script:
     """
     python3 - << 'EOF'
 import sys
 
-# タブが含まれる（2列以上存在する）行のみを選択的にパースして辞書に追加
+# TaxID マッピングの高速・軽量ロード
 taxid_dict = {}
 with open("${taxid_map}", 'r', encoding='utf-8') as f:
     for line in f:
-        line_clean = line.rstrip('\r\n')
-        if '\t' in line_clean:
-            parts = line_clean.split('\t', 1)
-            if len(parts) == 2 and parts[1]:
-                taxid_dict[parts[0]] = parts[1]
+        parts = line.rstrip().split('\t', 1)
+        if len(parts) == 2 and parts[1]:
+            taxid_dict[parts[0]] = parts[1]
 
+# KO マッピングの高速・軽量ロード
 ko_dict = {}
 with open("${ko_map}", 'r', encoding='utf-8') as f:
     for line in f:
-        line_clean = line.rstrip('\r\n')
-        if '\t' in line_clean:
-            parts = line_clean.split('\t', 1)
-            if len(parts) == 2 and parts[1]:
-                ko_dict[parts[0]] = parts[1]
+        parts = line.rstrip().split('\t', 1)
+        if len(parts) == 2 and parts[1]:
+            ko_dict[parts[0]] = parts[1]
 
 output_file = "${qry_id}_annotated.tsv"
 with open("${fmt6_result}", 'r', encoding='utf-8') as fin, open(output_file, 'w', encoding='utf-8') as fout:
@@ -71,21 +84,24 @@ with open("${fmt6_result}", 'r', encoding='utf-8') as fin, open(output_file, 'w'
     for line in fin:
         if line.startswith('#'):
             continue
-        cols = line.rstrip('\r\n').split('\t')
+        line_clean = line.rstrip()
+        cols = line_clean.split('\t')
         if len(cols) < 2:
             continue
         
         sseqid = cols[1]
-        taxid = taxid_dict.get(sseqid, "N/A")
-        ko = ko_dict.get(sseqid, "N/A")
+        taxid  = taxid_dict.get(sseqid, "N/A")
+        ko     = ko_dict.get(sseqid, "N/A")
         
-        line_clean = line.rstrip('\r\n')
         fout.write(f"{line_clean}\t{taxid}\t{ko}\n")
 EOF
     """
 }
 
-// アノテーション・サブワークフローの本体
+// ==========================================
+// 2. サブワークフロー（本体）
+// ==========================================
+
 workflow ANNOTATE_TAXID_KO_SUB {
     take:
     p
@@ -106,8 +122,8 @@ workflow ANNOTATE_TAXID_KO_SUB {
     search_out = MAP_PROT_SUB(p, db, orfs)
 
     // C. Map ファイルを value チャネル化して全サンプルに再利用可能にする
-    ch_taxid = (taxid_map instanceof Channel) ? taxid_map : Channel.value(taxid_map)
-    ch_ko    = (ko_map instanceof Channel)    ? ko_map    : Channel.value(ko_map)
+    ch_taxid = (taxid_map instanceof nextflow.extension.DataflowVariable || taxid_map instanceof nextflow.extension.DataflowQueue) ? taxid_map : Channel.value(taxid_map)
+    ch_ko    = (ko_map instanceof nextflow.extension.DataflowVariable || ko_map instanceof nextflow.extension.DataflowQueue) ? ko_map : Channel.value(ko_map)
 
     // D. TaxID / KO の紐づけ
     annotated_out = ANNOTATE_ORFS(search_out, ch_taxid, ch_ko)
@@ -117,12 +133,12 @@ workflow ANNOTATE_TAXID_KO_SUB {
 }
 
 // ==========================================
-// テスト・単体実行用エントリーポイント
+// 3. テスト・単体実行用エントリーポイント (-entry)
 // ==========================================
 
 // A. DB (MMseqs2/PZLAST インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
 workflow BUILD_REF_DB_ONLY {
-    p               = createNullParamsChannel()
+    p              = createNullParamsChannel()
     annotate_p_ref = createSeqsChannel(params.annotate_p_ref_fasta ?: params.ref_fasta)
 
     db_out = BUILD_REF_DB_PROT_SUB(p, annotate_p_ref)
