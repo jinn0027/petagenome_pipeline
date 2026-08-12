@@ -79,7 +79,8 @@ with open("${ko_map}", 'r', encoding='utf-8') as f:
 
 output_file = "${qry_id}_annotated.tsv"
 with open("${fmt6_result}", 'r', encoding='utf-8') as fin, open(output_file, 'w', encoding='utf-8') as fout:
-    fout.write("qseqid\tsseqid\tpident\tlength\tmismatch\tgapopen\tqstart\tqend\tsstart\tsend\tevalue\tbitscore\ttaxid\tko\n")
+    header = "\t".join(["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore", "taxid", "ko"]) + "\n"
+    fout.write(header)
     
     for line in fin:
         if line.startswith('#'):
