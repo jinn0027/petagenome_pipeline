@@ -42,7 +42,8 @@ process MERGE_FASTA {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple path(fasta_files), val(ext) // (配列ファイル群, 拡張子)
+        // stageAs: "?/*" を指定してファイル名の重複衝突を防ぐ
+        tuple path(fasta_files, stageAs: "?/*"), val(ext)
 
     output:
         tuple val("merged_all_samples"), path("combined_orfs.${ext}"), emit: merged_fasta

@@ -121,9 +121,9 @@ workflow ANNOTATE_TAXID_KO_SUB {
     // B. 相同性検索 (タンパク質用サブワークフローを呼び出し / 出力: [ ref_id, qry_id, out.m8 ])
     search_out = MAP_PROT_SUB(p, db, orfs)
 
-    // C. Map ファイルを value チャネル化して全サンプルに再利用可能にする
-    ch_taxid = (taxid_map instanceof nextflow.extension.DataflowVariable || taxid_map instanceof nextflow.extension.DataflowQueue) ? taxid_map : Channel.value(taxid_map)
-    ch_ko    = (ko_map instanceof nextflow.extension.DataflowVariable || ko_map instanceof nextflow.extension.DataflowQueue) ? ko_map : Channel.value(ko_map)
+    // C. Map ファイルを value チャネル化して全サンプルに再利用可能にする (型チェックの安全化)
+    ch_taxid = (taxid_map?.getClass()?.name?.contains('Dataflow')) ? taxid_map : Channel.value(taxid_map)
+    ch_ko    = (ko_map?.getClass()?.name?.contains('Dataflow'))    ? ko_map    : Channel.value(ko_map)
 
     // D. TaxID / KO の紐づけ
     annotated_out = ANNOTATE_ORFS(search_out, ch_taxid, ch_ko)
