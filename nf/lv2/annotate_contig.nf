@@ -46,23 +46,41 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
     # 1. アノテーション結果 (annotated.tsv) の読み込み
     # -------------------------------------------------------------
     NR == FNR {
-        if (FNR == 1) next;
-        orf_id   = \$1
-        sseqid   = \$2
-        pident   = \$3
-        evalue   = \$11
-        bitscore = \$12
-        taxid    = \$13
-        ko       = \$14
+        # 1行目のヘッダーから列名とインデックスを動的マッピング
+        if (FNR == 1) {
+            for (i = 1; i <= NF; i++) {
+                col[\$i] = i
+            }
+            next
+        }
+
+        # 動的インデックス取得（列が存在しない場合はデフォルト位置を割り当て）
+        c_qseqid   = (col["qseqid"]   ? col["qseqid"]   : 1)
+        c_sseqid   = (col["sseqid"]   ? col["sseqid"]   : 2)
+        c_pident   = (col["pident"]   ? col["pident"]   : 3)
+        c_evalue   = (col["evalue"]   ? col["evalue"]   : 11)
+        c_bitscore = (col["bitscore"] ? col["bitscore"] : 12)
+        c_taxid    = (col["taxid"]    ? col["taxid"]    : 13)
+        c_ko       = (col["ko"]       ? col["ko"]       : 14)
+
+        orf_id   = \$c_qseqid
+        sseqid   = \$c_sseqid
+        pident   = \$c_pident
+        evalue   = \$c_evalue
+        bitscore = \$c_bitscore
+        
+        # フィールドが存在し、かつ空文字列・空白でなければその値を使い、それ以外は "N/A"
+        taxid    = (NF >= c_taxid  && \$c_taxid  != "" && \$c_taxid  != " ") ? \$c_taxid  : "N/A"
+        ko       = (NF >= c_ko     && \$c_ko     != "" && \$c_ko     != " ") ? \$c_ko     : "N/A"
 
         if (anno_count[orf_id] < ANNO_TOP_N) {
             anno_count[orf_id]++
             idx = anno_count[orf_id]
 
-            orf_sseqid[orf_id, idx]   = sseqid
-            orf_pident[orf_id, idx]   = pident
-            orf_evalue[orf_id, idx]   = evalue
-            orf_bitscore[orf_id, idx] = bitscore
+            orf_sseqid[orf_id, idx]   = (sseqid   != "" ? sseqid   : "N/A")
+            orf_pident[orf_id, idx]   = (pident   != "" ? pident   : "N/A")
+            orf_evalue[orf_id, idx]   = (evalue   != "" ? evalue   : "N/A")
+            orf_bitscore[orf_id, idx] = (bitscore != "" ? bitscore : "N/A")
             orf_taxid[orf_id, idx]    = taxid
             orf_ko[orf_id, idx]       = ko
         }

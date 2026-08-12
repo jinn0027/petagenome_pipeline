@@ -45,28 +45,31 @@ process ANNOTATE_ORFS {
     python3 - << 'EOF'
 import sys
 
+# タブが含まれる（2列以上存在する）行のみを選択的にパースして辞書に追加
 taxid_dict = {}
-with open("${taxid_map}") as f:
+with open("${taxid_map}", 'r', encoding='utf-8') as f:
     for line in f:
-        parts = line.strip().split('\\t')
-        if len(parts) >= 2:
-            taxid_dict[parts[0]] = parts[1]
+        if '\t' in line:
+            parts = line.rstrip('\r\n').split('\t', 1)
+            if len(parts) == 2 and parts[1]:
+                taxid_dict[parts[0]] = parts[1]
 
 ko_dict = {}
-with open("${ko_map}") as f:
+with open("${ko_map}", 'r', encoding='utf-8') as f:
     for line in f:
-        parts = line.strip().split('\\t')
-        if len(parts) >= 2:
-            ko_dict[parts[0]] = parts[1]
+        if '\t' in line:
+            parts = line.rstrip('\r\n').split('\t', 1)
+            if len(parts) == 2 and parts[1]:
+                ko_dict[parts[0]] = parts[1]
 
 output_file = "${qry_id}_annotated.tsv"
-with open("${fmt6_result}") as fin, open(output_file, 'w') as fout:
-    fout.write("qseqid\\tsseqid\\tpident\\tlength\\tmismatch\\tgapopen\\tqstart\\tqend\\tsstart\\tsend\\tevalue\\tbitscore\\ttaxid\\tko\\n")
+with open("${fmt6_result}", 'r', encoding='utf-8') as fin, open(output_file, 'w', encoding='utf-8') as fout:
+    fout.write("qseqid\tsseqid\tpident\tlength\tmismatch\tgapopen\tqstart\tqend\tsstart\tsend\tevalue\tbitscore\ttaxid\tko\n")
     
     for line in fin:
         if line.startswith('#'):
             continue
-        cols = line.strip().split('\\t')
+        cols = line.rstrip('\r\n').split('\t')
         if len(cols) < 2:
             continue
         
@@ -74,7 +77,8 @@ with open("${fmt6_result}") as fin, open(output_file, 'w') as fout:
         taxid = taxid_dict.get(sseqid, "N/A")
         ko = ko_dict.get(sseqid, "N/A")
         
-        fout.write(f"{line.strip()}\\t{taxid}\\t{ko}\\n")
+        line_clean = line.rstrip('\r\n')
+        fout.write(f"{line_clean}\t{taxid}\t{ko}\n")
 EOF
     """
 }
@@ -116,7 +120,7 @@ workflow ANNOTATE_TAXID_KO_SUB {
 
 // A. DB (MMseqs2/PZLAST インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
 workflow BUILD_REF_DB_ONLY {
-    p              = createNullParamsChannel()
+    p               = createNullParamsChannel()
     annotate_p_ref = createSeqsChannel(params.annotate_p_ref_fasta ?: params.ref_fasta)
 
     db_out = BUILD_REF_DB_PROT_SUB(p, annotate_p_ref)

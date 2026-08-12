@@ -38,15 +38,18 @@ process SUMMARIZE_KO_TAXID {
     def py_script   = "${params.petagenomeDir}/scripts/Python/summarize_ko_taxid.py"
     def min_pident  = params.summarize_min_anno_pident
     
-    // マッピングファイルが存在する場合は引数を組み立てる
-    def ko_opt  = (ko_name_map.name != 'NO_FILE') ? "--ko_name_map ${ko_name_map}" : ""
-    def tax_opt = (taxid_name_map.name != 'NO_FILE') ? "--taxid_name_map ${taxid_name_map}" : ""
+    // stageAs で指定されたファイル名を用いてオプションを組み立て
+    def ko_opt  = (ko_name_map.name != 'NO_FILE') ? "--ko_name_map ko_map.tsv" : ""
+    def tax_opt = (taxid_name_map.name != 'NO_FILE') ? "--taxid_name_map taxid_map.tsv" : ""
 
     """
-    python3 ${py_script} \\
-        -i ${contig_anno_tsv} \\
-        -o ${qry_id} \\
-        -p ${min_pident} \\
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    python3 "${py_script}" \\
+        -i "${contig_anno_tsv}" \\
+        -o "${qry_id}" \\
+        -p "${min_pident}" \\
         ${ko_opt} \\
         ${tax_opt}
     """
@@ -81,7 +84,7 @@ workflow SUMMARIZE_KO_TAXID_ALL {
     // 入力TSVチャンネルの作成 (*_contig_taxid_ko.tsv を想定)
     contig_anno_ch = Channel.fromPath(params.summarize_input_tsv_path)
         .map { f ->
-            def qry_id = f.name.replaceAll(/_contig_taxid_ko\.tsv$/, '')
+            def qry_id = f.name.replaceAll(/_contig_taxid_ko\.tsv\$/, '')
             tuple(qry_id, f)
         }
 
