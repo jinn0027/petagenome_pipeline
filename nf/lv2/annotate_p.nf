@@ -58,29 +58,32 @@ process ANNOTATE_ORFS {
 
     script:
     """
-    python3 - << 'EOF'
+    python3 - "${taxid_map}" "${ko_map}" "${fmt6_result}" "${qry_id}_annotated.tsv" << 'EOF'
 import sys
 
-# TaxID マッピングの高速・軽量ロード
+taxid_map_file = sys.argv[1]
+ko_map_file    = sys.argv[2]
+fmt6_file      = sys.argv[3]
+out_file       = sys.argv[4]
+
 taxid_dict = {}
-with open("${taxid_map}", 'r', encoding='utf-8') as f:
+with open(taxid_map_file, 'r', encoding='utf-8') as f:
     for line in f:
         parts = line.rstrip().split('\t', 1)
         if len(parts) == 2 and parts[1]:
             taxid_dict[parts[0]] = parts[1]
 
-# KO マッピングの高速・軽量ロード
 ko_dict = {}
-with open("${ko_map}", 'r', encoding='utf-8') as f:
+with open(ko_map_file, 'r', encoding='utf-8') as f:
     for line in f:
         parts = line.rstrip().split('\t', 1)
         if len(parts) == 2 and parts[1]:
             ko_dict[parts[0]] = parts[1]
 
-output_file = "${qry_id}_annotated.tsv"
-with open("${fmt6_result}", 'r', encoding='utf-8') as fin, open(output_file, 'w', encoding='utf-8') as fout:
-    header = "\t".join(["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore", "taxid", "ko"]) + "\n"
-    fout.write(header)
+cols_header = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore", "taxid", "ko"]
+
+with open(fmt6_file, 'r', encoding='utf-8') as fin, open(out_file, 'w', encoding='utf-8') as fout:
+    fout.write("\t".join(cols_header) + "\n")
     
     for line in fin:
         if line.startswith('#'):
