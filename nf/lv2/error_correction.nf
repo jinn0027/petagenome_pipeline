@@ -46,11 +46,12 @@ process get_length {
     echo "${processProfile(task)}" | tee prof.txt
     mkdir -p ${id}
     reads_=( ${reads} )
-    for i in \${reads_[@]}
+    for i in "\${reads_[@]}"
     do
-        awk '{if(\$1~/^\\+/|| \$1~/^@/){print(\$1)}else{print(\$0)}}' \${i} | \
-        python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py -t fastq \
-        > ${id}/\${i}.length.txt
+        fname="\${i##*/}"
+        # パイプによるオーバーヘッドを減らし、basename指定で安全に出力
+        python ${params.petagenomeDir}/scripts/Python/get_sequence_length.py -t fastq "\${i}" \
+            > "${id}/\${fname}.length.txt"
     done
     """
 }
@@ -65,7 +66,7 @@ workflow ERROR_CORRECTION_SUB {
     reads
 
     main:
-    // 入力チャネルの構築
+    // 入力チャネルの構築 [ p_val, pair_id, reads_path ]
     in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
         tuple(p_val, pair_id, reads_path)
     }

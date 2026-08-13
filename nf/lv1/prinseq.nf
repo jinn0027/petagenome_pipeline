@@ -6,8 +6,9 @@ params.memory  = 16
 params.threads = 4
 
 // 2. PRINSEQ 固有の上限値定義
-def PRINSEQ_MAX_MEMORY  = 8 // GB (ストリーミング処理のため低メモリで十分)
-def PRINSEQ_MAX_THREADS = 8 // I/O およびパース処理の並列化飽和点
+// ※ prinseq-lite.pl は Single Thread 動作のため MAX_THREADS は 1〜2 が推奨されます
+def PRINSEQ_MAX_MEMORY  = 8 // GB
+def PRINSEQ_MAX_THREADS = 1 // prinseq-lite.pl はマルチスレッド非対応のため 1 に設定
 
 // 3. 上限値による動的クリッピング
 params.prinseq_prinseq_memory  = Math.min(params.memory as Integer, PRINSEQ_MAX_MEMORY)
@@ -33,16 +34,18 @@ process prinseq {
     container = "${params.petagenomeDir}/modules/prinseq/prinseq.sif"
     containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
-    def gb = "${params.prinseq_prinseq_memory}"
-    def threads = "${params.prinseq_prinseq_threads}"
-    memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
+    cpus   { params.executor == "sge" ? null : params.prinseq_prinseq_threads }
+    memory { params.executor == "sge" ? null : "${params.prinseq_prinseq_memory} GB" }
+    clusterOptions "${clusterOptions(params.executor, params.prinseq_prinseq_memory, params.prinseq_prinseq_threads, label)}"
+
     input:
         tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
         tuple val(pair_id), path("${pair_id}")
     script:
+        def gb = params.prinseq_prinseq_memory
+        def threads = params.prinseq_prinseq_threads
         """
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
@@ -50,12 +53,19 @@ process prinseq {
         read0=${reads[0]}
         read1=${reads[1]}
 
-        echo ${reads[0]} | grep -e ".gz\$" >& /dev/null && :
-        if [ \$? -eq 0 ] ; then
+        # gzip判定と解凍（unpigzがあれば並列解凍、なければgzipを使用）
+        if [[ "\${read0}" =~ \\.gz\$ ]]; then
             read0=\${read0%%.gz}
             read1=\${read1%%.gz}
-            unpigz -c ${reads[0]} > \${read0}
-            unpigz -c ${reads[1]} > \${read1}
+            
+            DECOMPRESSOR="gzip -dc"
+            if command -v unpigz >/dev/null 2>&1; then
+                DECOMPRESSOR="unpigz -c -p ${task.cpus ?: 1}"
+            fi
+
+            \$DECOMPRESSOR ${reads[0]} > \${read0}
+            \$DECOMPRESSOR ${reads[1]} > \${read1}
+            IS_DECOMPRESSED=1
         fi
 
         prinseq-lite.pl \\
@@ -74,21 +84,24 @@ process prinseq {
             -out_bad ${pair_id}/bad \\
             -fastq \${read0} \\
             -fastq2 \${read1}
+
+        # 展開した一時FASTQファイルのクリーンアップ（ディスク空き容量の確保）
+        if [ "\${IS_DECOMPRESSED}" = "1" ]; then
+            rm -f \${read0} \${read1}
+        fi
         """
 }
 
 // ==========================================
-// 1. サブワークフロー（再利用可能な処理の本体）
+// 1. サブワークフロー
 // ==========================================
 
-// PRINSEQ 処理の本体
 workflow PRINSEQ_SUB {
     take:
     p
     reads
 
     main:
-    // [ p_val, pair_id, reads_path ] にフラット化
     in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
         tuple(p_val, pair_id, reads_path)
     }
@@ -99,12 +112,10 @@ workflow PRINSEQ_SUB {
     out = out
 }
 
-
 // ==========================================
-// 2. コマンドライン (-entry) 用エントリーポイント
+// 2. エントリーポイント
 // ==========================================
 
-// A. メインの実行ワークフロー
 workflow PRINSEQ_ALL {
     p     = createNullParamsChannel()
     reads = createPairsChannel(params.prinseq_reads)
@@ -113,7 +124,6 @@ workflow PRINSEQ_ALL {
     out_ch.out.view { i -> "$i" }
 }
 
-// デフォルトエントリーポイント
 workflow {
     PRINSEQ_ALL()
 }

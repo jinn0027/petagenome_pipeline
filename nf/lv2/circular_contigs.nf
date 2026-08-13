@@ -77,72 +77,65 @@ process classify {
               path("${qry_id}/selfhit.tsv", arity: '1')
 
     script:
+    def al_self = getParam(p, 'circular_contigs_al_self')
     """
     echo "${processProfile(task)}" | tee prof.txt
+    
     qry_=${qry}
-    echo \${qry} | grep -e ".gz\$" >& /dev/null && :
-    if [ \$? -eq 0 ] ; then
-        qry_=\${qry_%%.gz}
-        unpigz -c ${qry} > \${qry_}
+    if [[ "\${qry_}" == *.gz ]]; then
+        qry_=\${qry_%.gz}
+        unpigz -p ${threads} -c ${qry} > \${qry_}
     fi
     mkdir -p ${qry_id}
 
-    # 自己ヒットしたもののみを選ぶ
-    awk -F "\\t" '{OFS="\\t"} {
-        if (\$1==\$2) {
-            print \$0
-        }
-    }' ${in_tsv} > ${qry_id}/selfhit.tsv 
+    # 1. 自己ヒットの抽出
+    awk -F "\\t" 'BEGIN{OFS="\\t"} \$1==\$2 {print \$0}' ${in_tsv} > ${qry_id}/selfhit.tsv
 
-    # 完全に一致する断片（自己アライメント）を除外し、
-    # 残ったヒット（環状オーバーラップまたはリピート）を抽出
-    awk -F "\\t" '{OFS="\\t"} {
-        q1 = \$7 < \$8 ? \$7 : \$8;
-        q2 = \$7 < \$8 ? \$8 : \$7;
-        t1 = \$9 < \$(10) ? \$9 : \$(10);
-        t2 = \$9 < \$(10) ? \$(10) : \$9;
+    # 2. AWKで一括解析し、各コンティグの最大アライメント末尾座標(pos_end)を抽出
+    awk -F "\\t" -v al_self="${al_self}" '
+    BEGIN { OFS="\t" }
+    {
+        q1 = (\$7 < \$8) ? \$7 : \$8;
+        q2 = (\$7 < \$8) ? \$8 : \$7;
+        t1 = (\$9 < \$10) ? \$9 : \$10;
+        t2 = (\$9 < \$10) ? \$10 : \$9;
+
+        # 非自己アライメント領域のチェック
         if (q1 != t1 || q2 != t2) {
-            print \$0
+            aln_len = \$4;
+            if (aln_len >= al_self) {
+                pos = 0;
+                if (q1 == 1) pos = t1;
+                else if (t1 == 1) pos = q1;
+
+                if (pos > 1) {
+                    if (pos > max_pos[\$1]) max_pos[\$1] = pos;
+                }
+            }
         }
-    }' ${qry_id}/selfhit.tsv > ${qry_id}/non_self_aligned_hits.tsv
+    }
+    END {
+        for (id in max_pos) {
+            print id, max_pos[id];
+        }
+    }' ${qry_id}/selfhit.tsv > ${qry_id}/circular_positions.txt
 
-    # 配列IDごとにヒットを分割
-    awk -F "\\t" -v qry_id="${qry_id}" '{OFS="\\t"} {
-        f=\$1; gsub("/", "__", f);
-        print \$0 >> qry_id"/selfhit"f".tsv"
-    }' ${qry_id}/non_self_aligned_hits.tsv
+    # 3. ID リストと BED ファイルの作成
+    cut -f1 ${qry_id}/circular_positions.txt > ${qry_id}/circular_ids.txt
+    awk 'BEGIN{OFS="\t"} {print \$1, 1, \$2}' ${qry_id}/circular_positions.txt > ${qry_id}/cut.bed
 
-    touch ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa ${qry_id}/circular.fa ${qry_id}/linear.fa
+    # 4. SeqKit による一括分画と一括切断処理 (Bashループなし)
+    if [ -s ${qry_id}/circular_ids.txt ]; then
+        seqkit grep -f ${qry_id}/circular_ids.txt \${qry_} > ${qry_id}/circular.fa
+        seqkit grep -v -f ${qry_id}/circular_ids.txt \${qry_} > ${qry_id}/linear.fa
 
-    # 配列IDごとにFASTAファイル分割
-    seqkit split -i \${qry_} --by-id-prefix @ -O ${qry_id}
-
-    seqkit fx2tab -j ${threads} -n -i -l \${qry_} | while read -r id len; do
-        f="\$(echo \${id} | sed 's#/#__#g')"
-        each_fa="${qry_id}/@\${f}.fa"
-        each_selfhit="${qry_id}/selfhit"\${f}".tsv"
-        if [ -f \${each_selfhit} ] ; then
-            pos_end=\$(sort -n -r -k4 \${each_selfhit} | sed -n '1p' | \\
-                       awk -v id=\${id} -v len=\${len} -v al_self=${getParam(p, 'circular_contigs_al_self')} '{ \\
-                           if (\$1==id && \$4!=len && \$4>=al_self) { \\
-                               q1 = \$7 < \$8 ? \$7 : \$8; \\
-                               t1 = \$9 < \$(10) ? \$9 : \$(10); \\
-                               if (q1==1) {print(t1)} \\
-                               else if (t1==1) {print(q1)}; \\
-                           } \\
-                       }')
-            if [ "\${pos_end}" != "" ] && [ "\${pos_end}" -gt 1 ] ; then
-                cat \${each_fa} | seqkit subseq -r 1:\${pos_end} > _fa
-                cat _fa >> ${qry_id}/circular.cut.fa
-                tail -n +2 \${each_fa} >> _fa
-                cat _fa >> ${qry_id}/circular.extended.fa
-                rm -f _fa
-                cat \${each_fa} >> ${qry_id}/circular.fa
-            else
-                cat \${each_fa} >> ${qry_id}/linear.fa
-            fi
-        fi
-    done
+        # 切断処理（seqkit seq -i でヘッダー末尾の座標テキストをカットしIDを保持）
+        seqkit subseq --bed ${qry_id}/cut.bed ${qry_id}/circular.fa | seqkit seq -i > ${qry_id}/circular.cut.fa
+        cat ${qry_id}/circular.cut.fa ${qry_id}/circular.fa > ${qry_id}/circular.extended.fa
+    else
+        touch ${qry_id}/circular.fa ${qry_id}/circular.cut.fa ${qry_id}/circular.extended.fa
+        cp \${qry_} ${qry_id}/linear.fa
+    fi
     """
 }
 
@@ -249,10 +242,8 @@ workflow CIRCULAR_CONTIGS_SUB {
         aln2 = pzlastn2(aln2_in).combine(cfg2)
 
         // 4. 重複除去 (Deduplicate)
-        // 判定をキーベースの join に変更して非同期処理の安全性を確保
-        // aln2:  [ref_id, qry_id, pzlst2_tsv, cfg]
-        // clsfy: [qry_id, cut, ext, circular, linear, selfhit_tsv]
-        aln2_key = aln2.map { ref_id, qry_id, tsv, cfg -> tuple(qry_id, tsv) }
+        // aln2 の要素数が異なる場合にも対応できるようインデックスで参照
+        aln2_key  = aln2.map { item -> tuple(item[1], item[2]) } // [qry_id, tsv]
         clsfy_key = clsfy.map { qry_id, cut, ext, circular, linear, selfhit_tsv -> tuple(qry_id, cut, ext, circular) }
 
         ch_new = clsfy_key.join(aln2_key).map { qry_id, cut, ext, circular, aln2_tsv ->
@@ -322,7 +313,7 @@ workflow CIRCULAR_CONTIGS_SUB {
         aln2 = blastn2(aln2_in)
 
         // 4. 重複除去 (Deduplicate)
-        aln2_key = aln2.map { ref_id, qry_id, tsv -> tuple(qry_id, tsv) }
+        aln2_key  = aln2.map { item -> tuple(item[1], item[2]) } // [qry_id, tsv]
         clsfy_key = clsfy.map { qry_id, cut, ext, circular, linear, selfhit_tsv -> tuple(qry_id, cut, ext, circular) }
 
         ch_new = clsfy_key.join(aln2_key).map { qry_id, cut, ext, circular, blst2_tsv ->

@@ -67,14 +67,15 @@ process EXTRACT_UNMAPPED_READS {
 
     if [ "\$IS_PAIRED" = "paired" ]; then
         # --- ペアエンド用処理 (-f 12 : 両方のリードが未マッピング) ---
-        samtools fastq -f 12 -@ ${threads} \\
-            -1 ${qry_id}_host_removed_R1.fastq.gz \\
-            -2 ${qry_id}_host_removed_R2.fastq.gz \\
-            -0 /dev/null -s /dev/null \\
-            ${bam_or_sam}
+        # samtools collate で名前順に一時並べ替えつつパイプで高速に fastq 化
+        samtools collate -u -O -@ ${threads} ${bam_or_sam} tmp_collate | \
+        samtools fastq -f 12 -@ ${threads} \
+            -1 ${qry_id}_host_removed_R1.fastq.gz \
+            -2 ${qry_id}_host_removed_R2.fastq.gz \
+            -0 /dev/null -s /dev/null -
     else
         # --- シングルエンド用処理 (-f 4 : 未マッピングリードのみ抽出) ---
-        samtools fastq -f 4 -@ ${threads} \\
+        samtools fastq -f 4 -@ ${threads} \
             ${bam_or_sam} | bgzip -@ ${threads} -c > ${qry_id}_host_removed_single.fastq.gz
     fi
     """
@@ -140,9 +141,9 @@ workflow REMOVE_HOST_ALL {
 
 // C. 作成済み DB を使用してマッピング〜除去を実行 (-entry REMOVE_HOST_WITH_DB)
 workflow REMOVE_HOST_WITH_DB {
-    p       = createNullParamsChannel()
-    host_db = createSeqsChannel(params.remove_host_prebuilt_db)
-    reads   = createPairsChannel(params.remove_host_reads)
+    p        = createNullParamsChannel()
+    host_db  = createSeqsChannel(params.remove_host_prebuilt_db)
+    reads    = createPairsChannel(params.remove_host_reads)
 
     params.remove_host_is_prebuilt_db = true
 
