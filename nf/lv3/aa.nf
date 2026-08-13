@@ -107,7 +107,12 @@ workflow BACTERIOME_PIPELINE_SUB {
     contig_mapping_res = ALIGN_CONTIGS_TO_ORFS_SUB(p, merged_fna_fasta, sample_orf_fna_ch)
 
     // 6. ORF -> TaxID / KO 対応テーブルの構築
-    contig_anno_res = ANNOTATE_CONTIG_SUB(p, contig_mapping_res.out, annotation_res.annotated)
+    // ANNOTATE_CONTIG_SUB 内で 1 vs N (contig_mapping_res.out vs annotation_res.annotated) の結合を行う
+    contig_anno_res = ANNOTATE_CONTIG_SUB(
+        p,
+        contig_mapping_res.out,
+        annotation_res.annotated
+    )
 
     // 7. サンプルごとの KO / TaxID 比率の集計処理 
     summary_res = SUMMARIZE_KO_TAXID_SUB(p, contig_anno_res.contig_anno, ko_name_map, taxid_name_map)

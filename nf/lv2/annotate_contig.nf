@@ -39,7 +39,8 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple val(ref_id), val(qry_id), path(contig_map_m8), path(annotated_tsv)
+        // 受け取るタプルを [ qry_id, contig_map_m8, annotated_tsv ] の 3 要素に正確に適合
+        tuple val(qry_id), path(contig_map_m8), path(annotated_tsv)
 
     output:
         tuple val(qry_id), path("${qry_id}_contig_taxid_ko.tsv"), emit: contig_anno
@@ -59,7 +60,6 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
     # 1. アノテーション結果 (annotated.tsv) の読み込み
     # -------------------------------------------------------------
     NR == FNR {
-        # 1行目のヘッダーから列名とインデックスを動的マッピング
         if (FNR == 1) {
             for (i = 1; i <= NF; i++) {
                 col[\$i] = i
@@ -80,11 +80,9 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
         evalue   = \$c_evalue
         bitscore = \$c_bitscore
         
-        # フィールドが存在し、かつ空文字列・空白でなければその値を使い、それ以外は "N/A"
         taxid    = (NF >= c_taxid  && \$c_taxid  != "" && \$c_taxid  != " ") ? \$c_taxid  : "N/A"
         ko       = (NF >= c_ko     && \$c_ko     != "" && \$c_ko     != " ") ? \$c_ko     : "N/A"
 
-        # taxid と ko の両方が "N/A" (または空) の場合は Top N 枠を消費せずスキップ
         if ((taxid == "N/A" || taxid == "") && (ko == "N/A" || ko == "")) {
             next
         }
@@ -162,15 +160,16 @@ process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
 workflow ANNOTATE_CONTIG_SUB {
     take:
     p
-    contig_map_out // tuple(ref_id, qry_id, path_m8)
-    annotated_res  // tuple(ref_id, path_tsv)
+    contig_map_out // tuple(qry_id, path_m8)        <- 2要素
+    annotated_res  // tuple(ref_id, path_tsv)      <- 2要素
 
     main:
-    // ref_id をキーにして join で確実に紐付け
+    // 2要素 + 2要素 の combine（計4要素）を受け取り、
+    // プロセスへ渡す 3要素 [ qry_id, map_m8, anno_tsv ] へ正確にマッピング
     joined_ch = contig_map_out
-        .join(annotated_res, by: 0)
-        .map { ref_id, qry_id, map_m8, anno_tsv ->
-            tuple(ref_id, qry_id, map_m8, anno_tsv)
+        .combine(annotated_res)
+        .map { qry_id, map_m8, ref_id, anno_tsv ->
+            tuple(qry_id, map_m8, anno_tsv)
         }
 
     res = ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N(joined_ch)
@@ -186,10 +185,11 @@ workflow ANNOTATE_CONTIG_SUB {
 workflow ANNOTATE_CONTIG_ALL {
     p = createNullParamsChannel()
 
+    // 単体実行時も本番同様に tuple(qry_id, f) の 2要素チャンネルを生成
     contig_map_ch = Channel.fromPath(params.annotate_contig_m8_path)
                             .map { f -> 
                                 def qry_id = f.name.replaceAll(/_contig_map\.m8$/, '')
-                                tuple('merged_all_samples', qry_id, f) 
+                                tuple(qry_id, f) 
                             }
     annotated_ch  = Channel.fromPath(params.annotate_contig_tsv_path)
                             .map { f -> tuple('merged_all_samples', f) }

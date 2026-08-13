@@ -48,8 +48,12 @@ workflow ALIGN_CONTIGS_TO_ORFS_SUB {
     // --- B. 相同性検索 (fmt6/m8 形式) ---
     search_out = MAP_NUCL_SUB(p, target_db, reads) // 出力: [ ref_id, qry_id, out.m8 ]
 
+
+    // --- C. ref_id を除外し、[ qry_id, out.m8 ] の形に整形して出力する
+    clean_out = search_out.out.map { ref_id, qry_id, m8_file -> tuple(qry_id, m8_file) }
+
     emit:
-    out = search_out.out
+    out = clean_out
 }
 
 
