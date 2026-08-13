@@ -38,7 +38,7 @@ process summarize_ko_taxid {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple val(qry_id), path(contig_anno_tsv)
+        tuple val(qry_id), path(samples_anno_tsv)
         path ko_name_map, stageAs: 'ko_map.tsv'       // params.ko_name_map から渡す (任意)
         path taxid_name_map, stageAs: 'taxid_map.tsv' // params.taxid_name_map から渡す (任意)
 
@@ -58,7 +58,7 @@ process summarize_ko_taxid {
     echo "${processProfile(task)}" | tee prof.txt
 
     python3 "${py_script}" \\
-        -i "${contig_anno_tsv}" \\
+        -i "${samples_anno_tsv}" \\
         -o "${qry_id}" \\
         -p "${min_pident}" \\
         ${ko_opt} \\

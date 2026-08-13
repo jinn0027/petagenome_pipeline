@@ -6,16 +6,16 @@ params.memory  = 16
 params.threads = 4
 
 // 2. プロセス固有の上限設定
-def ANNOTATE_CONTIG_MAX_MEMORY  = 8 // GB (AWK 連想配列でのアノテーション保持用)
-def ANNOTATE_CONTIG_MAX_THREADS = 2 // AWK 処理および I/O の上限
+def ANNOTATE_SAMPLES_MAX_MEMORY  = 8 // GB (AWK 連想配列でのアノテーション保持用)
+def ANNOTATE_SAMPLES_MAX_THREADS = 2 // AWK 処理および I/O の上限
 
 // 3. 上限値による動的クリッピング
-params.annotate_contig_memory  = Math.min(params.memory as Integer, ANNOTATE_CONTIG_MAX_MEMORY)
-params.annotate_contig_threads = Math.min(params.threads as Integer, ANNOTATE_CONTIG_MAX_THREADS)
+params.annotate_samples_memory  = Math.min(params.memory as Integer, ANNOTATE_SAMPLES_MAX_MEMORY)
+params.annotate_samples_threads = Math.min(params.threads as Integer, ANNOTATE_SAMPLES_MAX_THREADS)
 
 // 1コンティグ・1ORFあたりの保持上限数のデフォルト値
-params.annotate_contig_top_n_contig = 3  // 1 ORF に対して保持する merged ORF の上限
-params.annotate_contig_top_n_anno   = 3  // 1 merged ORF に対して保持する DB Hit (TaxID/KO) の上限
+params.annotate_samples_top_n_samples_vs_merged = 3  // 1 ORF に対して保持する merged ORF の上限
+params.annotate_samples_top_n_merged_vs_anno = 3  // 1 merged ORF に対して保持する DB Hit (TaxID/KO) の上限
 
 include { createNullParamsChannel; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -24,30 +24,30 @@ include { createNullParamsChannel; clusterOptions; processProfile; apptainerCont
 // 1. プロセス定義
 // ==========================================
 
-process assign_taxid_ko_to_contigs {
+process assign_taxid_ko_to_samples {
     tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb      = "${params.annotate_contig_memory}"
-    def threads = "${params.annotate_contig_threads}"
+    def gb      = "${params.annotate_samples_memory}"
+    def threads = "${params.annotate_samples_threads}"
 
     memory params.executor == "sge" ? null : "${gb} GB"
     cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        // 受け取るタプルを [ qry_id, contig_map_m8, annotated_tsv ] の 3 要素に正確に適合
-        tuple val(qry_id), path(contig_map_m8), path(annotated_tsv)
+        // 受け取るタプルを [ qry_id, samples_map_m8, annotated_tsv ] の 3 要素に正確に適合
+        tuple val(qry_id), path(samples_map_m8), path(annotated_tsv)
 
     output:
-        tuple val(qry_id), path("${qry_id}_contig_taxid_ko.tsv"), emit: contig_anno
+        tuple val(qry_id), path("${qry_id}_samples_taxid_ko.tsv"), emit: samples_anno
 
     script:
-    def map_top_n  = params.annotate_contig_top_n_contig
-    def anno_top_n = params.annotate_contig_top_n_anno
+    def map_top_n  = params.annotate_samples_top_n_samples_vs_merged
+    def anno_top_n = params.annotate_samples_top_n_merged_vs_anno
 
     """
     #!/usr/bin/env bash
@@ -102,22 +102,22 @@ process assign_taxid_ko_to_contigs {
     }
 
     # -------------------------------------------------------------
-    # 2. Contig -> ORF マッピング結果 (m8) の処理
+    # 2. samples -> ORF マッピング結果 (m8) の処理
     # -------------------------------------------------------------
     {
-        contig_id  = \$1
+        orf_in_sample_id  = \$1
         orf_id     = \$2
         c_pident   = \$3
         c_evalue   = \$11
         c_bitscore = \$12
 
-        if (map_count[contig_id] < MAP_TOP_N) {
-            map_count[contig_id]++
+        if (map_count[orf_in_sample_id] < MAP_TOP_N) {
+            map_count[orf_in_sample_id]++
 
             if (orf_id in anno_count) {
                 n = anno_count[orf_id]
                 for (i = 1; i <= n; i++) {
-                    print contig_id, \
+                    print orf_in_sample_id, \
                           orf_id, \
                           c_pident, \
                           c_evalue, \
@@ -130,7 +130,7 @@ process assign_taxid_ko_to_contigs {
                           orf_bitscore[orf_id, i]
                 }
             } else {
-                print contig_id, \
+                print orf_in_sample_id, \
                       orf_id, \
                       c_pident, \
                       c_evalue, \
@@ -144,11 +144,11 @@ process assign_taxid_ko_to_contigs {
             }
         }
     }
-    ' "${annotated_tsv}" "${contig_map_m8}" > temp_body.tsv
+    ' "${annotated_tsv}" "${samples_map_m8}" > temp_body.tsv
 
     # ヘッダーを付与して出力
-    echo -e "contig_id\\torf_id\\tmap_pident\\tmap_evalue\\tmap_bitscore\\tref_sseqid\\ttaxid\\tko\\tanno_pident\\tanno_evalue\\tanno_bitscore" > "${qry_id}_contig_taxid_ko.tsv"
-    cat temp_body.tsv >> "${qry_id}_contig_taxid_ko.tsv"
+    echo -e "orf_in_sample_id\\torf_id\\tmap_pident\\tmap_evalue\\tmap_bitscore\\tref_sseqid\\ttaxid\\tko\\tanno_pident\\tanno_evalue\\tanno_bitscore" > "${qry_id}_samples_taxid_ko.tsv"
+    cat temp_body.tsv >> "${qry_id}_samples_taxid_ko.tsv"
     rm -f temp_body.tsv
     """
 }
@@ -157,47 +157,47 @@ process assign_taxid_ko_to_contigs {
 // 2. サブワークフロー（本体）
 // ==========================================
 
-workflow ANNOTATE_CONTIG_SUB {
+workflow ANNOTATE_SAMPLES_SUB {
     take:
     p
-    contig_map_out // tuple(qry_id, path_m8)        <- 2要素
+    samples_map_out // tuple(qry_id, path_m8)      <- 2要素
     annotated_res  // tuple(ref_id, path_tsv)      <- 2要素
 
     main:
     // 2要素 + 2要素 の combine（計4要素）を受け取り、
     // プロセスへ渡す 3要素 [ qry_id, map_m8, anno_tsv ] へ正確にマッピング
-    joined_ch = contig_map_out
+    joined_ch = samples_map_out
         .combine(annotated_res)
         .map { qry_id, map_m8, ref_id, anno_tsv ->
             tuple(qry_id, map_m8, anno_tsv)
         }
 
-    res = assign_taxid_ko_to_contigs(joined_ch)
+    res = assign_taxid_ko_to_samples(joined_ch)
 
     emit:
-    contig_anno = res.contig_anno
+    samples_anno = res.samples_anno
 }
 
 // ==========================================
 // 3. テスト・単体実行用エントリーポイント (-entry)
 // ==========================================
 
-workflow ANNOTATE_CONTIG_ALL {
+workflow ANNOTATE_SAMPLES_ALL {
     p = createNullParamsChannel()
 
     // 単体実行時も本番同様に tuple(qry_id, f) の 2要素チャンネルを生成
-    contig_map_ch = Channel.fromPath(params.annotate_contig_m8_path)
+    samples_map_ch = Channel.fromPath(params.annotate_samples_m8_path)
                             .map { f -> 
-                                def qry_id = f.name.replaceAll(/_contig_map\.m8$/, '')
+                                def qry_id = f.name.replaceAll(/_samples_map\.m8$/, '')
                                 tuple(qry_id, f) 
                             }
-    annotated_ch  = Channel.fromPath(params.annotate_contig_tsv_path)
+    annotated_ch  = Channel.fromPath(params.annotate_samples_tsv_path)
                             .map { f -> tuple('merged_all_samples', f) }
 
-    out_ch = ANNOTATE_CONTIG_SUB(p, contig_map_ch, annotated_ch)
-    out_ch.contig_anno.view { i -> "CONTIG ANNO TSV: $i" }
+    out_ch = ANNOTATE_SAMPLES_SUB(p, samples_map_ch, annotated_ch)
+    out_ch.samples_anno.view { i -> "SAMPLES ANNO TSV: $i" }
 }
 
 workflow {
-    ANNOTATE_CONTIG_ALL()
+    ANNOTATE_SAMPLES_ALL()
 }

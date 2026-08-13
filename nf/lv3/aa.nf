@@ -19,9 +19,9 @@ include { FASTP_SUB }                 from "${params.petagenomeDir}/nf/lv1/fastp
 include { REMOVE_HOST_SUB }           from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
 include { ASSEMBLY_SUB }              from "${params.petagenomeDir}/nf/lv2/assembly.nf"
 include { PRODIGAL_SUB }              from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
-include { ANNOTATE_TAXID_KO_SUB }     from "${params.petagenomeDir}/nf/lv2/annotate_p.nf"
-include { ALIGN_CONTIGS_TO_ORFS_SUB } from "${params.petagenomeDir}/nf/lv2/align_contigs_to_orfs.nf"
-include { ANNOTATE_CONTIG_SUB }      from "${params.petagenomeDir}/nf/lv2/annotate_contig.nf"
+include { ANNOTATE_ORFS_SUB }         from "${params.petagenomeDir}/nf/lv2/annotate_orfs_prot.nf"
+include { ALIGN_SAMPLES_TO_ORFS_SUB } from "${params.petagenomeDir}/nf/lv2/align_samples_to_orfs.nf"
+include { ANNOTATE_SAMPLES_SUB }      from "${params.petagenomeDir}/nf/lv2/annotate_samples.nf"
 include { SUMMARIZE_KO_TAXID_SUB }    from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
 
 // 全サンプルの FASTA (.faa や .fna) を 1 つに結合する汎用プロセス
@@ -101,21 +101,21 @@ workflow BACTERIOME_PIPELINE_SUB {
     merged_fna_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.fna') }
 
     // アノテーション（タンパク質 .faa 側）
-    annotation_res = ANNOTATE_TAXID_KO_SUB(p, ref_or_db, merged_faa_fasta, taxid_map, ko_map)
+    annotation_res = ANNOTATE_ORFS_SUB(p, ref_or_db, merged_faa_fasta, taxid_map, ko_map)
 
     // ORF マッピング（各サンプルの ORF vs 統合 ORF カタログ）
-    contig_mapping_res = ALIGN_CONTIGS_TO_ORFS_SUB(p, merged_fna_fasta, sample_orf_fna_ch)
+    samples_mapping_res = ALIGN_SAMPLES_TO_ORFS_SUB(p, merged_fna_fasta, sample_orf_fna_ch)
 
     // 6. ORF -> TaxID / KO 対応テーブルの構築
-    // ANNOTATE_CONTIG_SUB 内で 1 vs N (contig_mapping_res.out vs annotation_res.annotated) の結合を行う
-    contig_anno_res = ANNOTATE_CONTIG_SUB(
+    // ANNOTATE_SAMPLES_SUB 内で 1 vs N (samples_mapping_res.out vs annotation_res.annotated) の結合を行う
+    samples_anno_res = ANNOTATE_SAMPLES_SUB(
         p,
-        contig_mapping_res.out,
+        samples_mapping_res.out,
         annotation_res.annotated
     )
 
     // 7. サンプルごとの KO / TaxID 比率の集計処理 
-    summary_res = SUMMARIZE_KO_TAXID_SUB(p, contig_anno_res.contig_anno, ko_name_map, taxid_name_map)
+    summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
 
     emit:
     raw_reads          = reads
@@ -126,8 +126,8 @@ workflow BACTERIOME_PIPELINE_SUB {
     stats              = asm_res.sts
     orfs               = orf_res.out
     annotated          = annotation_res.annotated
-    contig_map_out     = contig_mapping_res.out
-    contig_taxid_ko    = contig_anno_res.contig_anno
+    samples_map_out    = samples_mapping_res.out
+    samples_anno       = samples_anno_res.samples_anno
     ko_summary         = summary_res.ko_summary
     tax_summary        = summary_res.tax_summary
 }
@@ -162,7 +162,7 @@ workflow BACTERIOME_PIPELINE_ALL {
 
     // 2. 各種リファレンス・マップファイルの準備
     host_ref  = createSeqsChannel(params.remove_host_ref_fasta_or_db)
-    ref_or_db = createSeqsChannel(params.annotate_p_ref_or_db)
+    ref_or_db = createSeqsChannel(params.annotate_orfs_prot_ref_or_db)
     taxid_map = file(params.taxid_map_path, checkIfExists: true)
     ko_map    = file(params.ko_map_path, checkIfExists: true)
 
@@ -174,15 +174,15 @@ workflow BACTERIOME_PIPELINE_ALL {
     out_ch = BACTERIOME_PIPELINE_SUB(p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads)
 
     // 結果の確認
-    out_ch.fastp_reads.view        { i -> "FASTP PASSED READS : $i" }
-    out_ch.host_removed_reads.view { i -> "HOST REMOVED READS : $i" }
-    out_ch.contigs.view            { i -> "ASSEMBLY CONTIGS   : $i" }
-    out_ch.orfs.view               { i -> "PRODIGAL ORFS      : $i" }
-    out_ch.annotated.view          { i -> "ANNOTATED TSV      : $i" }
-    out_ch.contig_map_out.view     { i -> "CONTIG MAP RESULT  : $i" }
-    out_ch.contig_taxid_ko.view    { i -> "CONTIG TAXID KO TSV: $i" }
-    out_ch.ko_summary.view         { i -> "KO SUMMARY TSV     : $i" }
-    out_ch.tax_summary.view        { i -> "TAXID SUMMARY TSV  : $i" }
+    out_ch.fastp_reads.view        { i -> "FASTP PASSED READS  : $i" }
+    out_ch.host_removed_reads.view { i -> "HOST REMOVED READS  : $i" }
+    out_ch.contigs.view            { i -> "ASSEMBLY CONTIGS    : $i" }
+    out_ch.orfs.view               { i -> "PRODIGAL ORFS       : $i" }
+    out_ch.annotated.view          { i -> "ANNOTATED TSV       : $i" }
+    out_ch.samples_map_out.view    { i -> "SAMPLES MAP RESULT  : $i" }
+    out_ch.samples_anno.view       { i -> "SAMPLES KO TAXID TSV: $i" }
+    out_ch.ko_summary.view         { i -> "KO SUMMARY TSV      : $i" }
+    out_ch.tax_summary.view        { i -> "TAXID SUMMARY TSV   : $i" }
 }
 
 // デフォルトエントリーポイント

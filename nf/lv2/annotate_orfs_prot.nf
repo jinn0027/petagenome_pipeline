@@ -10,18 +10,18 @@ def ANNOTATE_ORFS_MAX_MEMORY  = 32
 def ANNOTATE_ORFS_MAX_THREADS = 4
 
 // 3. 上限値による動的クリッピング
-params.annotate_p_annotate_orfs_memory  = Math.min(params.memory as Integer, ANNOTATE_ORFS_MAX_MEMORY)
-params.annotate_p_annotate_orfs_threads = Math.min(params.threads as Integer, ANNOTATE_ORFS_MAX_THREADS)
+params.annotate_orfs_prot_memory  = Math.min(params.memory as Integer, ANNOTATE_ORFS_MAX_MEMORY)
+params.annotate_orfs_prot_threads = Math.min(params.threads as Integer, ANNOTATE_ORFS_MAX_THREADS)
 
-params.annotate_p_aligner        = "mmseqs2"
-params.annotate_p_is_prebuilt_db = false
+params.annotate_orfs_prot_aligner        = "mmseqs2"
+params.annotate_orfs_prot_is_prebuilt_db = false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 // アライナー（mmseqs2 または pzlast）のパスを動的に決定してインポート
 def pzlast_script = (params.containsKey('pzrepoDir') && params.pzrepoDir) ? "${params.pzrepoDir}/nf/lv1/pzlast.nf" : null
-def use_pzlast    = (params.annotate_p_aligner == 'pzlast') && pzlast_script && file(pzlast_script).exists()
+def use_pzlast    = (params.annotate_orfs_prot_aligner == 'pzlast') && pzlast_script && file(pzlast_script).exists()
 
 def aligner_path  = use_pzlast ? pzlast_script : "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
 
@@ -32,15 +32,15 @@ include { BUILD_REF_DB_PROT_SUB; MAP_PROT_SUB } from "${aligner_path}"
 // 1. プロセス定義
 // ==========================================
 
-process annotate_taxid_ko_to_orfs {
+process annotate_orfs {
     tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb      = "${params.annotate_p_annotate_orfs_memory}"
-    def threads = "${params.annotate_p_annotate_orfs_threads}"
+    def gb      = "${params.annotate_orfs_prot_memory}"
+    def threads = "${params.annotate_orfs_prot_threads}"
 
     memory params.executor == "sge" ? null : "${gb} GB"
     cpus   params.executor == "sge" ? null : threads
@@ -104,7 +104,7 @@ EOF
 // 2. サブワークフロー（本体）
 // ==========================================
 
-workflow ANNOTATE_TAXID_KO_SUB {
+workflow ANNOTATE_ORFS_SUB {
     take:
     p
     ref_or_db     // リファレンスFASTA または ビルド済みDB
@@ -114,7 +114,7 @@ workflow ANNOTATE_TAXID_KO_SUB {
 
     main:
     // A. DB の準備（タンパク質用サブワークフローを呼び出し）
-    if (params.annotate_p_is_prebuilt_db) {
+    if (params.annotate_orfs_prot_is_prebuilt_db) {
         db = ref_or_db
     } else {
         db = BUILD_REF_DB_PROT_SUB(p, ref_or_db).ref_db
@@ -128,7 +128,7 @@ workflow ANNOTATE_TAXID_KO_SUB {
     ch_ko    = (ko_map?.getClass()?.name?.contains('Dataflow'))    ? ko_map    : Channel.value(ko_map)
 
     // D. TaxID / KO の紐づけ
-    annotated_out = annotate_taxid_ko_to_orfs(search_out, ch_taxid, ch_ko)
+    annotated_out = annotate_orfs(search_out, ch_taxid, ch_ko)
 
     emit:
     annotated = annotated_out.annotated
@@ -141,46 +141,46 @@ workflow ANNOTATE_TAXID_KO_SUB {
 // A. DB (MMseqs2/PZLAST インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
 workflow BUILD_REF_DB_ONLY {
     p              = createNullParamsChannel()
-    annotate_p_ref = createSeqsChannel(params.annotate_p_ref_fasta)
+    annotate_orfs_prot_ref = createSeqsChannel(params.annotate_orfs_prot_ref_fasta)
 
-    db_out = BUILD_REF_DB_PROT_SUB(p, annotate_p_ref)
+    db_out = BUILD_REF_DB_PROT_SUB(p, annotate_orfs_prot_ref)
 
     db_out.ref_db.view { id, db_path ->
-        "[BUILD_REF_DB_ONLY] Created Index/DB (${params.annotate_p_aligner}): ${id} -> ${db_path}"
+        "[BUILD_REF_DB_ONLY] Created Index/DB (${params.annotate_orfs_prot_aligner}): ${id} -> ${db_path}"
     }
 }
 
 // B. FASTA からリファレンス DB を構築して検索・アノテーションを行うワークフロー
 workflow ANNOTATE_ALL {
     p         = createNullParamsChannel()
-    ref_fasta = createSeqsChannel(params.annotate_p_ref_fasta)
-    orfs      = createSeqsChannel(params.annotate_p_orfs)
-    taxid_map = file(params.annotate_p_taxid_map)
-    ko_map    = file(params.annotate_p_ko_map)
+    ref_fasta = createSeqsChannel(params.annotate_orfs_prot_ref_fasta)
+    orfs      = createSeqsChannel(params.annotate_orfs_prot_orfs)
+    taxid_map = file(params.annotate_orfs_prot_taxid_map)
+    ko_map    = file(params.annotate_orfs_prot_ko_map)
 
-    params.annotate_p_is_prebuilt_db = false
+    params.annotate_orfs_prot_is_prebuilt_db = false
 
-    out_ch = ANNOTATE_TAXID_KO_SUB(p, ref_fasta, orfs, taxid_map, ko_map)
+    out_ch = ANNOTATE_ORFS_SUB(p, ref_fasta, orfs, taxid_map, ko_map)
     out_ch.annotated.view { i -> "ANNOTATED RESULT: $i" }
 }
 
 // C. 事前構築済み DB を使用して検索・アノテーションを行うワークフロー
 workflow ANNOTATE_WITH_DB {
     p         = createNullParamsChannel()
-    ref_db    = createSeqsChannel(params.annotate_p_prebuilt_db)
-    orfs      = createSeqsChannel(params.annotate_p_orfs)
-    taxid_map = file(params.annotate_p_taxid_map)
-    ko_map    = file(params.annotate_p_ko_map)
+    ref_db    = createSeqsChannel(params.annotate_orfs_prot_prebuilt_db)
+    orfs      = createSeqsChannel(params.annotate_orfs_prot_orfs)
+    taxid_map = file(params.annotate_orfs_prot_taxid_map)
+    ko_map    = file(params.annotate_orfs_prot_ko_map)
 
-    params.annotate_p_is_prebuilt_db = true
+    params.annotate_orfs_prot_is_prebuilt_db = true
 
-    out_ch = ANNOTATE_TAXID_KO_SUB(p, ref_db, orfs, taxid_map, ko_map)
+    out_ch = ANNOTATE_ORFS_SUB(p, ref_db, orfs, taxid_map, ko_map)
     out_ch.annotated.view { i -> "ANNOTATED RESULT (PREBUILT DB): $i" }
 }
 
 // メイン・デフォルトエントリーポイント
 workflow {
-    if (params.annotate_p_is_prebuilt_db) {
+    if (params.annotate_orfs_prot_is_prebuilt_db) {
         ANNOTATE_WITH_DB()
     } else {
         ANNOTATE_ALL()
