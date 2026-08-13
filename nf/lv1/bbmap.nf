@@ -23,13 +23,13 @@ params.bbmap_ambiguous = "random"
 params.bbmap_minid = 0.95
 params.bbmap_pairlen = 1500
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process bbmap_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
-    containerOptions = "= ${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bbmap_bbmap_makerefdb_memory}"
     def threads = "${params.bbmap_bbmap_makerefdb_threads}"
@@ -54,7 +54,7 @@ process bbmap_makerefdb {
 process bbmap {
     tag "${ref_id}_@_${pair_id}"
     container = "${params.petagenomeDir}/modules/bbmap/bbmap.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bbmap_bbmap_memory}"
     def threads = "${params.bbmap_bbmap_threads}"

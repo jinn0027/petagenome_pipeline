@@ -19,13 +19,13 @@ params.bwa_mem2_bwa_mem2_makerefdb_threads = Math.min(params.threads as Integer,
 params.bwa_mem2_bwa_mem2_mem_memory  = Math.min(params.memory as Integer, BWA_MEM2_MEM_MAX_MEMORY)
 params.bwa_mem2_bwa_mem2_mem_threads = Math.min(params.threads as Integer, BWA_MEM2_MEM_MAX_THREADS)
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process bwa_mem2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bwa_mem2_bwa_mem2_makerefdb_memory}"
     def threads = "${params.bwa_mem2_bwa_mem2_makerefdb_threads}"
@@ -50,7 +50,7 @@ process bwa_mem2_makerefdb {
 process bwa_mem2_mem {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bwa_mem2_bwa_mem2_mem_memory}"
     def threads = "${params.bwa_mem2_bwa_mem2_mem_threads}"

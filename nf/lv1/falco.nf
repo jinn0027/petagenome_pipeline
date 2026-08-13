@@ -13,13 +13,13 @@ def FALCO_MAX_THREADS = 8 // I/O および FASTQ 解凍処理の並列化飽和�
 params.falco_falco_memory  = Math.min(params.memory as Integer, FALCO_MAX_MEMORY)
 params.falco_falco_threads = Math.min(params.threads as Integer, FALCO_MAX_THREADS)
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process falco {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/falco/falco.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.falco_falco_memory}"
     def threads = "${params.falco_falco_threads}"

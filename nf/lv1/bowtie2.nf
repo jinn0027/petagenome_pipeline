@@ -19,13 +19,13 @@ params.bowtie2_bowtie2_makerefdb_threads = Math.min(params.threads as Integer, B
 params.bowtie2_bowtie2_memory  = Math.min(params.memory as Integer, BOWTIE2_ALIGN_MAX_MEMORY)
 params.bowtie2_bowtie2_threads = Math.min(params.threads as Integer, BOWTIE2_ALIGN_MAX_THREADS)
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process bowtie2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bowtie2_bowtie2_makerefdb_memory}"
     def threads = "${params.bowtie2_bowtie2_makerefdb_threads}"
@@ -51,7 +51,7 @@ process bowtie2_makerefdb {
 process bowtie2 {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bowtie2_bowtie2_memory}"
     def threads = "${params.bowtie2_bowtie2_threads}"

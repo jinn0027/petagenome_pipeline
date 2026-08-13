@@ -17,13 +17,13 @@ params.cutadapt_fwd = "AATGATACGGCGACCACCGAGAUCTACAC"
 params.cutadapt_rev = "CAAGCAGAAGACGGCATACGAGAT"
 params.cutadapt_minimum_length = 50
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process cutadapt {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/cutadapt/cutadapt.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.cutadapt_cutadapt_memory}"
     def threads = "${params.cutadapt_cutadapt_threads}"

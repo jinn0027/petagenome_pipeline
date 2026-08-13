@@ -18,7 +18,7 @@ params.virsorter_db_type = "refseq"
 params.virsorter_aligner = "blast"
 //params.virsorter_aligner = "diamond"
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process virsorter {
@@ -26,8 +26,7 @@ process virsorter {
     def local_db = "/opt/VirSorter/virsorter-data"
     def local_mga = "/opt/VirSorter/mga_linux_ia64"
     container = "${params.petagenomeDir}/modules/virsorter/virsorter.sif"
-    containerOptions = "${params.apptainerRunOptions} -B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
-    //containerOptions = "--no-home -B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions} -B ${params.virsorter_db}:${local_db} -B ${params.virsorter_mga}:${local_mga}") }    
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.virsorter_virsorter_memory}"
     def threads = "${params.virsorter_virsorter_threads}"

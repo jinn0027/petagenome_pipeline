@@ -16,13 +16,13 @@ params.fastp_fastp_threads = Math.min(params.threads as Integer, FASTP_MAX_THREA
 params.fastp_cut_mean_quality = 15
 params.fastp_reads_minlength = 15
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process fastp {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastp/fastp.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.fastp_fastp_memory}"
     def threads = "${params.fastp_fastp_threads}"

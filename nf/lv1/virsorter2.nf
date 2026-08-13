@@ -13,15 +13,14 @@ def VIRSORTER2_MAX_THREADS = 16 // HMMER・マルチプロセス並列化の I/O
 params.virsorter2_virsorter2_memory  = Math.min(params.memory as Integer, VIRSORTER2_MAX_MEMORY)
 params.virsorter2_virsorter2_threads = Math.min(params.threads as Integer, VIRSORTER2_MAX_THREADS)
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process virsorter2 {
     tag "${read_id}"
     def local_db = "/opt/VirSorter2/db"
     container = "${params.petagenomeDir}/modules/virsorter2/virsorter2.sif"
-    containerOptions = "${params.apptainerRunOptions} -B ${params.virsorter2_db}:${local_db}"
-    //containerOptions = "${params.apptainerRunOptions} -B ${params.virsorter2_db}:${local_db} --writable-tmpfs"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions} -B ${params.virsorter2_db}:${local_db}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.virsorter2_virsorter2_memory}"
     def threads = "${params.virsorter2_virsorter2_threads}"

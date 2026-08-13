@@ -85,13 +85,13 @@ params.mmseqs2_linclust_min_aln_len = 0 // Minimum alignment length (range 0-INT
 params.mmseqs2_linclust_split_memory_limit = 0 // Set max memory per split. E.g. 800B, 5K, 10M, 1G. Default (0) to all available system memory [0]
 params.mmseqs2_linclust_sort_results = 0 // Sort results: 0: no sorting, 1: sort by E-value (Alignment) or seq.id. (Hamming) [0]
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process mmseqs2_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.mmseqs2_mmseqs2_makerefdb_memory}"
     def threads = "${params.mmseqs2_mmseqs2_makerefdb_threads}"
@@ -121,7 +121,7 @@ process mmseqs2_makerefdb {
 process mmseqs2_makeqrydb {
     tag "${qry_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.mmseqs2_mmseqs2_makeqrydb_memory}"
     def threads = "${params.mmseqs2_mmseqs2_makeqrydb_threads}"
@@ -146,7 +146,7 @@ process mmseqs2_makeqrydb {
 process mmseqs2_cluster {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.mmseqs2_mmseqs2_cluster_memory}"
     def threads = "${params.mmseqs2_mmseqs2_cluster_threads}"
@@ -217,7 +217,7 @@ process mmseqs2_cluster {
 process mmseqs2_search {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/mmseqs2/mmseqs2.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.mmseqs2_mmseqs2_search_memory}"
     def threads = "${params.mmseqs2_mmseqs2_search_threads}"

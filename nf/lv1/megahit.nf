@@ -13,13 +13,13 @@ def MEGAHIT_MAX_THREADS = 16  // アセンブリスケール効率とメモリ�
 params.megahit_megahit_memory  = Math.min(params.memory as Integer, MEGAHIT_MAX_MEMORY)
 params.megahit_megahit_threads = Math.min(params.threads as Integer, MEGAHIT_MAX_THREADS)
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process megahit {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/megahit/megahit.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.megahit_megahit_memory}"
     def threads = "${params.megahit_megahit_threads}"

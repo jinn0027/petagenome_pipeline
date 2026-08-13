@@ -26,13 +26,13 @@ params.prinseq_lc_threshold = 7
 params.prinseq_trim_ns_right = 1
 params.prinseq_ns_max_n = 0
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process prinseq {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/prinseq/prinseq.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     cpus   { params.executor == "sge" ? null : params.prinseq_prinseq_threads }

@@ -13,13 +13,13 @@ def FASTQC_MAX_THREADS = 8  // ファイル並列数・ディスク I/O 競合�
 params.fastqc_fastqc_memory  = Math.min(params.memory as Integer, FASTQC_MAX_MEMORY)
 params.fastqc_fastqc_threads = Math.min(params.threads as Integer, FASTQC_MAX_THREADS)
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process fastqc {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/fastqc/fastqc.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.fastqc_fastqc_memory}"
     def threads = "${params.fastqc_fastqc_threads}"

@@ -28,7 +28,7 @@ params.diamond_perc_identity = "95"
 params.diamond_evalue = "1e-20"
 params.diamond_outfmt = 6
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 // ------------------------------------------------------------------
@@ -38,7 +38,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 process diamond_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.diamond_diamond_makerefdb_memory}"
     def threads = "${params.diamond_diamond_makerefdb_threads}"
@@ -65,7 +65,7 @@ process diamond_makerefdb {
 process diamond_blastp {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.diamond_diamond_blastp_memory}"
     def threads = "${params.diamond_diamond_blastp_threads}"
@@ -93,7 +93,7 @@ process diamond_blastp {
 process diamond_blastx {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/diamond/diamond.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.diamond_diamond_blastx_memory}"
     def threads = "${params.diamond_diamond_blastx_threads}"

@@ -28,13 +28,13 @@ params.blast_evalue = "1e-20"
 params.blast_strand = "both"
 params.blast_outfmt = 6
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process blast_makerefdb {
     tag "${ref_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.blast_blast_makerefdb_memory}"
     def threads = "${params.blast_blast_makerefdb_threads}"
@@ -69,7 +69,7 @@ process blast_makerefdb {
 process blastn {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.blast_blast_memory}"
     def threads = "${params.blast_blast_threads}"
@@ -112,7 +112,7 @@ process blastn {
 process blastp {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.blast_blast_memory}"
     def threads = "${params.blast_blast_threads}"

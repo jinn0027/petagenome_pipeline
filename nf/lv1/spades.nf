@@ -27,13 +27,13 @@ params.spades_spades_e2e_threads = Math.min(params.threads as Integer, SPADES_AS
 
 params.spades_e2e = false
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process spades_error_correction {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.spades_spades_error_correction_memory}"
     def threads = "${params.spades_spades_error_correction_threads}"
@@ -67,7 +67,7 @@ process spades_error_correction {
 process spades_error_correction_gzip_output {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.spades_spades_error_correction_gzip_output_memory}"
     def threads = "${params.spades_spades_error_correction_gzip_output_threads}"
@@ -100,7 +100,7 @@ process spades_error_correction_gzip_output {
 process spades_assembler {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.spades_spades_assembler_memory}"
     def threads = "${params.spades_spades_assembler_threads}"
@@ -132,7 +132,7 @@ process spades_assembler {
 process spades_e2e {
     tag "${pair_id}"
     container = "${params.petagenomeDir}/modules/spades/spades.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink'
     def gb = "${params.spades_spades_e2e_memory}"
     def threads = "${params.spades_spades_e2e_threads}"

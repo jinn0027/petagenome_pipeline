@@ -19,13 +19,13 @@ params.cdhit_description_length = 150
 params.cdhit_word_length = 5
 params.cdhit_mask = "NX"
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 process cdhit_est {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/cdhit/cdhit.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.cdhit_cdhit_est_memory}"
     def threads = "${params.cdhit_cdhit_est_threads}"
