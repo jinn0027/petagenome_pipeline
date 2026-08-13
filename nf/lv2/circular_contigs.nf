@@ -37,7 +37,7 @@ params.circular_contigs_al_self    = 50
 params.circular_contigs_blast1_num_alignments = 5
 params.circular_contigs_blast2_num_alignments = 50
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { blast_makerefdb as blast_makerefdb1; blastn as blastn1 } from "${params.petagenomeDir}/nf/lv1/blast"
 include { blast_makerefdb as blast_makerefdb2; blastn as blastn2 } from "${params.petagenomeDir}/nf/lv1/blast"
@@ -54,7 +54,7 @@ if (params.use_pzlast) {
 process classify {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.circular_contigs_classify_memory}"
@@ -142,6 +142,8 @@ process classify {
 process deduplicate {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
+
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.circular_contigs_deduplicate_memory}"

@@ -25,7 +25,7 @@ params.assembly_get_length_threads = Math.min(params.threads as Integer, GET_LEN
 params.assembly_get_stats_memory   = Math.min(params.memory as Integer, GET_STATS_MAX_MEMORY)
 params.assembly_get_stats_threads  = Math.min(params.threads as Integer, GET_STATS_MAX_THREADS)
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { SPADES_E2E_SUB } from "${params.petagenomeDir}/nf/lv1/spades.nf"
 include { MEGAHIT_SUB    } from "${params.petagenomeDir}/nf/lv1/megahit.nf"
@@ -38,7 +38,7 @@ include { MEGAHIT_SUB    } from "${params.petagenomeDir}/nf/lv1/megahit.nf"
 process filter_and_rename {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.assembly_filter_and_rename_memory}"
@@ -64,7 +64,8 @@ process filter_and_rename {
 process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
+
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.assembly_get_length_memory}"
@@ -95,7 +96,8 @@ process get_length {
 process get_stats {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
+
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.assembly_get_stats_memory}"

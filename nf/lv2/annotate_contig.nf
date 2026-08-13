@@ -17,18 +17,18 @@ params.annotate_contig_threads = Math.min(params.threads as Integer, ANNOTATE_CO
 params.annotate_contig_top_n_contig = 3  // 1 ORF に対して保持する merged ORF の上限
 params.annotate_contig_top_n_anno   = 3  // 1 merged ORF に対して保持する DB Hit (TaxID/KO) の上限
 
-include { createNullParamsChannel; clusterOptions; processProfile } \
+include { createNullParamsChannel; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 // ==========================================
 // 1. プロセス定義
 // ==========================================
 
-process ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N {
+process assign_taxid_ko_to_contigs {
     tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.annotate_contig_memory}"
@@ -172,7 +172,7 @@ workflow ANNOTATE_CONTIG_SUB {
             tuple(qry_id, map_m8, anno_tsv)
         }
 
-    res = ASSIGN_TAXID_KO_TO_CONTIGS_TOP_N(joined_ch)
+    res = assign_taxid_ko_to_contigs(joined_ch)
 
     emit:
     contig_anno = res.contig_anno

@@ -89,3 +89,18 @@ def createSeqsChannel(path) {
 
     return seqs
 }
+
+def apptainerContainerOptions(userOptions = "") {
+    def binds = [launchDir.toString()]
+    
+    if (params.containsKey('petagenomeDir') && params.petagenomeDir) {
+        binds.add("${params.petagenomeDir}")
+    }
+    
+    if (params.containsKey('pzrepoDir') && params.pzrepoDir) {
+        binds.add("${params.pzrepoDir}")
+    }
+    
+    def bindOpts = binds.unique().collect { "-B ${it}" }.join(' ')
+    return "${userOptions} ${bindOpts}".trim()
+}

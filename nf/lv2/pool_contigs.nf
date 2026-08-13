@@ -36,7 +36,7 @@ params.pool_contigs_get_stats_threads        = Math.min(params.threads as Intege
 // クラスタリングプロセスのデフォルト設定
 params.pool_contigs_clustering_process = "mmseqs2"
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { cdhit_est } from "${params.petagenomeDir}/nf/lv1/cdhit"
 include { mmseqs2_makerefdb; mmseqs2_cluster } from "${params.petagenomeDir}/nf/lv1/mmseqs2"
@@ -49,7 +49,7 @@ include { blast_makerefdb } from "${params.petagenomeDir}/nf/lv1/blast"
 process merge_contigs {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.pool_contigs_mergs_contigs_memory}"
@@ -89,7 +89,7 @@ process merge_contigs {
 process filter_and_rename {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.pool_contigs_filter_and_rename_memory}"
@@ -117,7 +117,7 @@ process filter_and_rename {
 process summarize_name {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.pool_contigs_summarize_name_memory}"
@@ -160,7 +160,7 @@ process summarize_name {
 process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.pool_contigs_get_length_memory}"
@@ -193,7 +193,7 @@ process get_length {
 process get_stats {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.pool_contigs_get_stats_memory}"

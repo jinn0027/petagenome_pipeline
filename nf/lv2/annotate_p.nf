@@ -16,7 +16,7 @@ params.annotate_p_annotate_orfs_threads = Math.min(params.threads as Integer, AN
 params.annotate_p_aligner        = "mmseqs2"
 params.annotate_p_is_prebuilt_db = false
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 // アライナー（mmseqs2 または pzlast）のパスを動的に決定してインポート
@@ -32,11 +32,11 @@ include { BUILD_REF_DB_PROT_SUB; MAP_PROT_SUB } from "${aligner_path}"
 // 1. プロセス定義
 // ==========================================
 
-process ANNOTATE_ORFS {
+process annotate_taxid_ko_to_orfs {
     tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.annotate_p_annotate_orfs_memory}"
@@ -128,7 +128,7 @@ workflow ANNOTATE_TAXID_KO_SUB {
     ch_ko    = (ko_map?.getClass()?.name?.contains('Dataflow'))    ? ko_map    : Channel.value(ko_map)
 
     // D. TaxID / KO の紐づけ
-    annotated_out = ANNOTATE_ORFS(search_out, ch_taxid, ch_ko)
+    annotated_out = annotate_taxid_ko_to_orfs(search_out, ch_taxid, ch_ko)
 
     emit:
     annotated = annotated_out.annotated

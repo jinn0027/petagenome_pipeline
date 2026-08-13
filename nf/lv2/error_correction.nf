@@ -13,7 +13,7 @@ def GET_LENGTH_MAX_THREADS = 4
 params.error_correction_get_length_memory  = Math.min(params.memory as Integer, GET_LENGTH_MAX_MEMORY)
 params.error_correction_get_length_threads = Math.min(params.threads as Integer, GET_LENGTH_MAX_THREADS)
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { spades_error_correction } from "${params.petagenomeDir}/nf/lv1/spades"
 include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
@@ -25,7 +25,7 @@ include { fastqc } from "${params.petagenomeDir}/nf/lv1/fastqc"
 process get_length {
     tag "${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}/scripts"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.error_correction_get_length_memory}"

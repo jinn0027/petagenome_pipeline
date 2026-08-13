@@ -13,7 +13,7 @@ def MERGE_FASTA_MAX_THREADS = 4
 params.merge_fasta_memory  = Math.min(params.memory as Integer, MERGE_FASTA_MAX_MEMORY)
 params.merge_fasta_threads = Math.min(params.threads as Integer, MERGE_FASTA_MAX_THREADS)
 
-include { createNullParamsChannel; createSeqsChannel; getParam; clusterOptions; processProfile } \
+include { createNullParamsChannel; createSeqsChannel; getParam; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { FASTP_SUB }                 from "${params.petagenomeDir}/nf/lv1/fastp.nf"
 include { REMOVE_HOST_SUB }           from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
@@ -29,7 +29,7 @@ process MERGE_FASTA {
     tag "${ext}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.merge_fasta_memory}"

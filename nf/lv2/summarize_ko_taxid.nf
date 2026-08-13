@@ -16,18 +16,18 @@ params.summarize_ko_taxid_threads = Math.min(params.threads as Integer, SUMMARIZ
 // 低相同性アノテーションを除外するためのデフォルト閾値
 params.summarize_min_anno_pident = 0.0
 
-include { createNullParamsChannel; clusterOptions; processProfile } \
+include { createNullParamsChannel; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 // ==========================================
 // 1. プロセス定義
 // ==========================================
 
-process SUMMARIZE_KO_TAXID {
+process summarize_ko_taxid {
     tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
-    containerOptions = "${params.apptainerRunOptions} --bind ${params.petagenomeDir}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.summarize_ko_taxid_memory}"
@@ -78,7 +78,7 @@ workflow SUMMARIZE_KO_TAXID_SUB {
     taxid_name_map // path (または file('NO_FILE'))
 
     main:
-    res = SUMMARIZE_KO_TAXID(contig_anno_ch, ko_name_map, taxid_name_map)
+    res = summarize_ko_taxid(contig_anno_ch, ko_name_map, taxid_name_map)
 
     emit:
     ko_summary  = res.ko_summary

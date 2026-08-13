@@ -16,7 +16,7 @@ params.remove_host_extract_threads = Math.min(params.threads as Integer, EXTRACT
 params.remove_host_aligner          = "bwa_mem2"
 params.remove_host_is_prebuilt_db   = false
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 // ==========================================
@@ -38,11 +38,11 @@ include { BUILD_REF_DB_SUB; MAP_SUB } from "${aligner_path}"
 // 2. プロセス定義 (未マッピングペア抽出)
 // ==========================================
 
-process EXTRACT_UNMAPPED_READS {
+process extract_unmapped_reads {
     tag "${qry_id}"
 
     container = "${params.petagenomeDir}/modules/samtools/samtools.sif"
-    containerOptions = "${params.apptainerRunOptions}"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb      = "${params.remove_host_extract_memory}"
@@ -104,7 +104,7 @@ workflow REMOVE_HOST_SUB {
     map_out = MAP_SUB(p, host_db, reads)
 
     // --- C. 未マッピング（非ホスト）リードの抽出 ---
-    cleaned = EXTRACT_UNMAPPED_READS(map_out.out)
+    cleaned = extract_unmapped_reads(map_out.out)
 
     emit:
     reads = cleaned.reads
