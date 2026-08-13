@@ -25,7 +25,7 @@ include { ANNOTATE_CONTIG_SUB }      from "${params.petagenomeDir}/nf/lv2/annota
 include { SUMMARIZE_KO_TAXID_SUB }    from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
 
 // 全サンプルの FASTA (.faa や .fna) を 1 つに結合する汎用プロセス
-process MERGE_FASTA {
+process merge_fasta {
     tag "${ext}"
 
     container = "${params.petagenomeDir}/modules/common/el9.sif"
@@ -85,16 +85,16 @@ workflow BACTERIOME_PIPELINE_SUB {
     // 各サンプル固有の ORF 塩基配列 (.fna) チャンネル（クエリ用）
     sample_orf_fna_ch = orf_res.out.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
 
-    // 5. MERGE_FASTA 用に全サンプルの faa / fna リストを集約
+    // 5. merge_fasta 用に全サンプルの faa / fna リストを集約
     all_faa_files = orf_res.out.map { qry_id, faa, fna, gbk -> faa }.collect()
     all_fna_files = orf_res.out.map { qry_id, faa, fna, gbk -> fna }.collect()
 
-    // MERGE_FASTA への入力チャンネル作成
+    // merge_fasta への入力チャンネル作成
     merge_inputs_ch = all_faa_files.map { faa_list -> tuple(faa_list, "faa") }
         .mix(all_fna_files.map { fna_list -> tuple(fna_list, "fna") })
 
-    // MERGE_FASTA を 1 度呼び出し（内部で並列 2 タスクが起動）
-    merged_fastas = MERGE_FASTA(merge_inputs_ch)
+    // merge_fasta を 1 度呼び出し（内部で並列 2 タスクが起動）
+    merged_fastas = merge_fasta(merge_inputs_ch)
 
     // 出力結果を .faa と .fna に分岐
     merged_faa_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.faa') }
