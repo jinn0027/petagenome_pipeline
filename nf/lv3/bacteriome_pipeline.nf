@@ -1,6 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+params.memory  = params.memory  ?: 16
+params.threads = params.threads ?: 4
+
 include { createNullParamsChannel; getParam } from "${params.petagenomeDir}/nf/common/utils"
 include { FASTP_SUB }                         from "${params.petagenomeDir}/nf/lv1/fastp"
 include { ERROR_CORRECTION_SUB }              from "${params.petagenomeDir}/nf/lv2/error_correction"

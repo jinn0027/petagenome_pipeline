@@ -8,14 +8,16 @@ params.threads = params.threads ?: 4
 // 2. blast上限値定義
 def BLAST_MAKEREFDB_MAX_MEMORY  = 16 // GB (makeblastdb は低メモリ消費)
 def BLAST_MAKEREFDB_MAX_THREADS = 4  // makeblastdb はスレッド並列化のスケール効率が低い
-def BLASTN_MAX_MEMORY  = 64 // GB (大規模DBのオンメモリロードを考慮)
-def BLASTN_MAX_THREADS = 16 // スレッド並列化のスケール効率・I/O競合を考慮
+
+def BLAST_MAX_MEMORY  = 64 // GB (大規模DBのオンメモリロードを考慮)
+def BLAST_MAX_THREADS = 16 // スレッド並列化のスケール効率・I/O競合を考慮
 
 // 3. 上限値による動的クリッピング
-params.blast_blast_makerefdb_memory  = Math.min((params.blast_blast_makerefdb_memory  ?: params.memory) as Integer, BLAST_MAKEREFDB_MAX_MEMORY)
-params.blast_blast_makerefdb_threads = Math.min((params.blast_blast_makerefdb_threads ?: params.threads) as Integer, BLAST_MAKEREFDB_MAX_THREADS)
-params.blast_blastn_memory  = Math.min((params.blast_blastn_memory  ?: params.memory) as Integer, BLASTN_MAX_MEMORY)
-params.blast_blastn_threads = Math.min((params.blast_blastn_threads ?: params.threads) as Integer, BLASTN_MAX_THREADS)
+params.blast_blast_makerefdb_memory  = Math.min(params.memory as Integer, BLAST_MAKEREFDB_MAX_MEMORY)
+params.blast_blast_makerefdb_threads = Math.min(params.threads as Integer, BLAST_MAKEREFDB_MAX_THREADS)
+
+params.blast_blast_memory  = Math.min(params.memory as Integer, BLAST_MAX_MEMORY)
+params.blast_blast_threads = Math.min(params.threads as Integer, BLAST_MAX_THREADS)
 
 params.blast_dbtype = "nucl"
 params.blast_program = "blastn"
@@ -69,8 +71,8 @@ process blastn {
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
-    def gb = "${params.blast_blastn_memory}"
-    def threads = "${params.blast_blastn_threads}"
+    def gb = "${params.blast_blast_memory}"
+    def threads = "${params.blast_blast_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
@@ -112,8 +114,8 @@ process blastp {
     container = "${params.petagenomeDir}/modules/blast/blast.sif"
     containerOptions = "${params.apptainerRunOptions}"
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
-    def gb = "${params.blast_blastn_memory}"
-    def threads = "${params.blast_blastn_threads}"
+    def gb = "${params.blast_blast_memory}"
+    def threads = "${params.blast_blast_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"

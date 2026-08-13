@@ -10,8 +10,8 @@ def MEGAHIT_MAX_MEMORY  = 128 // GB (大規模メタゲノム Graph 構築用の
 def MEGAHIT_MAX_THREADS = 16  // アセンブリスケール効率とメモリバス競合のバランス上限
 
 // 3. 上限値による動的クリッピング
-params.megahit_megahit_memory  = Math.min((params.megahit_megahit_memory  ?: params.memory) as Integer, MEGAHIT_MAX_MEMORY)
-params.megahit_megahit_threads = Math.min((params.megahit_megahit_threads ?: params.threads) as Integer, MEGAHIT_MAX_THREADS)
+params.megahit_megahit_memory  = Math.min(params.memory as Integer, MEGAHIT_MAX_MEMORY)
+params.megahit_megahit_threads = Math.min(params.threads as Integer, MEGAHIT_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

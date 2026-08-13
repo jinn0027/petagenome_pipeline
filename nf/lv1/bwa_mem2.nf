@@ -13,11 +13,11 @@ def BWA_MEM2_MEM_MAX_MEMORY        = 64 // GB (巨大インデックスのオン
 def BWA_MEM2_MEM_MAX_THREADS       = 16 // マッピング・SIMD並列とI/Oバランスの上限
 
 // 3. 上限値による動的クリッピング
-params.bwa_mem2_bwa_mem2_makerefdb_memory  = Math.min((params.bwa_mem2_bwa_mem2_makerefdb_memory  ?: params.memory) as Integer, BWA_MEM2_MAKEREFDB_MAX_MEMORY)
-params.bwa_mem2_bwa_mem2_makerefdb_threads = Math.min((params.bwa_mem2_bwa_mem2_makerefdb_threads ?: params.threads) as Integer, BWA_MEM2_MAKEREFDB_MAX_THREADS)
+params.bwa_mem2_bwa_mem2_makerefdb_memory  = Math.min(params.memory as Integer, BWA_MEM2_MAKEREFDB_MAX_MEMORY)
+params.bwa_mem2_bwa_mem2_makerefdb_threads = Math.min(params.threads as Integer, BWA_MEM2_MAKEREFDB_MAX_THREADS)
 
-params.bwa_mem2_bwa_mem2_mem_memory  = Math.min((params.bwa_mem2_bwa_mem2_mem_memory  ?: params.memory) as Integer, BWA_MEM2_MEM_MAX_MEMORY)
-params.bwa_mem2_bwa_mem2_mem_threads = Math.min((params.bwa_mem2_bwa_mem2_mem_threads ?: params.threads) as Integer, BWA_MEM2_MEM_MAX_THREADS)
+params.bwa_mem2_bwa_mem2_mem_memory  = Math.min(params.memory as Integer, BWA_MEM2_MEM_MAX_MEMORY)
+params.bwa_mem2_bwa_mem2_mem_threads = Math.min(params.threads as Integer, BWA_MEM2_MEM_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

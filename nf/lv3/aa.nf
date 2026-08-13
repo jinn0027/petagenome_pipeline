@@ -1,19 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// ==========================================
-// 0. グローバルフォールバックと上限値（Clipping）定義
-// ==========================================
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
 params.memory  = params.memory  ?: 16
 params.threads = params.threads ?: 4
 
-// プロセス固有の上限設定 (Clipping)
+// 2. プロセス固有の上限設定
 def MERGE_FASTA_MAX_MEMORY  = 16
 def MERGE_FASTA_MAX_THREADS = 4
 
-// リソース割り当てと上限適応
-params.merge_fasta_memory  = Math.min((params.merge_fasta_memory  ?: params.memory)  as Integer, MERGE_FASTA_MAX_MEMORY)
-params.merge_fasta_threads = Math.min((params.merge_fasta_threads ?: params.threads) as Integer, MERGE_FASTA_MAX_THREADS)
+// 3. 上限値による動的クリッピング
+params.merge_fasta_memory  = Math.min(params.memory as Integer, MERGE_FASTA_MAX_MEMORY)
+params.merge_fasta_threads = Math.min(params.threads as Integer, MERGE_FASTA_MAX_THREADS)
 
 include { createNullParamsChannel; createSeqsChannel; getParam; clusterOptions; processProfile } \
     from "${params.petagenomeDir}/nf/common/utils"

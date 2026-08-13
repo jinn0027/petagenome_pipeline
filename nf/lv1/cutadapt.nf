@@ -10,8 +10,8 @@ def CUTADAPT_MAX_MEMORY  = 8 // GB (ストリーミング処理のため低メ�
 def CUTADAPT_MAX_THREADS = 8 // Gzip 圧縮/解凍パイプラインの並列化飽和点
 
 // 3. 上限値による動的クリッピング
-params.cutadapt_cutadapt_memory  = Math.min((params.cutadapt_cutadapt_memory  ?: params.memory) as Integer, CUTADAPT_MAX_MEMORY)
-params.cutadapt_cutadapt_threads = Math.min((params.cutadapt_cutadapt_threads ?: params.threads) as Integer, CUTADAPT_MAX_THREADS)
+params.cutadapt_cutadapt_memory  = Math.min(params.memory as Integer, CUTADAPT_MAX_MEMORY)
+params.cutadapt_cutadapt_threads = Math.min(params.threads as Integer, CUTADAPT_MAX_THREADS)
 
 params.cutadapt_fwd = "AATGATACGGCGACCACCGAGAUCTACAC"
 params.cutadapt_rev = "CAAGCAGAAGACGGCATACGAGAT"

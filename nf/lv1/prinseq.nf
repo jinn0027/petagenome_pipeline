@@ -10,8 +10,8 @@ def PRINSEQ_MAX_MEMORY  = 8 // GB (ストリーミング処理のため低メモ
 def PRINSEQ_MAX_THREADS = 8 // I/O およびパース処理の並列化飽和点
 
 // 3. 上限値による動的クリッピング
-params.prinseq_prinseq_memory  = Math.min((params.prinseq_prinseq_memory  ?: params.memory) as Integer, PRINSEQ_MAX_MEMORY)
-params.prinseq_prinseq_threads = Math.min((params.prinseq_prinseq_threads ?: params.threads) as Integer, PRINSEQ_MAX_THREADS)
+params.prinseq_prinseq_memory  = Math.min(params.memory as Integer, PRINSEQ_MAX_MEMORY)
+params.prinseq_prinseq_threads = Math.min(params.threads as Integer, PRINSEQ_MAX_THREADS)
 
 params.prinseq_trim_right = 10
 params.prinseq_trim_left = 10

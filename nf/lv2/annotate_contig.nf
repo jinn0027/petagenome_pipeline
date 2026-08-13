@@ -1,23 +1,21 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// ==========================================
-// 0. グローバルフォールバックと上限値（Clipping）定義
-// ==========================================
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
 params.memory  = params.memory  ?: 16
 params.threads = params.threads ?: 4
+
+// 2. プロセス固有の上限設定
+def ANNOTATE_CONTIG_MAX_MEMORY  = 8 // GB (AWK 連想配列でのアノテーション保持用)
+def ANNOTATE_CONTIG_MAX_THREADS = 2 // AWK 処理および I/O の上限
+
+// 3. 上限値による動的クリッピング
+params.annotate_contig_memory  = Math.min(params.memory as Integer, ANNOTATE_CONTIG_MAX_MEMORY)
+params.annotate_contig_threads = Math.min(params.threads as Integer, ANNOTATE_CONTIG_MAX_THREADS)
 
 // 1コンティグ・1ORFあたりの保持上限数のデフォルト値
 params.annotate_contig_top_n_contig = params.annotate_contig_top_n_contig ?: 3  // 1 ORF に対して保持する merged ORF の上限
 params.annotate_contig_top_n_anno   = params.annotate_contig_top_n_anno   ?: 3  // 1 merged ORF に対して保持する DB Hit (TaxID/KO) の上限
-
-// プロセス固有の上限設定
-def ANNOTATE_CONTIG_MAX_MEMORY  = 8 // GB (AWK 連想配列でのアノテーション保持用)
-def ANNOTATE_CONTIG_MAX_THREADS = 2 // AWK 処理および I/O の上限
-
-// パラメータ割り当てと上限適応
-params.annotate_contig_memory  = Math.min((params.annotate_contig_memory  ?: params.memory) as Integer, ANNOTATE_CONTIG_MAX_MEMORY)
-params.annotate_contig_threads = Math.min((params.annotate_contig_threads ?: params.threads) as Integer, ANNOTATE_CONTIG_MAX_THREADS)
 
 include { createNullParamsChannel; clusterOptions; processProfile } \
     from "${params.petagenomeDir}/nf/common/utils"

@@ -1,22 +1,20 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// ==========================================
-// 0. グローバルフォールバックと上限値（Clipping）定義
-// ==========================================
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
 params.memory  = params.memory  ?: 4
 params.threads = params.threads ?: (params.cpus ?: 1)
 
-// 低相同性アノテーションを除外するためのデフォルト閾値
-params.summarize_min_anno_pident = params.summarize_min_anno_pident ?: 0.0
-
-// プロセス固有の上限設定 (Clipping)
+// 2. プロセス固有の上限設定 
 def SUMMARIZE_MAX_MEMORY  = 8
 def SUMMARIZE_MAX_THREADS = 2
 
-// リソース割り当てと上限適応
-params.summarize_ko_taxid_memory  = Math.min((params.summarize_ko_taxid_memory  ?: params.memory)  as Integer, SUMMARIZE_MAX_MEMORY)
-params.summarize_ko_taxid_threads = Math.min((params.summarize_ko_taxid_threads ?: params.threads) as Integer, SUMMARIZE_MAX_THREADS)
+// 3. 上限値による動的クリッピング
+params.summarize_ko_taxid_memory  = Math.min(params.memory as Integer, SUMMARIZE_MAX_MEMORY)
+params.summarize_ko_taxid_threads = Math.min(params.threads as Integer, SUMMARIZE_MAX_THREADS)
+
+// 低相同性アノテーションを除外するためのデフォルト閾値
+params.summarize_min_anno_pident = params.summarize_min_anno_pident ?: 0.0
 
 include { createNullParamsChannel; clusterOptions; processProfile } \
     from "${params.petagenomeDir}/nf/common/utils"

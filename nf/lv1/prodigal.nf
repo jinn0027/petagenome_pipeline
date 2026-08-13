@@ -10,8 +10,8 @@ def PRODIGAL_MAX_MEMORY  = 8 // GB (非常に軽量なため 8GB で十分)
 def PRODIGAL_MAX_THREADS = 1 // 完全にシングルスレッド動作のため 1 に制限
 
 // 3. 上限値による動的クリッピング
-params.prodigal_prodigal_memory  = Math.min((params.prodigal_prodigal_memory  ?: params.memory) as Integer, PRODIGAL_MAX_MEMORY)
-params.prodigal_prodigal_threads = Math.min((params.prodigal_prodigal_threads ?: params.threads) as Integer, PRODIGAL_MAX_THREADS)
+params.prodigal_prodigal_memory  = Math.min(params.memory as Integer, PRODIGAL_MAX_MEMORY)
+params.prodigal_prodigal_threads = Math.min(params.threads as Integer, PRODIGAL_MAX_THREADS)
 
 params.prodigal_procedure = "meta"
 //params.prodigal_procedure = "single"

@@ -10,8 +10,8 @@ def VIRSORTER2_MAX_MEMORY  = 64 // GB (HMM DB・機械学習モデル特徴量�
 def VIRSORTER2_MAX_THREADS = 16 // HMMER・マルチプロセス並列化の I/O スケール上限
 
 // 3. 上限値による動的クリッピング
-params.virsorter2_virsorter2_memory  = Math.min((params.virsorter2_virsorter2_memory  ?: params.memory) as Integer, VIRSORTER2_MAX_MEMORY)
-params.virsorter2_virsorter2_threads = Math.min((params.virsorter2_virsorter2_threads ?: params.threads) as Integer, VIRSORTER2_MAX_THREADS)
+params.virsorter2_virsorter2_memory  = Math.min(params.memory as Integer, VIRSORTER2_MAX_MEMORY)
+params.virsorter2_virsorter2_threads = Math.min(params.threads as Integer, VIRSORTER2_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

@@ -9,9 +9,9 @@ params.threads = params.threads ?: 4
 def FASTP_MAX_MEMORY  = 16  // fastp はメモリをほぼ使わないため 16GB 上限
 def FASTP_MAX_THREADS = 8   // fastp のスレッド数は 8 以上で並列効率が飽和する
 
-// 3. パラメータの決定（ユーザー指定値 > 全体指定値 と ローカル上限の比較）
-params.fastp_fastp_memory  = Math.min((params.fastp_fastp_memory  ?: params.memory) as Integer, FASTP_MAX_MEMORY)
-params.fastp_fastp_threads = Math.min((params.fastp_fastp_threads ?: params.threads) as Integer, FASTP_MAX_THREADS)
+// 3. 上限値による動的クリッピング
+params.fastp_fastp_memory  = Math.min(params.memory as Integer, FASTP_MAX_MEMORY)
+params.fastp_fastp_threads = Math.min(params.threads as Integer, FASTP_MAX_THREADS)
 
 params.fastp_cut_mean_quality = 15
 params.fastp_reads_minlength = 15

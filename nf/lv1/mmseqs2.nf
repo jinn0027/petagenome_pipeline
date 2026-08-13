@@ -13,17 +13,17 @@ def MMSEQS2_EXEC_MAX_MEMORY     = 128 // GB (巨大 k-mer DB のメモリロー�
 def MMSEQS2_EXEC_MAX_THREADS    = 32  // 高効率 OpenMP 並列化の実効上限
 
 // 3. 上限値による動的クリッピング
-params.mmseqs2_mmseqs2_makerefdb_memory  = Math.min((params.mmseqs2_mmseqs2_makerefdb_memory  ?: params.memory) as Integer, MMSEQS2_CREATEDB_MAX_MEMORY)
-params.mmseqs2_mmseqs2_makerefdb_threads = Math.min((params.mmseqs2_mmseqs2_makerefdb_threads ?: params.threads) as Integer, MMSEQS2_CREATEDB_MAX_THREADS)
+params.mmseqs2_mmseqs2_makerefdb_memory  = Math.min(params.memory as Integer, MMSEQS2_CREATEDB_MAX_MEMORY)
+params.mmseqs2_mmseqs2_makerefdb_threads = Math.min(params.threads as Integer, MMSEQS2_CREATEDB_MAX_THREADS)
 
-params.mmseqs2_mmseqs2_makeqrydb_memory  = Math.min((params.mmseqs2_mmseqs2_makeqrydb_memory  ?: params.memory) as Integer, MMSEQS2_CREATEDB_MAX_MEMORY)
-params.mmseqs2_mmseqs2_makeqrydb_threads = Math.min((params.mmseqs2_mmseqs2_makeqrydb_threads ?: params.threads) as Integer, MMSEQS2_CREATEDB_MAX_THREADS)
+params.mmseqs2_mmseqs2_makeqrydb_memory  = Math.min(params.memory as Integer, MMSEQS2_CREATEDB_MAX_MEMORY)
+params.mmseqs2_mmseqs2_makeqrydb_threads = Math.min(params.threads as Integer, MMSEQS2_CREATEDB_MAX_THREADS)
 
-params.mmseqs2_mmseqs2_cluster_memory    = Math.min((params.mmseqs2_mmseqs2_cluster_memory    ?: params.memory) as Integer, MMSEQS2_EXEC_MAX_MEMORY)
-params.mmseqs2_mmseqs2_cluster_threads   = Math.min((params.mmseqs2_mmseqs2_cluster_threads   ?: params.threads) as Integer, MMSEQS2_EXEC_MAX_THREADS)
+params.mmseqs2_mmseqs2_cluster_memory    = Math.min(params.memory as Integer, MMSEQS2_EXEC_MAX_MEMORY)
+params.mmseqs2_mmseqs2_cluster_threads    = Math.min(params.threads as Integer, MMSEQS2_EXEC_MAX_THREADS)
 
-params.mmseqs2_mmseqs2_search_memory     = Math.min((params.mmseqs2_mmseqs2_search_memory     ?: params.memory) as Integer, MMSEQS2_EXEC_MAX_MEMORY)
-params.mmseqs2_mmseqs2_search_threads    = Math.min((params.mmseqs2_mmseqs2_search_threads    ?: params.threads) as Integer, MMSEQS2_EXEC_MAX_THREADS)
+params.mmseqs2_mmseqs2_search_memory     = Math.min(params.memory as Integer, MMSEQS2_EXEC_MAX_MEMORY)
+params.mmseqs2_mmseqs2_search_threads    = Math.min(params.threads as Integer, MMSEQS2_EXEC_MAX_THREADS)
 
 params.mmseqs2_ref_type = 0 // Database type 0: auto, 1: amino acid 2: nucleotides [0]
 params.mmseqs2_qry_type = 0 // Database type 0: auto, 1: amino acid 2: nucleotides [0]

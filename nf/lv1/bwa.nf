@@ -13,11 +13,11 @@ def BWA_MEM_MAX_MEMORY        = 32 // GB (インデックス展開＋マッピ�
 def BWA_MEM_MAX_THREADS       = 16 // マッピング処理・I/O スケールの上限
 
 // 3. 上限値による動的クリッピング
-params.bwa_bwa_makerefdb_memory  = Math.min((params.bwa_bwa_makerefdb_memory  ?: params.memory) as Integer, BWA_MAKEREFDB_MAX_MEMORY)
-params.bwa_bwa_makerefdb_threads = Math.min((params.bwa_bwa_makerefdb_threads ?: params.threads) as Integer, BWA_MAKEREFDB_MAX_THREADS)
+params.bwa_bwa_makerefdb_memory  = Math.min(params.memory as Integer, BWA_MAKEREFDB_MAX_MEMORY)
+params.bwa_bwa_makerefdb_threads = Math.min(params.threads as Integer, BWA_MAKEREFDB_MAX_THREADS)
 
-params.bwa_bwa_mem_memory  = Math.min((params.bwa_bwa_mem_memory  ?: params.memory) as Integer, BWA_MEM_MAX_MEMORY)
-params.bwa_bwa_mem_threads = Math.min((params.bwa_bwa_mem_threads ?: params.threads) as Integer, BWA_MEM_MAX_THREADS)
+params.bwa_bwa_mem_memory  = Math.min(params.memory as Integer, BWA_MEM_MAX_MEMORY)
+params.bwa_bwa_mem_threads = Math.min(params.threads as Integer, BWA_MEM_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

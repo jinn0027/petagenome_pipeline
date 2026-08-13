@@ -1,22 +1,20 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// ==========================================
-// 0. グローバルフォールバックと上限値（Clipping）定義
-// ==========================================
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
 params.memory  = params.memory  ?: 16
 params.threads = params.threads ?: 4
 
-params.remove_host_aligner          = params.remove_host_aligner          ?: "bwa_mem2"
-params.remove_host_is_prebuilt_db   = params.remove_host_is_prebuilt_db   ?: false
-
-// プロセス固有の上限設定 (Clipping)
+// 2. プロセス固有の上限設定
 def EXTRACT_MAX_MEMORY  = 8
 def EXTRACT_MAX_THREADS = 4
 
-// リソース割り当てと上限適応
-params.remove_host_extract_memory  = Math.min((params.remove_host_extract_memory  ?: params.memory)  as Integer, EXTRACT_MAX_MEMORY)
-params.remove_host_extract_threads = Math.min((params.remove_host_extract_threads ?: params.threads) as Integer, EXTRACT_MAX_THREADS)
+// 3. 上限値による動的クリッピング
+params.remove_host_extract_memory  = Math.min(params.memory as Integer, EXTRACT_MAX_MEMORY)
+params.remove_host_extract_threads = Math.min(params.threads as Integer, EXTRACT_MAX_THREADS)
+
+params.remove_host_aligner          = params.remove_host_aligner          ?: "bwa_mem2"
+params.remove_host_is_prebuilt_db   = params.remove_host_is_prebuilt_db   ?: false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

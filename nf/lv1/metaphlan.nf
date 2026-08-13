@@ -10,8 +10,8 @@ def METAPHLAN_MAX_MEMORY  = 32 // GB (ChocoPhlAn DB のオンメモリロード�
 def METAPHLAN_MAX_THREADS = 16 // Bowtie2 並列マッピングと I/O スケールの限界点
 
 // 3. 上限値による動的クリッピング
-params.metaphlan_metaphlan_memory  = Math.min((params.metaphlan_metaphlan_memory  ?: params.memory) as Integer, METAPHLAN_MAX_MEMORY)
-params.metaphlan_metaphlan_threads = Math.min((params.metaphlan_metaphlan_threads ?: params.threads) as Integer, METAPHLAN_MAX_THREADS)
+params.metaphlan_metaphlan_memory  = Math.min(params.memory as Integer, METAPHLAN_MAX_MEMORY)
+params.metaphlan_metaphlan_threads = Math.min(params.threads as Integer, METAPHLAN_MAX_THREADS)
 
 params.metaphlan_input_type = "fastq"
 //fastq,fasta,bowtie2out,sam

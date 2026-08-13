@@ -1,22 +1,20 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// ==========================================
-// 0. グローバルフォールバックと上限値（Clipping）定義
-// ==========================================
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
 params.memory  = params.memory  ?: 16
 params.threads = params.threads ?: 4
 
-params.annotate_p_aligner        = params.annotate_p_aligner        ?: "mmseqs2"
-params.annotate_p_is_prebuilt_db = params.annotate_p_is_prebuilt_db ?: false
-
-// プロセス固有の上限設定（巨大な TaxID/KO マッピング辞書をメモリ保持するため上限は 32GB を確保）
+// 2. プロセス固有の上限設定（巨大な TaxID/KO マッピング辞書をメモリ保持するため上限は 32GB を確保）
 def ANNOTATE_ORFS_MAX_MEMORY  = 32 
 def ANNOTATE_ORFS_MAX_THREADS = 4
 
-// パラメータ割り当てと上限適応
-params.annotate_p_annotate_orfs_memory  = Math.min((params.annotate_p_annotate_orfs_memory  ?: params.memory) as Integer, ANNOTATE_ORFS_MAX_MEMORY)
-params.annotate_p_annotate_orfs_threads = Math.min((params.annotate_p_annotate_orfs_threads ?: params.threads) as Integer, ANNOTATE_ORFS_MAX_THREADS)
+// 3. 上限値による動的クリッピング
+params.annotate_p_annotate_orfs_memory  = Math.min(params.memory as Integer, ANNOTATE_ORFS_MAX_MEMORY)
+params.annotate_p_annotate_orfs_threads = Math.min(params.threads as Integer, ANNOTATE_ORFS_MAX_THREADS)
+
+params.annotate_p_aligner        = params.annotate_p_aligner        ?: "mmseqs2"
+params.annotate_p_is_prebuilt_db = params.annotate_p_is_prebuilt_db ?: false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

@@ -10,8 +10,8 @@ def FALCO_MAX_MEMORY  = 8 // GB (C++実装で非常に軽量なため8GBで十�
 def FALCO_MAX_THREADS = 8 // I/O および FASTQ 解凍処理の並列化飽和点
 
 // 3. 上限値による動的クリッピング
-params.falco_falco_memory  = Math.min((params.falco_falco_memory  ?: params.memory) as Integer, FALCO_MAX_MEMORY)
-params.falco_falco_threads = Math.min((params.falco_falco_threads ?: params.threads) as Integer, FALCO_MAX_THREADS)
+params.falco_falco_memory  = Math.min(params.memory as Integer, FALCO_MAX_MEMORY)
+params.falco_falco_threads = Math.min(params.threads as Integer, FALCO_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

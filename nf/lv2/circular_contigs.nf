@@ -1,11 +1,23 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// ==========================================
-// 0. グローバルフォールバックと上限値（Clipping）定義
-// ==========================================
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
 params.memory  = params.memory  ?: 16
 params.threads = params.threads ?: 4
+
+// 2. プロセス固有の上限設定
+def CLASSIFY_MAX_MEMORY     = 16
+def CLASSIFY_MAX_THREADS    = 8
+
+def DEDUPLICATE_MAX_MEMORY  = 8
+def DEDUPLICATE_MAX_THREADS = 4
+
+// 3. 上限値による動的クリッピング
+params.circular_contigs_classify_memory    = Math.min(params.memory as Integer, CLASSIFY_MAX_MEMORY)
+params.circular_contigs_classify_threads   = Math.min(params.threads as Integer, CLASSIFY_MAX_THREADS)
+
+params.circular_contigs_deduplicate_memory = Math.min(params.memory as Integer, DEDUPLICATE_MAX_MEMORY)
+params.circular_contigs_deduplicate_threads= Math.min(params.threads as Integer, DEDUPLICATE_MAX_THREADS)
 
 // スイッチ・各種しきい値デフォルト設定
 params.use_pzlast           = params.use_pzlast           ?: false
@@ -24,18 +36,6 @@ params.circular_contigs_al_self    = params.circular_contigs_al_self    ?: 50
 
 params.circular_contigs_blast1_num_alignments = params.circular_contigs_blast1_num_alignments ?: 5
 params.circular_contigs_blast2_num_alignments = params.circular_contigs_blast2_num_alignments ?: 50
-
-// プロセス固有の上限設定
-def CLASSIFY_MAX_MEMORY     = 16
-def CLASSIFY_MAX_THREADS    = 8
-def DEDUPLICATE_MAX_MEMORY  = 8
-def DEDUPLICATE_MAX_THREADS = 4
-
-// パラメータ割り当てと上限適応
-params.circular_contigs_classify_memory     = Math.min((params.circular_contigs_classify_memory    ?: params.memory) as Integer, CLASSIFY_MAX_MEMORY)
-params.circular_contigs_classify_threads    = Math.min((params.circular_contigs_classify_threads   ?: params.threads) as Integer, CLASSIFY_MAX_THREADS)
-params.circular_contigs_deduplicate_memory  = Math.min((params.circular_contigs_deduplicate_memory ?: params.memory) as Integer, DEDUPLICATE_MAX_MEMORY)
-params.circular_contigs_deduplicate_threads = Math.min((params.circular_contigs_deduplicate_threads?: params.threads) as Integer, DEDUPLICATE_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

@@ -10,8 +10,8 @@ def VIRSORTER_MAX_MEMORY  = 32 // GB (HMM DB 検索・アノテーションバ�
 def VIRSORTER_MAX_THREADS = 16 // HMMER パイプライン並列化と I/O スケールの上限
 
 // 3. 上限値による動的クリッピング
-params.virsorter_virsorter_memory  = Math.min((params.virsorter_virsorter_memory  ?: params.memory) as Integer, VIRSORTER_MAX_MEMORY)
-params.virsorter_virsorter_threads = Math.min((params.virsorter_virsorter_threads ?: params.threads) as Integer, VIRSORTER_MAX_THREADS)
+params.virsorter_virsorter_memory  = Math.min(params.memory as Integer, VIRSORTER_MAX_MEMORY)
+params.virsorter_virsorter_threads = Math.min(params.threads as Integer, VIRSORTER_MAX_THREADS)
 
 params.virsorter_db_type = "refseq"
 //params.virsorter_db = "virome"

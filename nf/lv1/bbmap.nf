@@ -5,16 +5,19 @@ nextflow.enable.dsl=2
 params.memory  = params.memory  ?: 16
 params.threads = params.threads ?: 4
 
-// 2. bbmap_makerefdb 固有の上限値定義
+// 2. bbmap 固有の上限値定義
 def BBMAP_MAKEREFDB_MAX_MEMORY  = 64 // GB (大型ゲノムインデックス作成を考慮)
 def BBMAP_MAKEREFDB_MAX_THREADS = 16 // スレッド並列効率の頭打ちを考慮
 
-// 3. 上限値による動的クリッピング
-params.bbmap_bbmap_makerefdb_memory  = Math.min((params.bbmap_bbmap_makerefdb_memory  ?: params.memory) as Integer, BBMAP_MAKEREFDB_MAX_MEMORY)
-params.bbmap_bbmap_makerefdb_threads = Math.min((params.bbmap_bbmap_makerefdb_threads ?: params.threads) as Integer, BBMAP_MAKEREFDB_MAX_THREADS)
+def BBMAP_MAX_MEMORY  = 32  // 環境やデータ量に応じた上限
+def BBMAP_MAX_THREADS = 8   // BBMap のスレッド上限
 
-params.bbmap_bbmap_memory = params.memory
-params.bbmap_bbmap_threads = params.threads
+// 3. 上限値による動的クリッピング
+params.bbmap_bbmap_makerefdb_memory  = Math.min(params.memory as Integer, BBMAP_MAKEREFDB_MAX_MEMORY)
+params.bbmap_bbmap_makerefdb_threads = Math.min(params.threads as Integer, BBMAP_MAKEREFDB_MAX_THREADS)
+
+params.bbmap_bbmap_memory  = Math.min(params.memory as Integer, BBMAP_MAX_MEMORY)
+params.bbmap_bbmap_threads = Math.min(params.threads as Integer, BBMAP_MAX_THREADS)
 
 params.bbmap_ambiguous = "random"
 params.bbmap_minid = 0.95

@@ -10,8 +10,8 @@ def FASTQC_MAX_MEMORY  = 16 // GB (JVMメモリ＋複数ファイル同時処理
 def FASTQC_MAX_THREADS = 8  // ファイル並列数・ディスク I/O 競合の限界点
 
 // 3. 上限値による動的クリッピング
-params.fastqc_fastqc_memory  = Math.min((params.fastqc_fastqc_memory  ?: params.memory) as Integer, FASTQC_MAX_MEMORY)
-params.fastqc_fastqc_threads = Math.min((params.fastqc_fastqc_threads ?: params.threads) as Integer, FASTQC_MAX_THREADS)
+params.fastqc_fastqc_memory  = Math.min(params.memory as Integer, FASTQC_MAX_MEMORY)
+params.fastqc_fastqc_threads = Math.min(params.threads as Integer, FASTQC_MAX_THREADS)
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

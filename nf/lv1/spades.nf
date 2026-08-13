@@ -13,13 +13,17 @@ def SPADES_ASSEMBLY_MAX_MEMORY   = 250 // GB (De Bruijn Graph 構築用の高メ
 def SPADES_ASSEMBLY_MAX_THREADS  = 16  // グラフ走査・並列化効率の上限
 
 // 3. 上限値による動的クリッピング
+params.spades_spades_error_correction_memory             = Math.min(params.memory as Integer, SPADES_EC_MAX_MEMORY)
+params.spades_spades_error_correction_threads            = Math.min(params.threads as Integer, SPADES_EC_MAX_THREADS)
 
-// --- Error Correction モジュール ---
-params.spades_spades_error_correction_memory             = Math.min((params.spades_spades_error_correction_memory             ?: params.memory) as Integer, SPADES_EC_MAX_MEMORY)
-params.spades_spades_error_correction_threads            = Math.min((params.spades_spades_error_correction_threads            ?: params.threads) as Integer, SPADES_EC_MAX_THREADS)
+params.spades_spades_error_correction_gzip_output_memory = Math.min(params.memory as Integer, SPADES_EC_MAX_MEMORY)
+params.spades_spades_error_correction_gzip_output_threads= Math.min(params.threads as Integer, SPADES_EC_MAX_THREADS)
 
-params.spades_spades_error_correction_gzip_output_memory = Math.min((params.spades_spades_error_correction_gzip_output_memory ?: params.memory) as Integer, SPADES_EC_MAX_MEMORY)
-params.spades_spades_error_correction_gzip_output_threads= Math.min((params.spades_spades_error_correction_gzip_output_threads?: params.threads) as Integer, SPADES_EC_MAX_THREADS)
+params.spades_spades_assembler_memory = Math.min(params.memory as Integer, SPADES_ASSEMBLY_MAX_MEMORY)
+params.spades_spades_assembler_threads = Math.min(params.threads as Integer, SPADES_ASSEMBLY_MAX_THREADS)
+
+params.spades_spades_e2e_memory = Math.min(params.memory as Integer, SPADES_ASSEMBLY_MAX_MEMORY)
+params.spades_spades_e2e_threads = Math.min(params.threads as Integer, SPADES_ASSEMBLY_MAX_THREADS)
 
 params.spades_e2e = false
 

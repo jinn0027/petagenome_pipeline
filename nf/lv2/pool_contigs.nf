@@ -1,16 +1,11 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// ==========================================
-// 0. グローバルフォールバックと上限値（Clipping）定義
-// ==========================================
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
 params.memory  = params.memory  ?: 16
 params.threads = params.threads ?: 4
 
-// クラスタリングプロセスのデフォルト設定
-params.pool_contigs_clustering_process = params.pool_contigs_clustering_process ?: "mmseqs2"
-
-// プロセス固有の上限設定 (Clipping)
+// 2. プロセス固有の上限設定
 def MERGE_MAX_MEMORY          = 16
 def MERGE_MAX_THREADS         = 8
 def FILTER_RENAME_MAX_MEMORY  = 8
@@ -22,21 +17,24 @@ def GET_LEN_MAX_THREADS       = 4
 def GET_STATS_MAX_MEMORY      = 8
 def GET_STATS_MAX_THREADS     = 2
 
-// リソース割り当てと上限適応
-params.pool_contigs_mergs_contigs_memory    = Math.min((params.pool_contigs_mergs_contigs_memory    ?: params.memory)  as Integer, MERGE_MAX_MEMORY)
-params.pool_contigs_mergs_contigs_threads   = Math.min((params.pool_contigs_mergs_contigs_threads   ?: params.threads) as Integer, MERGE_MAX_THREADS)
+// 3. 上限値による動的クリッピング
+params.pool_contigs_mergs_contigs_memory      = Math.min(params.memory as Integer, MERGE_MAX_MEMORY)
+params.pool_contigs_mergs_contigs_threads      = Math.min(params.threads as Integer, MERGE_MAX_THREADS)
 
-params.pool_contigs_filter_and_rename_memory  = Math.min((params.pool_contigs_filter_and_rename_memory  ?: params.memory)  as Integer, FILTER_RENAME_MAX_MEMORY)
-params.pool_contigs_filter_and_rename_threads = Math.min((params.pool_contigs_filter_and_rename_threads ?: params.threads) as Integer, FILTER_RENAME_MAX_THREADS)
+params.pool_contigs_filter_and_rename_memory  = Math.min(params.memory as Integer, FILTER_RENAME_MAX_MEMORY)
+params.pool_contigs_filter_and_rename_threads = Math.min(params.threads as Integer, FILTER_RENAME_MAX_THREADS)
 
-params.pool_contigs_summarize_name_memory     = Math.min((params.pool_contigs_summarize_name_memory     ?: params.memory)  as Integer, SUMMARIZE_MAX_MEMORY)
-params.pool_contigs_summarize_name_threads    = Math.min((params.pool_contigs_summarize_name_threads    ?: params.threads) as Integer, SUMMARIZE_MAX_THREADS)
+params.pool_contigs_summarize_name_memory     = Math.min(params.memory as Integer, SUMMARIZE_MAX_MEMORY)
+params.pool_contigs_summarize_name_threads    = Math.min(params.threads as Integer, SUMMARIZE_MAX_THREADS)
 
-params.pool_contigs_get_length_memory       = Math.min((params.pool_contigs_get_length_memory       ?: params.memory)  as Integer, GET_LEN_MAX_MEMORY)
-params.pool_contigs_get_length_threads      = Math.min((params.pool_contigs_get_length_threads      ?: params.threads) as Integer, GET_LEN_MAX_THREADS)
+params.pool_contigs_get_length_memory        = Math.min(params.memory as Integer, GET_LEN_MAX_MEMORY)
+params.pool_contigs_get_length_threads       = Math.min(params.threads as Integer, GET_LEN_MAX_THREADS)
 
-params.pool_contigs_get_stats_memory        = Math.min((params.pool_contigs_get_stats_memory        ?: params.memory)  as Integer, GET_STATS_MAX_MEMORY)
-params.pool_contigs_get_stats_threads       = Math.min((params.pool_contigs_get_stats_threads       ?: params.threads) as Integer, GET_STATS_MAX_THREADS)
+params.pool_contigs_get_stats_memory         = Math.min(params.memory as Integer, GET_STATS_MAX_MEMORY)
+params.pool_contigs_get_stats_threads        = Math.min(params.threads as Integer, GET_STATS_MAX_THREADS)
+
+// クラスタリングプロセスのデフォルト設定
+params.pool_contigs_clustering_process = params.pool_contigs_clustering_process ?: "mmseqs2"
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

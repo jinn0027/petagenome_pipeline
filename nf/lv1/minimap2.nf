@@ -13,14 +13,14 @@ def MINIMAP2_ALIGN_MAX_MEMORY      = 64 // GB (インデックス展開＋マッ
 def MINIMAP2_ALIGN_MAX_THREADS     = 16 // スレッド並列化と I/O スケールの上限
 
 // 3. 上限値による動的クリッピング
-params.minimap2_minimap2_makerefdb_memory  = Math.min((params.minimap2_minimap2_makerefdb_memory  ?: params.memory) as Integer, MINIMAP2_MAKEREFDB_MAX_MEMORY)
-params.minimap2_minimap2_makerefdb_threads = Math.min((params.minimap2_minimap2_makerefdb_threads ?: params.threads) as Integer, MINIMAP2_MAKEREFDB_MAX_THREADS)
+params.minimap2_minimap2_makerefdb_memory  = Math.min(params.memory as Integer, MINIMAP2_MAKEREFDB_MAX_MEMORY)
+params.minimap2_minimap2_makerefdb_threads = Math.min(params.threads as Integer, MINIMAP2_MAKEREFDB_MAX_THREADS)
 
-params.minimap2_minimap2_memory  = Math.min((params.minimap2_minimap2_memory  ?: params.memory) as Integer, MINIMAP2_ALIGN_MAX_MEMORY)
-params.minimap2_minimap2_threads = Math.min((params.minimap2_minimap2_threads ?: params.threads) as Integer, MINIMAP2_ALIGN_MAX_THREADS)
+params.minimap2_minimap2_memory            = Math.min(params.memory as Integer, MINIMAP2_ALIGN_MAX_MEMORY)
+params.minimap2_minimap2_threads           = Math.min(params.threads as Integer, MINIMAP2_ALIGN_MAX_THREADS)
 
-params.minimap2_minimap2_e2e_memory  = Math.min((params.minimap2_minimap2_e2e_memory  ?: params.memory) as Integer, MINIMAP2_ALIGN_MAX_MEMORY)
-params.minimap2_minimap2_e2e_threads = Math.min((params.minimap2_minimap2_e2e_threads ?: params.threads) as Integer, MINIMAP2_ALIGN_MAX_THREADS)
+params.minimap2_minimap2_e2e_memory        = Math.min(params.memory as Integer, MINIMAP2_ALIGN_MAX_MEMORY)
+params.minimap2_minimap2_e2e_threads       = Math.min(params.threads as Integer, MINIMAP2_ALIGN_MAX_THREADS)
 
 params.minimap2_ambiguous = "random"
 params.minimap2_minid = 0.95

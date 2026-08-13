@@ -1,13 +1,11 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// ==========================================
-// 0. グローバルフォールバックと上限値（Clipping）定義
-// ==========================================
+// 1. 全体デフォルト値の定義（未定義時のフォールバック）
 params.memory  = params.memory  ?: 16
 params.threads = params.threads ?: 4
 
-// 各プロセスの特性に応じた上限設定
+// 2. プロセス固有の上限設定
 def FILTER_RENAME_MAX_MEMORY  = 8 // GB (Python テキスト処理)
 def FILTER_RENAME_MAX_THREADS = 2
 
@@ -17,18 +15,16 @@ def GET_LENGTH_MAX_THREADS    = 2
 def GET_STATS_MAX_MEMORY      = 4 // GB (R 集計)
 def GET_STATS_MAX_THREADS     = 1 // シングルスレッド処理
 
-// パラメータ割り当てと上限適応
-params.assembly_filter_and_rename_memory  = Math.min((params.assembly_filter_and_rename_memory  ?: params.memory) as Integer, FILTER_RENAME_MAX_MEMORY)
-params.assembly_filter_and_rename_threads = Math.min((params.assembly_filter_and_rename_threads ?: params.threads) as Integer, FILTER_RENAME_MAX_THREADS)
+// 3. 上限値による動的クリッピング
+params.assembly_filter_and_rename_memory  = Math.min(params.memory as Integer, FILTER_RENAME_MAX_MEMORY)
+params.assembly_filter_and_rename_threads = Math.min(params.threads as Integer, FILTER_RENAME_MAX_THREADS)
 
-params.assembly_get_length_memory  = Math.min((params.assembly_get_length_memory  ?: params.memory) as Integer, GET_LENGTH_MAX_MEMORY)
-params.assembly_get_length_threads = Math.min((params.assembly_get_length_threads ?: params.threads) as Integer, GET_LENGTH_MAX_THREADS)
+params.assembly_get_length_memory  = Math.min(params.memory as Integer, GET_LENGTH_MAX_MEMORY)
+params.assembly_get_length_threads = Math.min(params.threads as Integer, GET_LENGTH_MAX_THREADS)
 
-params.assembly_get_stats_memory   = Math.min((params.assembly_get_stats_memory   ?: params.memory) as Integer, GET_STATS_MAX_MEMORY)
-params.assembly_get_stats_threads  = Math.min((params.assembly_get_stats_threads  ?: params.threads) as Integer, GET_STATS_MAX_THREADS)
+params.assembly_get_stats_memory   = Math.min(params.memory as Integer, GET_STATS_MAX_MEMORY)
+params.assembly_get_stats_threads  = Math.min(params.threads as Integer, GET_STATS_MAX_THREADS)
 
-
-// モジュールのインポート
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { SPADES_E2E_SUB } from "${params.petagenomeDir}/nf/lv1/spades.nf"
