@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. プロセス固有の上限設定（巨大な TaxID/KO マッピング辞書をメモリ保持するため上限は 32GB を確保）
 def ANNOTATE_ORFS_MAX_MEMORY  = 32 
@@ -13,8 +13,8 @@ def ANNOTATE_ORFS_MAX_THREADS = 4
 params.annotate_p_annotate_orfs_memory  = Math.min(params.memory as Integer, ANNOTATE_ORFS_MAX_MEMORY)
 params.annotate_p_annotate_orfs_threads = Math.min(params.threads as Integer, ANNOTATE_ORFS_MAX_THREADS)
 
-params.annotate_p_aligner        = params.annotate_p_aligner        ?: "mmseqs2"
-params.annotate_p_is_prebuilt_db = params.annotate_p_is_prebuilt_db ?: false
+params.annotate_p_aligner        = "mmseqs2"
+params.annotate_p_is_prebuilt_db = false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -141,7 +141,7 @@ workflow ANNOTATE_TAXID_KO_SUB {
 // A. DB (MMseqs2/PZLAST インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
 workflow BUILD_REF_DB_ONLY {
     p              = createNullParamsChannel()
-    annotate_p_ref = createSeqsChannel(params.annotate_p_ref_fasta ?: params.ref_fasta)
+    annotate_p_ref = createSeqsChannel(params.annotate_p_ref_fasta)
 
     db_out = BUILD_REF_DB_PROT_SUB(p, annotate_p_ref)
 

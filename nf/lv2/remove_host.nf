@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. プロセス固有の上限設定
 def EXTRACT_MAX_MEMORY  = 8
@@ -13,8 +13,8 @@ def EXTRACT_MAX_THREADS = 4
 params.remove_host_extract_memory  = Math.min(params.memory as Integer, EXTRACT_MAX_MEMORY)
 params.remove_host_extract_threads = Math.min(params.threads as Integer, EXTRACT_MAX_THREADS)
 
-params.remove_host_aligner          = params.remove_host_aligner          ?: "bwa_mem2"
-params.remove_host_is_prebuilt_db   = params.remove_host_is_prebuilt_db   ?: false
+params.remove_host_aligner          = "bwa_mem2"
+params.remove_host_is_prebuilt_db   = false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -117,7 +117,7 @@ workflow REMOVE_HOST_SUB {
 // A. DB (BWA/PZBWA インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
 workflow BUILD_REF_DB_ONLY {
     p        = createNullParamsChannel()
-    host_ref = createSeqsChannel(params.remove_host_ref_fasta ?: params.host_ref_fasta)
+    host_ref = createSeqsChannel(params.remove_host_ref_fasta)
 
     db_out = BUILD_REF_DB_SUB(p, host_ref)
 

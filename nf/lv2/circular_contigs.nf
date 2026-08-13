@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. プロセス固有の上限設定
 def CLASSIFY_MAX_MEMORY     = 16
@@ -20,22 +20,22 @@ params.circular_contigs_deduplicate_memory = Math.min(params.memory as Integer, 
 params.circular_contigs_deduplicate_threads= Math.min(params.threads as Integer, DEDUPLICATE_MAX_THREADS)
 
 // スイッチ・各種しきい値デフォルト設定
-params.use_pzlast           = params.use_pzlast           ?: false
-params.pzlast_cfg1          = params.pzlast_cfg1          ?: null
-params.pzlast_cfg2          = params.pzlast_cfg2          ?: null
+params.use_pzlast           = false
+params.pzlast_cfg1          = null
+params.pzlast_cfg2          = null
 
-params.circular_contigs_e_thre     = params.circular_contigs_e_thre     ?: "1e-10"
-params.circular_contigs_pi_thre    = params.circular_contigs_pi_thre    ?: "100"
-params.circular_contigs_al_thre    = params.circular_contigs_al_thre    ?: "50"
-params.circular_contigs_pi_thre_rd = params.circular_contigs_pi_thre_rd ?: "95"
-params.circular_contigs_qc_thre_rd = params.circular_contigs_qc_thre_rd ?: "95"
-params.circular_contigs_len_l      = params.circular_contigs_len_l      ?: "5000"
-params.circular_contigs_len_c      = params.circular_contigs_len_c      ?: "1500"
-params.circular_contigs_pi_self    = params.circular_contigs_pi_self    ?: 100
-params.circular_contigs_al_self    = params.circular_contigs_al_self    ?: 50
+params.circular_contigs_e_thre     = "1e-10"
+params.circular_contigs_pi_thre    = "100"
+params.circular_contigs_al_thre    = "50"
+params.circular_contigs_pi_thre_rd = "95"
+params.circular_contigs_qc_thre_rd = "95"
+params.circular_contigs_len_l      = "5000"
+params.circular_contigs_len_c      = "1500"
+params.circular_contigs_pi_self    = 100
+params.circular_contigs_al_self    = 50
 
-params.circular_contigs_blast1_num_alignments = params.circular_contigs_blast1_num_alignments ?: 5
-params.circular_contigs_blast2_num_alignments = params.circular_contigs_blast2_num_alignments ?: 50
+params.circular_contigs_blast1_num_alignments = 5
+params.circular_contigs_blast2_num_alignments = 50
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

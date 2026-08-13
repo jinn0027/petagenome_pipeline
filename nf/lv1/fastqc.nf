@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. FastQC 固有の上限値定義
 def FASTQC_MAX_MEMORY  = 16 // GB (JVMメモリ＋複数ファイル同時処理用)

@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. VirSorter2 固有の上限値定義
 def VIRSORTER2_MAX_MEMORY  = 64 // GB (HMM DB・機械学習モデル特徴量抽出用)

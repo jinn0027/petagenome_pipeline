@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. BWA 固有の上限値定義
 def BWA_MAKEREFDB_MAX_MEMORY  = 64 // GB (大型リファレンスの BWT 構築用)

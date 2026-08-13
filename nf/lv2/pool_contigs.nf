@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. プロセス固有の上限設定
 def MERGE_MAX_MEMORY          = 16
@@ -34,7 +34,7 @@ params.pool_contigs_get_stats_memory         = Math.min(params.memory as Integer
 params.pool_contigs_get_stats_threads        = Math.min(params.threads as Integer, GET_STATS_MAX_THREADS)
 
 // クラスタリングプロセスのデフォルト設定
-params.pool_contigs_clustering_process = params.pool_contigs_clustering_process ?: "mmseqs2"
+params.pool_contigs_clustering_process = "mmseqs2"
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"

@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. Minimap2 固有の上限値定義
 def MINIMAP2_MAKEREFDB_MAX_MEMORY  = 32 // GB (ミニマイザーインデックス構築用)

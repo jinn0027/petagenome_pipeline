@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. Prodigal 固有の上限値定義
 def PRODIGAL_MAX_MEMORY  = 8 // GB (非常に軽量なため 8GB で十分)

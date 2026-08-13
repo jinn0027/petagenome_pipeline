@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. PRINSEQ 固有の上限値定義
 def PRINSEQ_MAX_MEMORY  = 8 // GB (ストリーミング処理のため低メモリで十分)

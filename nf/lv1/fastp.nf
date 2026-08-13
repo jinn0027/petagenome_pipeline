@@ -2,8 +2,8 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // 2. このモジュール・タスク固有の推奨・上限値（ローカル定数として定義）
 def FASTP_MAX_MEMORY  = 16  // fastp はメモリをほぼ使わないため 16GB 上限

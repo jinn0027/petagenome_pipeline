@@ -2,12 +2,12 @@
 nextflow.enable.dsl=2
 
 // 1. 全体デフォルト値の定義（未定義時のフォールバック）
-params.memory  = params.memory  ?: 16
-params.threads = params.threads ?: 4
+params.memory  = 16
+params.threads = 4
 
 // アライナーパラメータの初期化
-params.align_ref_aligner        = params.align_ref_aligner ?: "mmseqs2"
-params.align_ref_is_prebuilt_db = params.align_ref_is_prebuilt_db ?: false
+params.align_ref_aligner        = "mmseqs2"
+params.align_ref_is_prebuilt_db = false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -17,7 +17,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 // ==========================================
 
 // PZLAST のリポジトリパスとスクリプト存在確認
-def pz_script  = params.pzrepoDir ? "${params.pzrepoDir}/nf/lv1/pzlast.nf" : null
+def pz_script = params.containsKey('pzrepoDir') && params.pzrepoDir ? "${params.pzrepoDir}/nf/lv1/pzlast.nf" : null
 def use_pzlast = (params.align_ref_aligner == 'pzlast') && pz_script && file(pz_script).exists()
 
 // 使用するアライナーのパスを決定 (pzlast の条件が揃わなければ mmseqs2.nf を選択)
