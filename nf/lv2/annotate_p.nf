@@ -67,27 +67,27 @@ out_file       = sys.argv[4]
 taxid_dict = {}
 with open(taxid_map_file, 'r', encoding='utf-8') as f:
     for line in f:
-        parts = line.rstrip().split('\t', 1)
+        parts = line.rstrip().split('\\t', 1)
         if len(parts) == 2 and parts[1]:
             taxid_dict[parts[0]] = parts[1]
 
 ko_dict = {}
 with open(ko_map_file, 'r', encoding='utf-8') as f:
     for line in f:
-        parts = line.rstrip().split('\t', 1)
+        parts = line.rstrip().split('\\t', 1)
         if len(parts) == 2 and parts[1]:
             ko_dict[parts[0]] = parts[1]
 
 cols_header = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore", "taxid", "ko"]
 
 with open(fmt6_file, 'r', encoding='utf-8') as fin, open(out_file, 'w', encoding='utf-8') as fout:
-    fout.write("\t".join(cols_header) + "\n")
+    fout.write("\\t".join(cols_header) + "\\n")
     
     for line in fin:
         if line.startswith('#'):
             continue
         line_clean = line.rstrip()
-        cols = line_clean.split('\t')
+        cols = line_clean.split('\\t')
         if len(cols) < 2:
             continue
         
@@ -95,7 +95,7 @@ with open(fmt6_file, 'r', encoding='utf-8') as fin, open(out_file, 'w', encoding
         taxid  = taxid_dict.get(sseqid, "N/A")
         ko     = ko_dict.get(sseqid, "N/A")
         
-        fout.write(f"{line_clean}\t{taxid}\t{ko}\n")
+        fout.write(f"{line_clean}\\t{taxid}\\t{ko}\\n")
 EOF
     """
 }
