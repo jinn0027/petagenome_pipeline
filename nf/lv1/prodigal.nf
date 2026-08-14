@@ -55,14 +55,14 @@ process prodigal {
             touch ${read_id}/out.fna
             touch ${read_id}/out.${getParam(p, 'prodigal_outfmt')}
         else
-            prodigal \\
-                -p ${getParam(p, 'prodigal_procedure')} \\
-                -i \${read_} \\
-                -f ${getParam(p, 'prodigal_outfmt')} \\
-                -a ${read_id}/out.faa \\
-                -d ${read_id}/out.fna \\
+            prodigal \
+                -p ${getParam(p, 'prodigal_procedure')} \
+                -i \${read_} \
+                -f ${getParam(p, 'prodigal_outfmt')} \
+                -a ${read_id}/out.faa \
+                -d ${read_id}/out.fna \
                 -o ${read_id}/out.${getParam(p, 'prodigal_outfmt')}
-            fi
+        fi
         """
 }
 

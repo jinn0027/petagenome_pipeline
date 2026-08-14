@@ -6,8 +6,8 @@ params.memory  = 16
 params.threads = 4
 
 // アライナーパラメータの初期化
-params.align_samples_to_orfs_aligner        = "mmseqs2"
-params.align_samples_to_orfs_is_prebuilt_db = false
+params.align_samples_to_catalog_aligner        = "mmseqs2"
+params.align_samples_to_catalog_is_prebuilt_db = false
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -18,7 +18,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 
 // PZLAST のリポジトリパスとスクリプト存在確認
 def pz_script = params.containsKey('pzrepoDir') && params.pzrepoDir ? "${params.pzrepoDir}/nf/lv1/pzlast.nf" : null
-def use_pzlast = (params.align_samples_to_orfs_aligner == 'pzlast') && pz_script && file(pz_script).exists()
+def use_pzlast = (params.align_samples_to_catalog_aligner == 'pzlast') && pz_script && file(pz_script).exists()
 
 // 使用するアライナーのパスを決定 (pzlast の条件が揃わなければ mmseqs2.nf を選択)
 def aligner_path = use_pzlast ? pz_script : "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
@@ -31,7 +31,7 @@ include { BUILD_REF_DB_NUCL_SUB; MAP_NUCL_SUB } from "${aligner_path}"
 // 2. マッピングサブワークフロー（処理の本体）
 // ==========================================
 
-workflow ALIGN_SAMPLES_TO_ORFS_SUB {
+workflow ALIGN_SAMPLES_TO_CATALOG_SUB {
     take:
     p
     target_ref_or_db  // マッピング先リファレンス (塩基配列 FASTA等) または ビルド済み DB インデックス
@@ -39,7 +39,7 @@ workflow ALIGN_SAMPLES_TO_ORFS_SUB {
 
     main:
     // --- A. DB (インデックス) の準備 ---
-    if (params.align_samples_to_orfs_is_prebuilt_db) {
+    if (params.align_samples_to_catalog_is_prebuilt_db) {
         target_db = target_ref_or_db
     } else {
         target_db = BUILD_REF_DB_NUCL_SUB(p, target_ref_or_db).ref_db
@@ -64,44 +64,44 @@ workflow ALIGN_SAMPLES_TO_ORFS_SUB {
 // A. DB インデックスの作成のみを実行
 workflow BUILD_REF_DB_ONLY {
     p          = createNullParamsChannel()
-    target_ref = createSeqsChannel(params.align_samples_to_orfs_fasta)
+    target_ref = createSeqsChannel(params.align_samples_to_catalog_fasta)
 
     db_out = BUILD_REF_DB_NUCL_SUB(p, target_ref)
 
     db_out.ref_db.view { id, db_path ->
-        "[BUILD_REF_DB_ONLY] Created Index/DB (${params.align_samples_to_orfs_aligner}): ${id} -> ${db_path}"
+        "[BUILD_REF_DB_ONLY] Created Index/DB (${params.align_samples_to_catalog_aligner}): ${id} -> ${db_path}"
     }
 }
 
-// B. 未構築FASTAから全行程を実行 (-entry ALIGN_SAMPLES_TO_ORFS_ALL)
-workflow ALIGN_SAMPLES_TO_ORFS_ALL {
+// B. 未構築FASTAから全行程を実行 (-entry ALIGN_SAMPLES_TO_CATALOG_ALL)
+workflow ALIGN_SAMPLES_TO_CATALOG_ALL {
     p          = createNullParamsChannel()
-    target_ref = createSeqsChannel(params.align_samples_to_orfs_fasta)
-    reads      = createSeqsChannel(params.align_samples_to_orfs_reads)
+    target_ref = createSeqsChannel(params.align_samples_to_catalog_fasta)
+    reads      = createSeqsChannel(params.align_samples_to_catalog_reads)
 
-    params.align_samples_to_orfs_is_prebuilt_db = false
+    params.align_samples_to_catalog_is_prebuilt_db = false
 
-    out_ch = ALIGN_SAMPLES_TO_ORFS_SUB(p, target_ref, reads)
+    out_ch = ALIGN_SAMPLES_TO_CATALOG_SUB(p, target_ref, reads)
     out_ch.out.view { i -> "ALIGNMENT OUT (m8): $i" }
 }
 
-// C. 作成済み DB を使用してマッピングを実行 (-entry ALIGN_SAMPLES_TO_ORFS_WITH_DB)
-workflow ALIGN_SAMPLES_TO_ORFS_WITH_DB {
+// C. 作成済み DB を使用してマッピングを実行 (-entry ALIGN_SAMPLES_TO_CATALOG_WITH_DB)
+workflow ALIGN_SAMPLES_TO_CATALOG_WITH_DB {
     p         = createNullParamsChannel()
-    target_db = createSeqsChannel(params.align_samples_to_orfs_prebuilt_db)
-    reads     = createSeqsChannel(params.align_samples_to_orfs_reads)
+    target_db = createSeqsChannel(params.align_samples_to_catalog_prebuilt_db)
+    reads     = createSeqsChannel(params.align_samples_to_catalog_reads)
 
-    params.align_samples_to_orfs_is_prebuilt_db = true
+    params.align_samples_to_catalog_is_prebuilt_db = true
 
-    out_ch = ALIGN_SAMPLES_TO_ORFS_SUB(p, target_db, reads)
+    out_ch = ALIGN_SAMPLES_TO_CATALOG_SUB(p, target_db, reads)
     out_ch.out.view { i -> "ALIGNMENT OUT (m8 / PREBUILT DB): $i" }
 }
 
 // デフォルトエントリーポイント
 workflow {
-    if (params.align_samples_to_orfs_is_prebuilt_db) {
-        ALIGN_SAMMPLES_TO_ORFS_WITH_DB()
+    if (params.align_samples_to_catalog_is_prebuilt_db) {
+        ALIGN_SAMMPLES_TO_CATALOG_WITH_DB()
     } else {
-        ALIGN_SAMPLES_TO_ORFS_ALL()
+        ALIGN_SAMPLES_TO_CATALOG_ALL()
     }
 }

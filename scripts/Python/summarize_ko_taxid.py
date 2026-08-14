@@ -42,7 +42,13 @@ def process_sample(filepath, out_prefix, min_anno_pident=0.0, ko_map_path=None, 
     # --- 1. KO 集計 ---
     if 'ko' in df.columns:
         df_ko = df[['orf_id', 'ko']].dropna().drop_duplicates()
-        df_ko = df_ko[df_ko['ko'] != 'N/A']
+        df_ko = df_ko[df_ko['ko'] != 'N/A'].copy()
+        
+        # セミコロン区切りの値を分割して展開
+        df_ko['ko'] = df_ko['ko'].str.split(';')
+        df_ko = df_ko.explode('ko')
+        df_ko['ko'] = df_ko['ko'].str.strip()
+        df_ko = df_ko.drop_duplicates()
         
         total_ko_orfs = len(df_ko['orf_id'].unique())
         ko_counts = df_ko['ko'].value_counts().reset_index()

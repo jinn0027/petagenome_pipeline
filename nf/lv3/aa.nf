@@ -10,21 +10,24 @@ def MERGE_FASTA_MAX_MEMORY  = 16
 def MERGE_FASTA_MAX_THREADS = 4
 
 // 3. 上限値による動的クリッピング
-params.merge_fasta_memory  = Math.min(params.memory as Integer, MERGE_FASTA_MAX_MEMORY)
-params.merge_fasta_threads = Math.min(params.threads as Integer, MERGE_FASTA_MAX_THREADS)
+params.merge_fasta_memory   = Math.min(params.memory as Integer, MERGE_FASTA_MAX_MEMORY)
+params.merge_fasta_threads  = Math.min(params.threads as Integer, MERGE_FASTA_MAX_THREADS)
 
 include { createNullParamsChannel; createSeqsChannel; getParam; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
-include { FASTP_SUB }                 from "${params.petagenomeDir}/nf/lv1/fastp.nf"
-include { REMOVE_HOST_SUB }           from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
-include { ASSEMBLY_SUB }              from "${params.petagenomeDir}/nf/lv2/assembly.nf"
-include { PRODIGAL_SUB }              from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
-include { ANNOTATE_ORFS_SUB }         from "${params.petagenomeDir}/nf/lv2/annotate_orfs_prot.nf"
-include { ALIGN_SAMPLES_TO_ORFS_SUB } from "${params.petagenomeDir}/nf/lv2/align_samples_to_orfs.nf"
-include { ANNOTATE_SAMPLES_SUB }      from "${params.petagenomeDir}/nf/lv2/annotate_samples.nf"
-include { SUMMARIZE_KO_TAXID_SUB }    from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
+include { FASTP_SUB }                    from "${params.petagenomeDir}/nf/lv1/fastp.nf"
+include { REMOVE_HOST_SUB }              from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
+include { ASSEMBLY_SUB }                 from "${params.petagenomeDir}/nf/lv2/assembly.nf"
+include { PRODIGAL_SUB }                 from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
+include { ANNOTATE_CATALOG_SUB }         from "${params.petagenomeDir}/nf/lv2/annotate_catalog_prot.nf"
+include { ALIGN_SAMPLES_TO_CATALOG_SUB } from "${params.petagenomeDir}/nf/lv2/align_samples_to_catalog.nf"
+include { ANNOTATE_SAMPLES_SUB }         from "${params.petagenomeDir}/nf/lv2/annotate_samples.nf"
+include { SUMMARIZE_KO_TAXID_SUB }       from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
 
-// 全サンプルの FASTA (.faa や .fna) を 1 つに結合する汎用プロセス
+// 新しく作成したカタログ構築サブワークフローをインポート
+include { NR_CATALOG_SUB }          from "${params.petagenomeDir}/nf/lv2/nr_catalog.nf"
+
+// 全サンプルの FASTA (.faa や .fna) を単純に 1 つに結合する汎用プロセス（カタログ作成前の入力用）
 process merge_fasta {
     tag "${ext}"
 
@@ -40,17 +43,18 @@ process merge_fasta {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        // stageAs: "?/*" を指定してファイル名の重複衝突を防ぐ
         tuple path(fasta_files, stageAs: "?/*"), val(ext)
 
     output:
         tuple val("merged_all_samples"), path("combined_orfs.${ext}"), emit: merged_fasta
 
     script:
-    """
-    echo "${processProfile(task)}" | tee prof.txt
-    cat ${fasta_files} > combined_orfs.${ext}
-    """
+        """
+        echo "${processProfile(task)}" | tee prof.txt
+        
+        # すべてのサンプルのFASTAファイルを結合（ここでは単に結合し、IDのリネームは nr_catalog 側に任せる）
+        cat ${fasta_files} > combined_orfs.${ext}
+        """
 }
 
 // ==========================================
@@ -60,13 +64,13 @@ process merge_fasta {
 workflow BACTERIOME_PIPELINE_SUB {
     take:
     p
-    host_ref       // ホストゲノム(FASTAまたはDB)
-    ref_or_db      // アノテーション用リファレンス
-    taxid_map      // uniprot_to_taxid.tsv
-    ko_map         // uniprot_to_ko.tsv
-    ko_name_map    // ko_to_name.tsv (任意)
-    taxid_name_map // taxid_to_name.tsv (任意)
-    reads          // 入力リードペア [ pair_id, [R1, R2] ]
+    host_ref           // ホストゲノム(FASTAまたはDB)
+    ref_or_db          // アノテーション用リファレンス
+    taxid_map          // uniprot_to_taxid.tsv
+    ko_map             // uniprot_to_ko.tsv
+    ko_name_map        // ko_to_name.tsv (任意)
+    taxid_name_map     // taxid_to_name.tsv (任意)
+    reads              // 入力リードペア [ pair_id, [R1, R2] ]
 
     main:
     // 1. FASTP による QC・トリミング
@@ -93,28 +97,26 @@ workflow BACTERIOME_PIPELINE_SUB {
     merge_inputs_ch = all_faa_files.map { faa_list -> tuple(faa_list, "faa") }
         .mix(all_fna_files.map { fna_list -> tuple(fna_list, "fna") })
 
-    // merge_fasta を 1 度呼び出し（内部で並列 2 タスクが起動）
+    // merge_fasta を呼び出し（全サンプルのfaa / fnaをそれぞれ結合）
     merged_fastas = merge_fasta(merge_inputs_ch)
 
     // 出力結果を .faa と .fna に分岐
     merged_faa_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.faa') }
     merged_fna_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.fna') }
 
-    // アノテーション（タンパク質 .faa 側）
-    annotation_res = ANNOTATE_ORFS_SUB(p, ref_or_db, merged_faa_fasta, taxid_map, ko_map)
+    // 6. NRカタログ構築 (MMseqs2によるクラスタリング ＆ NRCAT連番ID化 ＆ 対応表作成)
+    nr_catalog_res = NR_CATALOG_SUB(p, merged_faa_fasta, merged_fna_fasta)
 
-    // ORF マッピング（各サンプルの ORF vs 統合 ORF カタログ）
-    samples_mapping_res = ALIGN_SAMPLES_TO_ORFS_SUB(p, merged_fna_fasta, sample_orf_fna_ch)
+    // 7. アノテーション（クラスタリング＆リネーム済みの代表アミノ酸カタログ .faa 側に対して実行）
+    annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_catalog_res.rep_faa, taxid_map, ko_map)
 
-    // 6. ORF -> TaxID / KO 対応テーブルの構築
-    // ANNOTATE_SAMPLES_SUB 内で 1 vs N (samples_mapping_res.out vs annotation_res.annotated) の結合を行う
-    samples_anno_res = ANNOTATE_SAMPLES_SUB(
-        p,
-        samples_mapping_res.out,
-        annotation_res.annotated
-    )
+    // 8. ORF マッピング（各サンプルの ORF vs カタログ塩基配列 .fna）
+    samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, nr_catalog_res.rep_fna, sample_orf_fna_ch)
 
-    // 7. サンプルごとの KO / TaxID 比率の集計処理 
+    // 9. ORF -> TaxID / KO 対応テーブルの構築
+    samples_anno_res = ANNOTATE_SAMPLES_SUB(p, samples_mapping_res.out, annotation_res.annotated)
+
+    // 10. サンプルごとの KO / TaxID 比率の集計処理 
     summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
 
     emit:
@@ -126,6 +128,10 @@ workflow BACTERIOME_PIPELINE_SUB {
     stats              = asm_res.sts
     orfs               = orf_res.out
     annotated          = annotation_res.annotated
+    hit_ids            = annotation_res.hit_ids
+    nr_catalog_faa     = nr_catalog_res.rep_faa
+    nr_catalog_fna     = nr_catalog_res.rep_fna
+    id_mapping         = nr_catalog_res.mapping
     samples_map_out    = samples_mapping_res.out
     samples_anno       = samples_anno_res.samples_anno
     ko_summary         = summary_res.ko_summary
@@ -162,7 +168,7 @@ workflow BACTERIOME_PIPELINE_ALL {
 
     // 2. 各種リファレンス・マップファイルの準備
     host_ref  = createSeqsChannel(params.remove_host_ref_fasta_or_db)
-    ref_or_db = createSeqsChannel(params.annotate_orfs_prot_ref_or_db)
+    ref_or_db = createSeqsChannel(params.annotate_catalog_prot_ref_or_db)
     taxid_map = file(params.taxid_map_path, checkIfExists: true)
     ko_map    = file(params.ko_map_path, checkIfExists: true)
 
@@ -179,6 +185,9 @@ workflow BACTERIOME_PIPELINE_ALL {
     out_ch.contigs.view            { i -> "ASSEMBLY CONTIGS    : $i" }
     out_ch.orfs.view               { i -> "PRODIGAL ORFS       : $i" }
     out_ch.annotated.view          { i -> "ANNOTATED TSV       : $i" }
+    out_ch.nr_catalog_faa.view     { i -> "NR CATALOG FAA      : $i" }
+    out_ch.nr_catalog_fna.view     { i -> "NR CATALOG FNA      : $i" }
+    out_ch.id_mapping.view         { i -> "ID MAPPING TSV      : $i" }
     out_ch.samples_map_out.view    { i -> "SAMPLES MAP RESULT  : $i" }
     out_ch.samples_anno.view       { i -> "SAMPLES KO TAXID TSV: $i" }
     out_ch.ko_summary.view         { i -> "KO SUMMARY TSV      : $i" }

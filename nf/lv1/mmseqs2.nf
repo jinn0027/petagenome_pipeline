@@ -49,7 +49,7 @@ params.mmseqs2_search_max_seqs = 300 // Maximum results per query sequence allow
 params.mmseqs2_search_sort_results = 0 // Sort results: 0: no sorting, 1: sort by E-value (Alignment) or seq.id. (Hamming) [0]
 
 //=== cluster params
-params.mmseqs2_cluster_mode = "cluster" // cluster or linclust
+params.mmseqs2_cluster_mode = "linclust" // cluster or linclust
 
 //=== cluster [cluster]
 params.mmseqs2_cluster_s = 4.0 // Sensitivity: 1.0 faster; 4.0 fast; 7.5 sensitive [4.000]
@@ -62,7 +62,7 @@ params.mmseqs2_cluster_cov_mode = 0 // 0: coverage of query and target
                                     // 3: target seq. length has to be at least x% of query length
                                     // 4: query seq. length has to be at least x% of target length
                                     // 5: short seq. needs to be at least x% of the other seq. length [0]
-params.mmseqs2_cluster_min_seq_id = 0.0 // List matches above this sequence identity (for clustering) (range 0.0-1.0) [0.000]
+params.mmseqs2_cluster_min_seq_id = 0.95 // List matches above this sequence identity (for clustering) (range 0.0-1.0) [0.95]
 params.mmseqs2_cluster_min_aln_len = 0 // Minimum alignment length (range 0-INT_MAX) [0]
 params.mmseqs2_cluster_split = 0 // Split input into N equally distributed chunks. 0: set the best split automatically [0]
 params.mmseqs2_cluster_split_mode = 2 // 0: split target db; 1: split query db; 2: auto, depending on main memory [2]
@@ -80,7 +80,7 @@ params.mmseqs2_linclust_cov_mode = 0 // 0: coverage of query and target
                                      // 3: target seq. length has to be at least x% of query length
                                      // 4: query seq. length has to be at least x% of target length
                                      // 5: short seq. needs to be at least x% of the other seq. length [0]
-params.mmseqs2_linclust_min_seq_id = 0.0 // List matches above this sequence identity (for clustering) (range 0.0-1.0) [0.900]
+params.mmseqs2_linclust_min_seq_id = 0.95 // List matches above this sequence identity (for clustering) (range 0.0-1.0) [0.95]
 params.mmseqs2_linclust_min_aln_len = 0 // Minimum alignment length (range 0-INT_MAX) [0]
 params.mmseqs2_linclust_split_memory_limit = 0 // Set max memory per split. E.g. 800B, 5K, 10M, 1G. Default (0) to all available system memory [0]
 params.mmseqs2_linclust_sort_results = 0 // Sort results: 0: no sorting, 1: sort by E-value (Alignment) or seq.id. (Hamming) [0]

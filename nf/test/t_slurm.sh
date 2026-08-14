@@ -127,24 +127,24 @@ case ${test} in
                  --prodigal_procedure "meta" \
                  --prodigal_read "${longFnaGz1}"
         ;;
-    "annotate_orfs_prot")
+    "annotate_catalog_prot")
         db=${extDir}/uniprot_refs/mmseqs2
         if [ ! -d ${db} ] ; then
             mkdir -p $(dirname ${db})
             ref=${extDir}/uniprot_refs/uniprot_sprot.fasta.gz 
-            nextflow run ${nfDir}/lv2/annotate_orfs_prot.nf -entry BUILD_REF_DB_ONLY ${args} \
-                     --annotate_orfs_prot_aligner mmseqs2 \
-                     --annotate_orfs_prot_ref_fasta ${ref} \
+            nextflow run ${nfDir}/lv2/annotate_catalog_prot.nf -entry BUILD_REF_DB_ONLY ${args} \
+                     --annotate_catalog_prot_aligner mmseqs2 \
+                     --annotate_catalog_prot_ref_fasta ${ref} \
 		     --mmseqs2_ref_type 1
             mv ${outdir}/BUILD_REF_DB_ONLY:BUILD_REF_DB_SUB:mmseqs2_makerefdb/00_uniprot ${db}
         fi
-        nextflow run ${nfDir}/lv2/annotate_orfs_prot.nf -entry ANNOTATE_WITH_DB ${args} \
-                 --annotate_orfs_prot_aligner mmseqs2 \
-                 --annotate_orfs_prot_is_prebuilt_db "true" \
-                 --annotate_orfs_prot_prebuilt_db ${db} \
-                 --annotate_orfs_prot_orfs ${shortFnaGz1} \
-		 --annotate_orfs_prot_taxid_map ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
-		 --annotate_orfs_prot_ko_map ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
+        nextflow run ${nfDir}/lv2/annotate_catalog_prot.nf -entry ANNOTATE_WITH_DB ${args} \
+                 --annotate_catalog_prot_aligner mmseqs2 \
+                 --annotate_catalog_prot_is_prebuilt_db "true" \
+                 --annotate_catalog_prot_prebuilt_db ${db} \
+                 --annotate_catalog_prot_orfs ${shortFnaGz1} \
+		 --annotate_catalog_prot_taxid_map ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
+		 --annotate_catalog_prot_ko_map ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
                  --prodigal_procedure "meta" \
                  --mmseqs2_ref_type 1 \
                  --mmseqs2_qry_type 1
@@ -155,9 +155,9 @@ case ${test} in
                  --remove_host_is_prebuilt_db "true" \
                  --remove_host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db" \
                  --assembly_assembler "megahit" \
-                 --annotate_orfs_prot_aligner mmseqs2 \
-                 --annotate_orfs_prot_is_prebuilt_db "true" \
-                 --annotate_orfs_prot_ref_or_db ${extDir}/uniprot_refs/mmseqs2 \
+                 --annotate_catalog_prot_aligner mmseqs2 \
+                 --annotate_catalog_prot_is_prebuilt_db "true" \
+                 --annotate_catalog_prot_ref_or_db ${extDir}/uniprot_refs/mmseqs2 \
                  --taxid_map_path ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
                  --ko_map_path ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
                  --taxid_name_map_path ${extDir}/uniprot_refs/taxid_to_name.tsv \
