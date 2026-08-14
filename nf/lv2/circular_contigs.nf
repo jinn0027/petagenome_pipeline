@@ -93,7 +93,7 @@ process classify {
 
     # 2. AWKで一括解析し、各コンティグの最大アライメント末尾座標(pos_end)を抽出
     awk -F "\\t" -v al_self="${al_self}" '
-    BEGIN { OFS="\t" }
+    BEGIN { OFS="\\t" }
     {
         q1 = (\$7 < \$8) ? \$7 : \$8;
         q2 = (\$7 < \$8) ? \$8 : \$7;
@@ -122,7 +122,7 @@ process classify {
 
     # 3. ID リストと BED ファイルの作成
     cut -f1 ${qry_id}/circular_positions.txt > ${qry_id}/circular_ids.txt
-    awk 'BEGIN{OFS="\t"} {print \$1, 1, \$2}' ${qry_id}/circular_positions.txt > ${qry_id}/cut.bed
+    awk 'BEGIN{OFS="\\t"} {print \$1, 1, \$2}' ${qry_id}/circular_positions.txt > ${qry_id}/cut.bed
 
     # 4. SeqKit による一括分画と一括切断処理 (Bashループなし)
     if [ -s ${qry_id}/circular_ids.txt ]; then
