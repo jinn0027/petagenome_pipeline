@@ -19,7 +19,7 @@ params.nr_catalog_filter_fna_threads   = Math.min(params.threads as Integer, FIL
 
 include { createNullParamsChannel; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
-include { CLUSTER_SUB } from "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
+include { BUILD_REF_DB_PROT_SUB; CLUSTER_PROT_SUB } from "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
 
 // ==========================================
 // 1. プロセス定義
@@ -129,13 +129,14 @@ workflow NR_CATALOG_SUB {
     merged_fna // [ "merged_all_samples", merged.fna ]
 
     main:
-    // 1. タンパク質ベースのクラスタリング
+    // 1. タンパク質ベースのクラスタリング用 DB 作成 & クラスタリング実行
     cluster_in = merged_faa.map { id, path -> tuple("nr_prot", path) }
-    clustered = CLUSTER_SUB(p, cluster_in)
+    ref_db     = BUILD_REF_DB_PROT_SUB(p, cluster_in)
+    clustered  = CLUSTER_PROT_SUB(p, ref_db)
 
     // 2. 代表配列のIDリネーム & 対応表作成 (NRCAT0000001形式へ)
     // 出力: [ "nr_catalog", nr_catalog.faa, id_mapping.tsv ]
-    renamed_catalog = rename_catalog(clustered.out)
+    renamed_catalog = rename_catalog(clustered)
 
     // 3. 塩基配列のフィルタリングとヘッダーの連番置換
     // renamed_catalog の中から [id, faa, mapping_tsv] を受け取り、mapping_tsv をフィルタに利用
@@ -154,7 +155,7 @@ workflow NR_CATALOG_SUB {
 // ==========================================
 
 workflow NR_CATALOG_ALL {
-    p          = createNullParamsChannel()
+    p         = createNullParamsChannel()
     catalog_faa = createSeqsChannel(params.nr_catalog_faa)
     catalog_fna = createSeqsChannel(params.nr_catalog_fna)
 
