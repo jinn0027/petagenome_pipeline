@@ -6,14 +6,14 @@ params.memory  = 16
 params.threads = 4
 
 // 2. プロセス固有の上限設定
-def RENAME_CATALOG_MAX_MEMORY = 4
-def RENAME_CATALOG_MAX_THREADS = 1
-def FILTER_FNA_MAX_MEMORY   = 8
-def FILTER_FNA_MAX_THREADS  = 2
+def SANITIZE_MAX_MEMORY      = 8
+def SANITIZE_MAX_THREADS     = 2
+def FILTER_FNA_MAX_MEMORY    = 8
+def FILTER_FNA_MAX_THREADS   = 2
 
 // 3. 上限値による動的クリッピング
-params.nr_catalog_rename_catalog_memory  = Math.min(params.memory as Integer, RENAME_CATALOG_MAX_MEMORY)
-params.nr_catalog_rename_catalog_threads = Math.min(params.threads as Integer, RENAME_CATALOG_MAX_THREADS)
+params.nr_catalog_sanitize_memory    = Math.min(params.memory as Integer, SANITIZE_MAX_MEMORY)
+params.nr_catalog_sanitize_threads   = Math.min(params.threads as Integer, SANITIZE_MAX_THREADS)
 params.nr_catalog_filter_fna_memory    = Math.min(params.memory as Integer, FILTER_FNA_MAX_MEMORY)
 params.nr_catalog_filter_fna_threads   = Math.min(params.threads as Integer, FILTER_FNA_MAX_THREADS)
 
@@ -25,52 +25,84 @@ include { BUILD_REF_DB_PROT_SUB; CLUSTER_PROT_SUB } from "${params.petagenomeDir
 // 1. プロセス定義
 // ==========================================
 
-process rename_catalog {
-    tag "rename_catalog"
+// 1. 入力段階で FAA と FNA の両方を一意なローカル連番ID (GENE0000001...) に同期リネームするプロセス
+process sanitize_and_rename {
+    tag "sanitize_${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb      = "${params.nr_catalog_rename_catalog_memory}"
-    def threads = "${params.nr_catalog_rename_catalog_threads}"
+    def gb      = "${params.nr_catalog_sanitize_memory}"
+    def threads = "${params.nr_catalog_sanitize_threads}"
 
     memory params.executor == "sge" ? null : "${gb} GB"
     cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple val(id), path(rep_faa)
+        tuple val(id), path(faa), path(fna)
     output:
-        tuple val("nr_catalog"), path("nr_catalog.faa"), path("id_mapping.tsv")
+        tuple val(id), path("sanitized.faa"), path("sanitized.fna"), path("initial_mapping.tsv")
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
-        # FASTAのヘッダーを連番(NRCAT0000001...)に書き換えつつ、旧IDとの対応表(id_mapping.tsv)を作成するPythonスクリプト
         python3 - << 'EOF'
-        import sys
+        input_faa = "${faa}"
+        input_fna = "${fna}"
+        out_faa = "sanitized.faa"
+        out_fna = "sanitized.fna"
+        mapping = "initial_mapping.tsv"
 
-        input_faa = "${rep_faa}"
-        output_faa = "nr_catalog.faa"
-        mapping_tsv = "id_mapping.tsv"
+        # FAAの読み込みとユニークID化
+        faa_dict = {}
+        with open(input_faa, "r") as f:
+            header = None
+            seq_lines = []
+            for line in f:
+                if line.startswith(">"):
+                    if header:
+                        faa_dict[header.strip()[1:].split()[0]] = "".join(seq_lines)
+                    header = line
+                    seq_lines = []
+                else:
+                    seq_lines.append(line.strip())
+            if header:
+                faa_dict[header.strip()[1:].split()[0]] = "".join(seq_lines)
+
+        # FNAの読み込みとユニークID化
+        fna_dict = {}
+        with open(input_fna, "r") as f:
+            header = None
+            seq_lines = []
+            for line in f:
+                if line.startswith(">"):
+                    if header:
+                        fna_dict[header.strip()[1:].split()[0]] = "".join(seq_lines)
+                    header = line
+                    seq_lines = []
+                else:
+                    seq_lines.append(line.strip())
+            if header:
+                fna_dict[header.strip()[1:].split()[0]] = "".join(seq_lines)
+
+        # 両方に共通して存在するキーに対して同期した連番を振る
+        common_keys = [k for k in faa_dict.keys() if k in fna_dict]
 
         count = 1
-        with open(input_faa, "r") as fin, open(output_faa, "w") as fout, open(mapping_tsv, "w") as fmap:
-            for line in fin:
-                if line.startswith(">"):
-                    old_id = line.strip()[1:].split()[0]
-                    new_id = f"NRCAT{count:07d}"
-                    fout.write(f">{new_id}\\n")
-                    fmap.write(f"{new_id}\\t{old_id}\\n")
-                    count += 1
-                else:
-                    fout.write(line)
+        with open(out_faa, "w") as ofaa, open(out_fna, "w") as ofna, open(mapping, "w") as fmap:
+            for old_id in common_keys:
+                new_id = f"GENE{count:09d}"
+                ofaa.write(f">{new_id}\n{faa_dict[old_id]}\n")
+                ofna.write(f">{new_id}\n{fna_dict[old_id]}\n")
+                fmap.write(f"{new_id}\t{old_id}\n")
+                count += 1
         EOF
         """
 }
 
 process filter_fna_by_faa {
     tag "filter_fna"
-    container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
+    container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
@@ -82,38 +114,38 @@ process filter_fna_by_faa {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple val(id), path(fna)
-        path(id_mapping) // id_mapping.tsv から旧IDを抽出して seqkit grep に使う
+        tuple val(id), path(sanitized_fna)
+        tuple val(rep_id), path(rep_faa) // クラスタリング後の代表アミノ酸配列（IDはサニタイズ済みのGENE...）
     output:
         tuple val("nr_catalog"), path("nr_catalog.fna")
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
-        # mappingファイルから旧IDの列（2列目）を抽出して一時ファイルに落とし、seqkitに渡す
-        awk '{print \$2}' ${id_mapping} > old_rep_ids.txt
-        seqkit grep -f old_rep_ids.txt ${fna} > nr_catalog_raw.fna
-        
-        # 塩基配列側もアミノ酸側と同様に連番ID（NRCAT...）へヘッダーを置換する
         python3 - << 'EOF'
-        mapping = {}
-        with open("${id_mapping}") as f:
+        # 代表アミノ酸配列から残すべきIDのセットを作成する
+        rep_ids = set()
+        with open("${rep_faa}", "r") as f:
             for line in f:
-                new_id, old_id = line.strip().split("\\t")
-                mapping[old_id] = new_id
+                if line.startswith(">"):
+                    rep_id = line.strip()[1:].split()[0]
+                    rep_ids.add(rep_id)
 
-        input_fna = "nr_catalog_raw.fna"
+        input_fna = "${sanitized_fna}"
         output_fna = "nr_catalog.fna"
 
         with open(input_fna, "r") as fin, open(output_fna, "w") as fout:
+            write_flag = False
             for line in fin:
                 if line.startswith(">"):
-                    orig_header = line.strip()[1:]
-                    # seqkit grep はヒットした配列のヘッダーをそのまま返すため、先頭の単語（ID）でマッピングを引く
-                    orig_id = orig_header.split()[0]
-                    new_id = mapping.get(orig_id, orig_id)
-                    fout.write(f">{new_id}\\n")
+                    orig_id = line.strip()[1:].split()[0]
+                    if orig_id in rep_ids:
+                        fout.write(line)
+                        write_flag = True
+                    else:
+                        write_flag = False
                 else:
-                    fout.write(line)
+                    if write_flag:
+                        fout.write(line)
         EOF
         """
 }
@@ -129,25 +161,26 @@ workflow NR_CATALOG_SUB {
     fna // [ id, fna ]
 
     main:
+    // 0. 入力データを結合して、最初に一意なローカルID（GENE...）へ同期リネーム
+    input_ch = faa.join(fna) // [ id, faa_path, fna_path ]
+    sanitized = sanitize_and_rename(input_ch) // [ id, sanitized_faa, sanitized_fna, initial_mapping ]
+
     // 1. タンパク質ベースのクラスタリング用 DB 作成 & クラスタリング実行
-    cluster_in = faa.map { id, path -> tuple("nr_prot", path) }
+    cluster_in = sanitized.map { id, faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
     ref_db     = BUILD_REF_DB_PROT_SUB(p, cluster_in)
-    clustered  = CLUSTER_PROT_SUB(p, ref_db)
+    clustered  = CLUSTER_PROT_SUB(p, ref_db) // 出力: [ id, rep_faa ] (IDはGENE...のまま)
 
-    // 2. 代表配列のIDリネーム & 対応表作成 (NRCAT0000001形式へ)
-    // 出力: [ "nr_catalog", nr_catalog.faa, id_mapping.tsv ]
-    renamed_catalog = rename_catalog(clustered)
+    // 2. サニタイズ済みFNAから、クラスタリングの代表配列に対応するものだけをそのまま抽出
+    sanitized_fna_ch = sanitized.map { id, faa_p, fna_p, mapping -> fna_p }
+    nr_fna = filter_fna_by_faa(sanitized_fna_ch.combine(clustered), clustered)
 
-    // 3. 塩基配列のフィルタリングとヘッダーの連番置換
-    // renamed_catalog の中から [id, faa, mapping_tsv] を受け取り、mapping_tsv をフィルタに利用
-    mapping_ch = renamed_catalog.map { id, faa, mapping -> tuple(id, mapping) }
-    
-    nr_fna = filter_fna_by_faa(fna, mapping_ch.map { it[1] })
+    // 初期マッピングも必要に応じて出力できるようにタプルを整形
+    mapping_ch = sanitized.map { id, faa_p, fna_p, mapping -> tuple(id, mapping) }
 
     emit:
-    rep_faa = renamed_catalog.map { id, faa, mapping -> tuple(id, faa) }
-    rep_fna = nr_fna
-    mapping = mapping_ch.map { id, mapping -> tuple(id, mapping) }
+    rep_faa = clustered // サニタイズされた一意なID（GENE...）を維持した代表アミノ酸配列
+    rep_fna = nr_fna    // 対応する塩基配列カタログ
+    mapping = mapping_ch
 }
 
 // ==========================================
@@ -155,7 +188,7 @@ workflow NR_CATALOG_SUB {
 // ==========================================
 
 workflow NR_CATALOG_ALL {
-    p         = createNullParamsChannel()
+    p           = createNullParamsChannel()
     catalog_faa = createSeqsChannel(params.nr_catalog_faa)
     catalog_fna = createSeqsChannel(params.nr_catalog_fna)
 

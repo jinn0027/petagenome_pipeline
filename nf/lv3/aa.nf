@@ -8,14 +8,18 @@ params.threads = 4
 // 2. プロセス固有の上限設定
 def MERGE_FASTA_MAX_MEMORY  = 16
 def MERGE_FASTA_MAX_THREADS = 4
+def FILTER_CATALOG_MAX_MEMORY  = 8
+def FILTER_CATALOG_MAX_THREADS = 2
 
 // 3. 上限値による動的クリッピング
 params.merge_fasta_memory   = Math.min(params.memory as Integer, MERGE_FASTA_MAX_MEMORY)
 params.merge_fasta_threads  = Math.min(params.threads as Integer, MERGE_FASTA_MAX_THREADS)
+params.filter_catalog_memory   = Math.min(params.memory as Integer, FILTER_CATALOG_MAX_MEMORY)
+params.filter_catalog_threads  = Math.min(params.threads as Integer, FILTER_CATALOG_MAX_THREADS)
 
 include { createNullParamsChannel; createSeqsChannel; getParam; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
-include { FASTP_SUB }                    from "${params.petagenomeDir}/nf/lv1/fastp.nf"
+include { FASTP_SUB }                  from "${params.petagenomeDir}/nf/lv1/fastp.nf"
 include { REMOVE_HOST_SUB }              from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
 include { ASSEMBLY_SUB }                 from "${params.petagenomeDir}/nf/lv2/assembly.nf"
 include { PRODIGAL_SUB }                 from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
@@ -51,9 +55,109 @@ process merge_fasta {
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
-        
-        # すべてのサンプルのFASTAファイルを結合（ここでは単に結合し、IDのリネームは nr_catalog 側に任せる）
         cat ${fasta_files} > combined_orfs.${ext}
+        """
+}
+
+// hit_ids に含まれる ID のみにカタログ（FAA/FNA）をフィルタリングするプロセス
+process filter_catalog_by_hits {
+    tag "${ext}"
+
+    container = "${params.petagenomeDir}/modules/common/el9.sif"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
+
+    def gb      = "${params.filter_catalog_memory}"
+    def threads = "${params.filter_catalog_threads}"
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
+    input:
+        tuple path(fasta_file), val(ext)
+        path hit_ids
+
+    output:
+        tuple val("filtered_catalog"), path("filtered_catalog.${ext}"), emit: filtered_fasta
+
+    script:
+        """
+        echo "${processProfile(task)}" | tee prof.txt
+        python3 - << 'EOF'
+        # 1. hit_ids の読み込み
+        valid_ids = set()
+        with open("${hit_ids}", "r") as f:
+            for line in f:
+                qid = line.strip()
+                if qid:
+                    valid_ids.add(qid)
+
+        # 2. FASTAのフィルタリング
+        input_fasta = "${fasta_file}"
+        output_fasta = "filtered_catalog.${ext}"
+
+        with open(input_fasta, "r") as fin, open(output_fasta, "w") as fout:
+            write_flag = False
+            for line in fin:
+                if line.startswith(">"):
+                    header = line.strip()[1:].split()[0]
+                    if header in valid_ids:
+                        fout.write(line)
+                        write_flag = True
+                    else:
+                        write_flag = False
+                else:
+                    if write_flag:
+                        fout.write(line)
+        EOF
+        """
+}
+
+// アノテーションの hit_ids に基づいて id_mapping.tsv をフィルタリングするプロセス
+process filter_mapping_by_hits {
+    tag "filter_mapping"
+
+    container = "${params.petagenomeDir}/modules/common/el9.sif"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
+
+    def gb      = "${params.filter_catalog_memory}"
+    def threads = "${params.filter_catalog_threads}"
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
+    input:
+        path id_mapping
+        path hit_ids
+
+    output:
+        tuple val("filtered_mapping"), path("filtered_id_mapping.tsv"), emit: filtered_mapping
+
+    script:
+        """
+        echo "${processProfile(task)}" | tee prof.txt
+        python3 - << 'EOF'
+        # 1. hit_ids の読み込み
+        valid_ids = set()
+        with open("${hit_ids}", "r") as f:
+            for line in f:
+                qid = line.strip()
+                if qid:
+                    valid_ids.add(qid)
+
+        # 2. id_mapping.tsv のフィルタリング (形式: new_id \t old_id)
+        with open("${id_mapping}", "r") as fin, open("filtered_id_mapping.tsv", "w") as fout:
+            for line in fin:
+                parts = line.strip().split("\t")
+                if not parts:
+                    continue
+                catalog_id = parts[0]
+                if catalog_id in valid_ids:
+                    fout.write(line)
+        EOF
         """
 }
 
@@ -103,19 +207,29 @@ workflow BACTERIOME_PIPELINE_SUB {
     merged_faa_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.faa') }
     merged_fna_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.fna') }
 
-    // 6. NRカタログ構築 (MMseqs2によるクラスタリング ＆ NRCAT連番ID化 ＆ 対応表作成)
+    // 6. NRカタログ構築 (MMseqs2によるクラスタリング ＆ 一意なローカルID化 ＆ 対応表作成)
     nr_catalog_res = NR_CATALOG_SUB(p, merged_faa_fasta, merged_fna_fasta)
 
-    // 7. アノテーション（クラスタリング＆リネーム済みの代表アミノ酸カタログ .faa 側に対して実行）
+    // 7. アノテーション（クラスタリング済みの代表アミノ酸カタログ .faa 側に対して実行）
     annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_catalog_res.rep_faa, taxid_map, ko_map)
 
-    // 8. ORF マッピング（各サンプルの ORF vs カタログ塩基配列 .fna）
-    samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, nr_catalog_res.rep_fna, sample_orf_fna_ch)
+    // 8. hit_ids に基づいてカタログ（FAAおよびFNA）、マッピングテーブル (id_mapping)をフィルタリング
+    catalog_to_filter = nr_catalog_res.rep_faa.map { id, path -> tuple(path, "faa") }
+        .mix(nr_catalog_res.rep_fna.map { id, path -> tuple(path, "fna") })
 
-    // 9. ORF -> TaxID / KO 対応テーブルの構築
+    filtered_catalogs = filter_catalog_by_hits(catalog_to_filter, annotation_res.hit_ids)
+
+    filtered_rep_faa = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.faa') }
+    filtered_rep_fna = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.fna') }
+    filtered_mapping_res = filter_mapping_by_hits(nr_catalog_res.mapping.map { id, path -> path }, annotation_res.hit_ids)
+
+    // 9. ORF マッピング（各サンプルの ORF vs フィルタリング済みカタログ塩基配列 .fna）
+    samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, filtered_rep_fna, sample_orf_fna_ch)
+
+    // 10. ORF -> TaxID / KO 対応テーブルの構築
     samples_anno_res = ANNOTATE_SAMPLES_SUB(p, samples_mapping_res.out, annotation_res.annotated)
 
-    // 10. サンプルごとの KO / TaxID 比率の集計処理 
+    // 11. サンプルごとの KO / TaxID 比率の集計処理 
     summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
 
     emit:
@@ -127,15 +241,14 @@ workflow BACTERIOME_PIPELINE_SUB {
     orfs               = orf_res.out
     annotated          = annotation_res.annotated
     hit_ids            = annotation_res.hit_ids
-    nr_catalog_faa     = nr_catalog_res.rep_faa
-    nr_catalog_fna     = nr_catalog_res.rep_fna
-    id_mapping         = nr_catalog_res.mapping
+    nr_catalog_faa     = filtered_rep_faa // フィルタリング済みの代表アミノ酸カタログ
+    nr_catalog_fna     = filtered_rep_fna // フィルタリング済みの代表塩基カタログ
+    id_mapping         = filtered_mapping_res.filtered_mapping // フィルタリング済みのマッピングテーブル
     samples_map_out    = samples_mapping_res.out
     samples_anno       = samples_anno_res.samples_anno
     ko_summary         = summary_res.ko_summary
     tax_summary        = summary_res.tax_summary
 }
-
 
 // ==========================================
 // 2. コマンドライン (-entry) 用エントリーポイント
