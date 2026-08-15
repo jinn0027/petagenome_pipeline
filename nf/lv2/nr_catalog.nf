@@ -88,9 +88,9 @@ count = 1
 with open(out_faa, "w") as ofaa, open(out_fna, "w") as ofna, open(mapping, "w") as fmap:
     for old_id in common_keys:
         new_id = f"GENE{count:09d}"
-        ofaa.write(f">{new_id}\n{faa_dict[old_id]}\n")
-        ofna.write(f">{new_id}\n{fna_dict[old_id]}\n")
-        fmap.write(f"{new_id}\t{old_id}\n")
+        ofaa.write(f">{new_id}\\n{faa_dict[old_id]}\\n")
+        ofna.write(f">{new_id}\\n{fna_dict[old_id]}\\n")
+        fmap.write(f"{new_id}\\t{old_id}\\n")
         count += 1
 EOF
         """
