@@ -42,7 +42,7 @@ process bowtie2_makerefdb {
         mkdir -p ${ref_id}
         bowtie2-build \\
             --threads ${threads} \\
-            --seed ${getParam(p, 'random_seed')} \\
+            --seed ${getParam(p, params, 'random_seed')} \\
             ${ref} \\
             ${ref_id}/ref
         """
@@ -68,7 +68,7 @@ process bowtie2 {
         mkdir -p ${qry_id}
         bowtie2 \\
             -p ${threads} \\
-            --seed ${getParam(p, 'random_seed')} \\
+            --seed ${getParam(p, params, 'random_seed')} \\
             -f \\
             -x ${ref_db}/ref \\
             -U ${qry} \\

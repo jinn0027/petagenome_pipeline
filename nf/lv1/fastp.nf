@@ -46,8 +46,8 @@ process fastp {
             -o ${pair_id}/out_1.fastq.gz \\
             -O ${pair_id}/out_2.fastq.gz \\
             --cut_front --cut_tail \\
-            --cut_mean_quality ${getParam(p, 'fastp_cut_mean_quality')} \\
-            --length_required ${getParam(p, 'fastp_reads_minlength')} \\
+            --cut_mean_quality ${getParam(p, params, 'fastp_cut_mean_quality')} \\
+            --length_required ${getParam(p, params, 'fastp_reads_minlength')} \\
             --json ${pair_id}_fastp.json \\
             --html ${pair_id}_fastp.html
         """

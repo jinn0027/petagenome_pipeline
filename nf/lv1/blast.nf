@@ -60,7 +60,7 @@ process blast_makerefdb {
             makeblastdb \\
                 -in \${ref_} \\
                 -out ${ref_id}/ref \\
-                -dbtype ${getParam(p, 'blast_dbtype')} \\
+                -dbtype ${getParam(p, params, 'blast_dbtype')} \\
                 -parse_seqids
         fi
         """
@@ -95,15 +95,15 @@ process blastn {
         db_siz=\$(ls ${ref_db} 2>/dev/null | wc -l)
         if [ \${qry_siz} -gt 0 ] && [ \${db_siz} -gt 0 ]; then
             blastn \\
-                -task ${getParam(p, 'blast_task')} \\
+                -task ${getParam(p, params, 'blast_task')} \\
                 -num_threads ${threads} \\
                 -query \${qry_} \\
                 -db ${ref_db}/ref \\
-                -perc_identity ${getParam(p, 'blast_perc_identity')} \\
-                -evalue ${getParam(p, 'blast_evalue')} \\
-                -outfmt ${getParam(p, 'blast_outfmt')} \\
-                -num_alignments ${getParam(p, 'blast_num_alignments')} \\
-                -strand ${getParam(p, 'blast_strand')} \\
+                -perc_identity ${getParam(p, params, 'blast_perc_identity')} \\
+                -evalue ${getParam(p, params, 'blast_evalue')} \\
+                -outfmt ${getParam(p, params, 'blast_outfmt')} \\
+                -num_alignments ${getParam(p, params, 'blast_num_alignments')} \\
+                -strand ${getParam(p, params, 'blast_strand')} \\
                 -out ${qry_id}/out
         fi
         """
@@ -141,10 +141,10 @@ process blastp {
                 -num_threads ${threads} \\
                 -query \${qry_} \\
                 -db ${ref_db}/ref \\
-                -perc_identity ${getParam(p, 'blast_perc_identity')} \\
-                -evalue ${getParam(p, 'blast_evalue')} \\
-                -outfmt ${getParam(p, 'blast_outfmt')} \\
-                -num_alignments ${getParam(p, 'blast_num_alignments')} \\
+                -perc_identity ${getParam(p, params, 'blast_perc_identity')} \\
+                -evalue ${getParam(p, params, 'blast_evalue')} \\
+                -outfmt ${getParam(p, params, 'blast_outfmt')} \\
+                -num_alignments ${getParam(p, params, 'blast_num_alignments')} \\
                 -out ${qry_id}/out
         fi
         """
@@ -186,9 +186,9 @@ workflow MAP_SUB {
     }
 
     // p 内の blast_program の値に応じてプロセス分岐
-    prog = p.map { map -> getParam(map, 'blast_program') }.first()
+    prog_closure = { getParam(p, params, params, 'blast_program') }
 
-    if (prog == "blastp") {
+    if (prog_closure() == "blastp") {
         out = blastp(in_ch)
     } else {
         out = blastn(in_ch)

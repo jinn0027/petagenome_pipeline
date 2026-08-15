@@ -5,8 +5,18 @@ def createNullParamsChannel() {
     return Channel.of(['@':'@'])
 }
 
-def getParam(obj, member) {
-    return obj?.getAt(member) ?: params.getAt(member)
+def getParam(obj, global_params, member) {
+    if (obj != null && obj.respondsTo('containsKey') && obj.containsKey(member)) {
+        def val = obj.getAt(member)
+        if (val != null) return val
+    }
+    
+    //if (global_params != null && global_params.containsKey(member)) {
+    //    return global_params.getAt(member)
+    //}
+    //
+    //return null
+    return global_params.getAt(member)
 }
 
 def clusterOptions(executor, gb, threads, label) {

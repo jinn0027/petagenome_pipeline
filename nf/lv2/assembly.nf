@@ -142,8 +142,8 @@ workflow ASSEMBLY_SUB {
     reads
 
     main:
-    def tool_closure = { getParam(p, 'assembly_assembler') }
-    def l_thre_closure = { getParam(p, 'assembly_l_thre') }
+    def tool_closure = { getParam(p, params, 'assembly_assembler') }
+    def l_thre_closure = { getParam(p, params, 'assembly_l_thre') }
 
     // 1. アセンブラの分岐実行
     if (tool_closure() == 'spades') {

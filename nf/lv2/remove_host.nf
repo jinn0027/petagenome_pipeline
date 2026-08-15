@@ -93,7 +93,8 @@ workflow REMOVE_HOST_SUB {
 
     main:
     // --- A. DB (インデックス) の準備 ---
-    if (params.remove_host_is_prebuilt_db) {
+    def is_prebuilt_db_closure = { getParam(p, params, 'remove_host_is_prebuilt_db') }
+    if (is_prebuilt_db_closure()) {
         host_db = host_ref_or_db
     } else {
         // インポート元が動的に切り替わっているため、そのまま呼び出しOK

@@ -77,7 +77,7 @@ process classify {
               path("${qry_id}/selfhit.tsv", arity: '1')
 
     script:
-    def al_self = getParam(p, 'circular_contigs_al_self')
+    def al_self = getParam(p, params, 'circular_contigs_al_self')
     """
     echo "${processProfile(task)}" | tee prof.txt
     
@@ -188,7 +188,9 @@ workflow CIRCULAR_CONTIGS_SUB {
     contig
 
     main:
-    if (params.use_pzlast) {
+    
+    def use_pzlast_closure = { getParam(p, params, 'use_pzlast') }
+    if (use_pzlast_closure()) {
         // --- PZLAST モード ---
         cfg1 = params.pzlast_cfg1 ? Channel.of(file(params.pzlast_cfg1)) : Channel.of('')
 

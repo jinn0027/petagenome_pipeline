@@ -43,11 +43,11 @@ process cdhit_est {
         cd-hit-est \\
             -M "${gb}000" \\
             -T ${threads} \\
-            -c ${getParam(p, 'cdhit_identity_threshold')} \\
-            -G ${getParam(p, 'cdhit_global_sequence_identity')} \\
-            -d ${getParam(p, 'cdhit_description_length')} \\
-            -n ${getParam(p, 'cdhit_word_length')} \\
-            -mask ${getParam(p, 'cdhit_mask')} \\
+            -c ${getParam(p, params, 'cdhit_identity_threshold')} \\
+            -G ${getParam(p, params, 'cdhit_global_sequence_identity')} \\
+            -d ${getParam(p, params, 'cdhit_description_length')} \\
+            -n ${getParam(p, params, 'cdhit_word_length')} \\
+            -mask ${getParam(p, params, 'cdhit_mask')} \\
             -i ${read} \\
             -o ${id}/out.fasta
         """

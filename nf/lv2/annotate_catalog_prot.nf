@@ -130,7 +130,8 @@ workflow ANNOTATE_CATALOG_SUB {
 
     main:
     // A. DB の準備（タンパク質用サブワークフローを呼び出し）
-    if (params.annotate_catalog_prot_is_prebuilt_db) {
+    def is_prebuilt_db_closure = { getParam(p, params, 'annotate_catalog_prot_is_prebuilt_db') }
+    if (is_prebuilt_db_closure()) {
         db = ref_or_db
     } else {
         db = BUILD_REF_DB_PROT_SUB(p, ref_or_db).ref_db

@@ -53,15 +53,15 @@ process prodigal {
             echo "Warning: \${read_} is empty or contains no reads. Creating empty outputs."
             touch ${read_id}/out.faa
             touch ${read_id}/out.fna
-            touch ${read_id}/out.${getParam(p, 'prodigal_outfmt')}
+            touch ${read_id}/out.${getParam(p, params, 'prodigal_outfmt')}
         else
             prodigal \
-                -p ${getParam(p, 'prodigal_procedure')} \
+                -p ${getParam(p, params, 'prodigal_procedure')} \
                 -i \${read_} \
-                -f ${getParam(p, 'prodigal_outfmt')} \
+                -f ${getParam(p, params, 'prodigal_outfmt')} \
                 -a ${read_id}/out.faa \
                 -d ${read_id}/out.fna \
-                -o ${read_id}/out.${getParam(p, 'prodigal_outfmt')}
+                -o ${read_id}/out.${getParam(p, params, 'prodigal_outfmt')}
         fi
         """
 }

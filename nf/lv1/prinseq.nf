@@ -69,17 +69,17 @@ process prinseq {
         fi
 
         prinseq-lite.pl \\
-            -trim_left ${getParam(p, 'prinseq_trim_left')} \\
-            -trim_right ${getParam(p, 'prinseq_trim_right')} \\
-            -trim_qual_left ${getParam(p, 'prinseq_qual_left')} \\
-            -trim_qual_right ${getParam(p, 'prinseq_qual_right')} \\
-            -trim_qual_window ${getParam(p, 'prinseq_qual_window')} \\
-            -min_len ${getParam(p, 'prinseq_min_len')} \\
-            -derep ${getParam(p, 'prinseq_derep')} \\
-            -lc_method ${getParam(p, 'prinseq_lc_method')} \\
-            -lc_threshold ${getParam(p, 'prinseq_lc_threshold')} \\
-            -trim_ns_right ${getParam(p, 'prinseq_trim_ns_right')} \\
-            -ns_max_n ${getParam(p, 'prinseq_ns_max_n')} \\
+            -trim_left ${getParam(p, params, 'prinseq_trim_left')} \\
+            -trim_right ${getParam(p, params, 'prinseq_trim_right')} \\
+            -trim_qual_left ${getParam(p, params, 'prinseq_qual_left')} \\
+            -trim_qual_right ${getParam(p, params, 'prinseq_qual_right')} \\
+            -trim_qual_window ${getParam(p, params, 'prinseq_qual_window')} \\
+            -min_len ${getParam(p, params, 'prinseq_min_len')} \\
+            -derep ${getParam(p, params, 'prinseq_derep')} \\
+            -lc_method ${getParam(p, params, 'prinseq_lc_method')} \\
+            -lc_threshold ${getParam(p, params, 'prinseq_lc_threshold')} \\
+            -trim_ns_right ${getParam(p, params, 'prinseq_trim_ns_right')} \\
+            -ns_max_n ${getParam(p, params, 'prinseq_ns_max_n')} \\
             -out_good ${pair_id}/good \\
             -out_bad ${pair_id}/bad \\
             -fastq \${read0} \\

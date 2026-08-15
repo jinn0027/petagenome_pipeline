@@ -39,11 +39,11 @@ process cutadapt {
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
         cutadapt \\
-            -a ${getParam(p, 'cutadapt_fwd')} \\
-            -g ${getParam(p, 'cutadapt_rev')} \\
+            -a ${getParam(p, params, 'cutadapt_fwd')} \\
+            -g ${getParam(p, params, 'cutadapt_rev')} \\
             -o ${pair_id}/out_1.fastq \\
             -p ${pair_id}/out_2.fastq \\
-            --minimum-length ${getParam(p, 'cutadapt_minimum_length')} \\
+            --minimum-length ${getParam(p, params, 'cutadapt_minimum_length')} \\
             ${reads[0]} \\
             ${reads[1]}
         """

@@ -26,7 +26,6 @@ def aligner_path = use_pzlast ? pz_script : "${params.petagenomeDir}/nf/lv1/mmse
 // 塩基配列（ヌクレオチド）用のサブワークフローをインポート
 include { BUILD_REF_DB_NUCL_SUB; MAP_NUCL_SUB } from "${aligner_path}"
 
-
 // ==========================================
 // 2. マッピングサブワークフロー（処理の本体）
 // ==========================================
@@ -39,7 +38,8 @@ workflow ALIGN_SAMPLES_TO_CATALOG_SUB {
 
     main:
     // --- A. DB (インデックス) の準備 ---
-    if (params.align_samples_to_catalog_is_prebuilt_db) {
+    def is_prebuilt_db_closure = { getParam(p, params, 'align_samples_to_catalog_is_prebuilt_db' ) }
+    if (is_prebuilt_db_closure()) {
         target_db = target_ref_or_db
     } else {
         target_db = BUILD_REF_DB_NUCL_SUB(p, target_ref_or_db).ref_db
@@ -55,7 +55,6 @@ workflow ALIGN_SAMPLES_TO_CATALOG_SUB {
     emit:
     out = clean_out
 }
-
 
 // ==========================================
 // 3. テスト・単体実行用エントリーポイント (-entry)
