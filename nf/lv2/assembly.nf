@@ -142,11 +142,11 @@ workflow ASSEMBLY_SUB {
     reads
 
     main:
-    def tool = { getParam(p, 'assembly_assembler') }
-    def l_thre = { getParam(p, 'assembly_l_thre') }
+    def tool_closure = { getParam(p, 'assembly_assembler') }
+    def l_thre_closure = { getParam(p, 'assembly_l_thre') }
 
     // 1. アセンブラの分岐実行
-    if (tool == 'spades') {
+    if (tool_closure() == 'spades') {
         in_ch = p.combine(reads).map { p_val, pair_id, reads_path -> tuple(p_val, pair_id, reads_path) }
         asm_raw = SPADES_E2E_SUB(in_ch)
         asm = asm_raw.map { id, scaffolds, contigs -> tuple(id, (scaffolds && 0 < scaffolds.size()) ? scaffolds : contigs) }
@@ -157,7 +157,7 @@ workflow ASSEMBLY_SUB {
     }
 
     // 2. 配列長のフィルタリングとリネーム
-    flt_in = asm.map { id, contigs -> tuple(id, contigs, l_thre) }
+    flt_in = asm.map { id, contigs -> tuple(id, contigs, l_thre_closure()) }
     flt_raw = filter_and_rename(flt_in)
     flt_seqs = flt_raw.map { id, contigs, name -> tuple(id, contigs) }
 
