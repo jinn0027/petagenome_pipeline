@@ -25,11 +25,13 @@ params.assembly_get_length_threads = Math.min(params.threads as Integer, GET_LEN
 params.assembly_get_stats_memory   = Math.min(params.memory as Integer, GET_STATS_MAX_MEMORY)
 params.assembly_get_stats_threads  = Math.min(params.threads as Integer, GET_STATS_MAX_THREADS)
 
+params.assembly_assembler = "megahit"
+params.assembly_l_thre = 1000
+
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { SPADES_E2E_SUB } from "${params.petagenomeDir}/nf/lv1/spades.nf"
 include { MEGAHIT_SUB    } from "${params.petagenomeDir}/nf/lv1/megahit.nf"
-
 
 // ==========================================
 // 1. プロセス定義
@@ -138,10 +140,10 @@ workflow ASSEMBLY_SUB {
     take:
     p
     reads
-    l_thre
 
     main:
-    def tool = params.assembly_assembler ?: 'megahit'
+    def tool = { getParam(p, 'assembly_assembler') }
+    def l_thre = { getParam(p, 'assembly_l_thre') }
 
     // 1. アセンブラの分岐実行
     if (tool == 'spades') {
@@ -155,23 +157,19 @@ workflow ASSEMBLY_SUB {
     }
 
     // 2. 配列長のフィルタリングとリネーム
-    flt_in = asm.map { id, contigs -> 
-        tuple(id, contigs, l_thre) 
-    }
+    flt_in = asm.map { id, contigs -> tuple(id, contigs, l_thre) }
     flt_raw = filter_and_rename(flt_in)
-    flt_seqs = flt_raw.map { id, contigs, name -> 
-        tuple(id, contigs) 
-    }
+    flt_seqs = flt_raw.map { id, contigs, name -> tuple(id, contigs) }
 
     // 3. 配列長計算、統計取得
-    len = get_length(flt_seqs)
-    sts = get_stats(len)
+    //len = get_length(flt_seqs)
+    //sts = get_stats(len)
 
     emit:
     asm      = asm
     flt_seqs = flt_seqs
-    len      = len
-    sts      = sts
+    //len      = len
+    //sts      = sts
 }
 
 
@@ -182,14 +180,13 @@ workflow ASSEMBLY_SUB {
 workflow ASSEMBLY_ALL {
     p      = createNullParamsChannel()
     reads  = createPairsChannel(params.assembly_reads)
-    l_thre = params.assembly_l_thre ?: 1000
 
-    out_ch = ASSEMBLY_SUB(p, reads, l_thre)
+    out_ch = ASSEMBLY_SUB(p, reads)
 
     out_ch.asm.view      { i -> "ASM: $i" }
     out_ch.flt_seqs.view { i -> "FLT_SEQ: $i" }
-    out_ch.len.view      { i -> "LEN: $i" }
-    out_ch.sts.view      { i -> "STS: $i" }
+    //out_ch.len.view      { i -> "LEN: $i" }
+    //out_ch.sts.view      { i -> "STS: $i" }
 }
 
 workflow {

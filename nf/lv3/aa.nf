@@ -80,8 +80,7 @@ workflow BACTERIOME_PIPELINE_SUB {
     host_removed = REMOVE_HOST_SUB(p, host_ref, fp.out)
 
     // 3. アセンブリ
-    l_thre = params.containsKey('assembly_l_thre') ? params.assembly_l_thre : 1000
-    asm_res = ASSEMBLY_SUB(p, host_removed.reads, l_thre)
+    asm_res = ASSEMBLY_SUB(p, host_removed.reads)
 
     // 4. Prodigal による ORF (遺伝子) 予測
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
@@ -125,7 +124,6 @@ workflow BACTERIOME_PIPELINE_SUB {
     host_removed_reads = host_removed.reads
     contigs            = asm_res.asm
     flt_seqs           = asm_res.flt_seqs
-    stats              = asm_res.sts
     orfs               = orf_res.out
     annotated          = annotation_res.annotated
     hit_ids            = annotation_res.hit_ids

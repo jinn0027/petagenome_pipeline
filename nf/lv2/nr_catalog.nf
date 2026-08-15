@@ -82,7 +82,7 @@ process filter_fna_by_faa {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple val(id), path(merged_fna)
+        tuple val(id), path(fna)
         path(id_mapping) // id_mapping.tsv から旧IDを抽出して seqkit grep に使う
     output:
         tuple val("nr_catalog"), path("nr_catalog.fna")
@@ -91,7 +91,7 @@ process filter_fna_by_faa {
         echo "${processProfile(task)}" | tee prof.txt
         # mappingファイルから旧IDの列（2列目）を抽出して一時ファイルに落とし、seqkitに渡す
         awk '{print \$2}' ${id_mapping} > old_rep_ids.txt
-        seqkit grep -f old_rep_ids.txt ${merged_fna} > nr_catalog_raw.fna
+        seqkit grep -f old_rep_ids.txt ${fna} > nr_catalog_raw.fna
         
         # 塩基配列側もアミノ酸側と同様に連番ID（NRCAT...）へヘッダーを置換する
         python3 - << 'EOF'
@@ -125,12 +125,12 @@ process filter_fna_by_faa {
 workflow NR_CATALOG_SUB {
     take:
     p
-    merged_faa // [ "merged_all_samples", merged.faa ]
-    merged_fna // [ "merged_all_samples", merged.fna ]
+    faa // [ id, faa ]
+    fna // [ id, fna ]
 
     main:
     // 1. タンパク質ベースのクラスタリング用 DB 作成 & クラスタリング実行
-    cluster_in = merged_faa.map { id, path -> tuple("nr_prot", path) }
+    cluster_in = faa.map { id, path -> tuple("nr_prot", path) }
     ref_db     = BUILD_REF_DB_PROT_SUB(p, cluster_in)
     clustered  = CLUSTER_PROT_SUB(p, ref_db)
 
@@ -142,7 +142,7 @@ workflow NR_CATALOG_SUB {
     // renamed_catalog の中から [id, faa, mapping_tsv] を受け取り、mapping_tsv をフィルタに利用
     mapping_ch = renamed_catalog.map { id, faa, mapping -> tuple(id, mapping) }
     
-    nr_fna = filter_fna_by_faa(merged_fna, mapping_ch.map { it[1] })
+    nr_fna = filter_fna_by_faa(fna, mapping_ch.map { it[1] })
 
     emit:
     rep_faa = renamed_catalog.map { id, faa, mapping -> tuple(id, faa) }
