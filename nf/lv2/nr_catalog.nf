@@ -31,7 +31,7 @@ process sanitize_and_rename {
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb      = "${params.nr_catalog_sanitize_memory}"
+    def gb     = "${params.nr_catalog_sanitize_memory}"
     def threads = "${params.nr_catalog_sanitize_threads}"
 
     memory params.executor == "sge" ? null : "${gb} GB"
@@ -102,7 +102,7 @@ process filter_fna_by_faa {
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb      = "${params.nr_catalog_filter_fna_memory}"
+    def gb     = "${params.nr_catalog_filter_fna_memory}"
     def threads = "${params.nr_catalog_filter_fna_threads}"
 
     memory params.executor == "sge" ? null : "${gb} GB"
@@ -110,7 +110,7 @@ process filter_fna_by_faa {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple val(id), path(sanitized_fna)
+        path sanitized_fnas       // 複数のfnaファイルをまとめて受け取る
         tuple val(rep_id), path(rep_faa)
     output:
         tuple val("nr_catalog"), path("nr_catalog.fna")
@@ -125,22 +125,23 @@ with open("${rep_faa}", "r") as f:
             rep_id = line.strip()[1:].split()[0]
             rep_ids.add(rep_id)
 
-input_fna = "${sanitized_fna}"
 output_fna = "nr_catalog.fna"
 
-with open(input_fna, "r") as fin, open(output_fna, "w") as fout:
-    write_flag = False
-    for line in fin:
-        if line.startswith(">"):
-            orig_id = line.strip()[1:].split()[0]
-            if orig_id in rep_ids:
-                fout.write(line)
-                write_flag = True
-            else:
-                write_flag = False
-        else:
-            if write_flag:
-                fout.write(line)
+with open(output_fna, "w") as fout:
+    for input_fna in "${sanitized_fnas}".split():
+        with open(input_fna, "r") as fin:
+            write_flag = False
+            for line in fin:
+                if line.startswith(">"):
+                    orig_id = line.strip()[1:].split()[0]
+                    if orig_id in rep_ids:
+                        fout.write(line)
+                        write_flag = True
+                    else:
+                        write_flag = False
+                else:
+                    if write_flag:
+                        fout.write(line)
 EOF
         """
 }
@@ -162,18 +163,12 @@ workflow NR_CATALOG_SUB {
     // 1. MMseqs2 用に入力を成形
     cluster_in = sanitized.map { id, faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
     ref_db     = BUILD_REF_DB_PROT_SUB(p, cluster_in)
-    clustered  = CLUSTER_PROT_SUB(p, ref_db) // 想定出力: [id, rep_faa] (例: ["nr_prot", out.fasta])
+    clustered  = CLUSTER_PROT_SUB(p, ref_db) // 想定出力: [id, rep_faa]
 
-    // 2. filter_fna_by_faa に渡すチャンネルの構造を明確に合わせる
-    // sanitized から [id, sanitized_fna] を取り出す
-    sanitized_fna_ch = sanitized.map { id, faa_p, fna_p, mapping -> tuple(id, fna_p) }
+    // 2. 全サンプルの sanitized_fna をリストとして収集して渡す
+    sanitized_fna_list = sanitized.map { id, faa_p, fna_p, mapping -> fna_p }.collect()
 
-    // combine するのではなく、同一IDまたは1対1の対応関係として適切に渡す
-    // ここでは clustered 側も [id, rep_faa] であることを前提にペアを組ませます
-    // もし clustered の id が "nr_prot" 固定の場合は、キーを合わせて join するかそのままタプルにします
-    
-    // 例: 両者のタプル形式を [id, path] に統一して渡す場合
-    nr_fna = filter_fna_by_faa(sanitized_fna_ch, clustered)
+    nr_fna = filter_fna_by_faa(sanitized_fna_list, clustered)
 
     mapping_ch = sanitized.map { id, faa_p, fna_p, mapping -> tuple(id, mapping) }
 
