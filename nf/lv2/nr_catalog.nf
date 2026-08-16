@@ -163,7 +163,17 @@ workflow NR_CATALOG_SUB {
     // 1. MMseqs2 用に入力を成形
     cluster_in = sanitized.map { id, faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
     ref_db     = BUILD_REF_DB_PROT_SUB(p, cluster_in)
-    clustered  = CLUSTER_PROT_SUB(p, ref_db) // 想定出力: [id, rep_faa]
+    clustered_raw = CLUSTER_PROT_SUB(p, ref_db) 
+
+    // どのような形式で返ってきても確実に [id, rep_faa] の2要素タプルに整形する
+    clustered = clustered_raw.map { item ->
+        if (item instanceof List) {
+            def path_val = item.find { it instanceof java.nio.file.Path || it instanceof File || (it.toString().endsWith('.fasta') || it.toString().endsWith('.faa')) }
+            def id_val = item[0] instanceof CharSequence ? item[0] : "nr_prot"
+            return tuple(id_val, path_val)
+        }
+        return item
+    }
 
     // 2. 全サンプルの sanitized_fna をリストとして収集して渡す
     sanitized_fna_list = sanitized.map { id, faa_p, fna_p, mapping -> fna_p }.collect()
