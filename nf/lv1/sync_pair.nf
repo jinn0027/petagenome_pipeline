@@ -6,8 +6,8 @@ params.memory  = 16
 params.threads = 4
 
 // 2. このモジュール・タスク固有の推奨・上限値
-def SYNC_MAX_MEMORY  = 32  // 辞書やハッシュを持つため少し余裕を持たせる
-def SYNC_MAX_THREADS = 8   
+def SYNC_MAX_MEMORY  = 32  
+def SYNC_MAX_THREADS = 16  // seqkit はマルチスレッド処理に対応している
 
 // 3. 上限値による動的クリッピング
 params.sync_pair_memory  = Math.min(params.memory as Integer, SYNC_MAX_MEMORY)
@@ -18,14 +18,14 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 
 process sync_pair {
     tag "${pair_id}"
-    container = "${params.petagenomeDir}/modules/common/el9.sif"
+    container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     
-    def gb = "${params.sync_pair_memory}"
+    def gb      = "${params.sync_pair_memory}"
     def threads = "${params.sync_pair_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+    cpus   params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
@@ -39,72 +39,33 @@ process sync_pair {
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
 
-        # Pythonによる厳密なペア同期処理
-        python3 - << 'EOF'
-        import gzip
+        # seqkit pair を使った高速なペアリング・同期処理
+        # --by-name: リード名ベースでマッチング
+        # --out-dir: 出力先ディレクトリ
+        # -j: スレッド数
+        # gzip 圧縮されたまま直接処理・出力可能
+        
+        seqkit pair \
+            -j ${threads} \
+            --by-name \
+            -1 ${reads[0]} \
+            -2 ${reads[1]} \
+            -out-dir ${pair_id}_seqkit_tmp \
+            --quiet
 
-        def clean_qname(title):
-            # ヘッダーの最初の単語（スペース前）を取り出し、末尾の /1 または /2 のみを除去
-            first_word = title.strip().split()[0]
-            if first_word.endswith('/1') or first_word.endswith('/2'):
-                return first_word[:-2]
-            return first_word
-
-        r1_path = "${reads[0]}"
-        r2_path = "${reads[1]}"
-        out1_path = "${pair_id}/sync_1.fastq.gz"
-        out2_path = "${pair_id}/sync_2.fastq.gz"
-
-        print("Indexing R2 reads...")
-        r2_dict = {}
-        with gzip.open(r2_path, 'rt') as f2:
-            while True:
-                l1 = f2.readline()
-                if not l1: break
-                l2 = f2.readline()
-                l3 = f2.readline()
-                l4 = f2.readline()
-                
-                qname = clean_qname(l1)
-                r2_dict[qname] = (l1, l2, l3, l4)
-
-        print(f"Total R2 records indexed: {len(r2_dict)}")
-
-        print("Filtering and writing synced pairs...")
-        matched_count = 0
-        with gzip.open(r1_path, 'rt') as f1, \
-             gzip.open(out1_path, 'wt') as out1, \
-             gzip.open(out2_path, 'wt') as out2:
-            
-            while True:
-                l1 = f1.readline()
-                if not l1: break
-                l2 = f1.readline()
-                l3 = f1.readline()
-                l4 = f1.readline()
-                
-                qname = clean_qname(l1)
-                
-                # R1とR2の両方に存在する（ペアが揃っている）場合のみ出力
-                if qname in r2_dict:
-                    r2_rec = r2_dict[qname]
-                    
-                    # R1を書く
-                    out1.write(l1)
-                    out1.write(l2)
-                    out1.write(l3)
-                    out1.write(l4)
-                    
-                    # 対応するR2を書く
-                    out2.write(r2_rec[0])
-                    out2.write(r2_rec[1])
-                    out2.write(r2_rec[2])
-                    out2.write(r2_rec[3])
-                    
-                    matched_count += 1
-
-        print(f"Successfully synced {matched_count} pairs.")
-        EOF
+        # seqkit pair はデフォルトで命名規則に応じたサフィックス等を付与するか、
+        # あるいは指定した出力名に整形するため、必要な名前にリネーム・移動する
+        # （※ seqkit pair の出力仕様に合わせてファイル名を調整）
+        
+        # 例として、出力されたファイルを期待する sync_1.fastq.gz / sync_2.fastq.gz に合わせる
+        # seqkit pair は通常 ${pair_id}_1.fastq.gz のような名前で出力するため、それを利用
+        
+        # 実際のファイル名パターンを確認して安全にリネーム
+        mv ${pair_id}_seqkit_tmp/*_1*.fastq.gz ${pair_id}/sync_1.fastq.gz
+        mv ${pair_id}_seqkit_tmp/*_2*.fastq.gz ${pair_id}/sync_2.fastq.gz
+        
+        # 一時ディレクトリの削除
+        rm -rf ${pair_id}_seqkit_tmp
         """
 }
 
@@ -132,7 +93,7 @@ workflow SYNC_PAIR_SUB {
 // ==========================================
 workflow SYNC_PAIR_ALL {
     p      = createNullParamsChannel()
-    reads = createPairsChannel(params.sync_pair_reads)
+    reads  = createPairsChannel(params.sync_pair_reads)
 
     out_ch = SYNC_PAIR_SUB(p, reads)
     out_ch.out.view { i -> "$i" }
