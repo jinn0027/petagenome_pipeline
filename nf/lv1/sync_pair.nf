@@ -34,17 +34,14 @@ process sync_pair {
     output:
         tuple val(pair_id), path("${pair_id}/sync_{1,2}.fastq.gz", arity: '2')
 
-script:
+    script:
+        // 入力パスからファイル名（例: ERR1620255_..._R1_001.fastq.gz）を抽出しておく
+        def r1_name = new File("${reads[0]}").name
+        def r2_name = new File("${reads[1]}").name
         """
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
 
-        # seqkit pairを実行
-        # -1 / -2 で入力を指定
-        # -O で出力ディレクトリを指定
-        # -f （必要に応じて既存ディレクトリの上書き）
-        # -j はグローバルオプションとして渡すか、そのまま指定可能
-        
         seqkit pair \
             -j ${threads} \
             -1 ${reads[0]} \
@@ -53,13 +50,9 @@ script:
             -f \
             --quiet
 
-        # seqkit pair の出力ファイル名構造に合わせてリネーム
-        # 通常、入力が pair_1.fastq.gz / pair_2.fastq.gz の場合、
-        # 出力側にはペアが一致したものが _1.fastq.gz / _2.fastq.gz として格納される
-        
-        # 出力ファイル名を安全に捕捉して移動
-        mv ${pair_id}_seqkit_tmp/*_1*.fastq.gz ${pair_id}/sync_1.fastq.gz
-        mv ${pair_id}_seqkit_tmp/*_2*.fastq.gz ${pair_id}/sync_2.fastq.gz
+        # seqkit pair が出力した元のファイル名でキャプチャしてリネーム移動
+        mv ${pair_id}_seqkit_tmp/${r1_name} ${pair_id}/sync_1.fastq.gz
+        mv ${pair_id}_seqkit_tmp/${r2_name} ${pair_id}/sync_2.fastq.gz
         
         # 一時ディレクトリの削除
         rm -rf ${pair_id}_seqkit_tmp
