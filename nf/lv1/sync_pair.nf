@@ -34,33 +34,30 @@ process sync_pair {
     output:
         tuple val(pair_id), path("${pair_id}/sync_{1,2}.fastq.gz", arity: '2')
 
-    script:
+script:
         """
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
 
-        # seqkit pair を使った高速なペアリング・同期処理
-        # --by-name: リード名ベースでマッチング
-        # --out-dir: 出力先ディレクトリ
-        # -j: スレッド数
-        # gzip 圧縮されたまま直接処理・出力可能
+        # seqkit pairを実行
+        # -1 / -2 で入力を指定
+        # -O で出力ディレクトリを指定
+        # -f （必要に応じて既存ディレクトリの上書き）
+        # -j はグローバルオプションとして渡すか、そのまま指定可能
         
         seqkit pair \
             -j ${threads} \
-            --by-name \
             -1 ${reads[0]} \
             -2 ${reads[1]} \
-            -out-dir ${pair_id}_seqkit_tmp \
+            -O ${pair_id}_seqkit_tmp \
+            -f \
             --quiet
 
-        # seqkit pair はデフォルトで命名規則に応じたサフィックス等を付与するか、
-        # あるいは指定した出力名に整形するため、必要な名前にリネーム・移動する
-        # （※ seqkit pair の出力仕様に合わせてファイル名を調整）
+        # seqkit pair の出力ファイル名構造に合わせてリネーム
+        # 通常、入力が pair_1.fastq.gz / pair_2.fastq.gz の場合、
+        # 出力側にはペアが一致したものが _1.fastq.gz / _2.fastq.gz として格納される
         
-        # 例として、出力されたファイルを期待する sync_1.fastq.gz / sync_2.fastq.gz に合わせる
-        # seqkit pair は通常 ${pair_id}_1.fastq.gz のような名前で出力するため、それを利用
-        
-        # 実際のファイル名パターンを確認して安全にリネーム
+        # 出力ファイル名を安全に捕捉して移動
         mv ${pair_id}_seqkit_tmp/*_1*.fastq.gz ${pair_id}/sync_1.fastq.gz
         mv ${pair_id}_seqkit_tmp/*_2*.fastq.gz ${pair_id}/sync_2.fastq.gz
         
