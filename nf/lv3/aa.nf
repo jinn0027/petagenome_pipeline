@@ -178,7 +178,7 @@ workflow BACTERIOME_PIPELINE_SUB {
 
     main:
     // 1. FASTP による QC・トリミング
-    fp = FASTP_SUB(p, reads.out)
+    fp = FASTP_SUB(p, reads)
 
     // 2. ホスト除去
     host_removed = REMOVE_HOST_SUB(p, host_ref, fp.out)
