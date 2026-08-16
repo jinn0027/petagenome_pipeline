@@ -25,7 +25,6 @@ include { createNullParamsChannel; createSeqsChannel; getParam; clusterOptions; 
     from "${params.petagenomeDir}/nf/common/utils"
 
 // 各種サブワークフローのインポート
-include { SYNC_PAIR_SUB }              from "${params.petagenomeDir}/nf/lv1/sync_pair.nf" // 追加
 include { FASTP_SUB }                  from "${params.petagenomeDir}/nf/lv1/fastp.nf"
 include { REMOVE_HOST_SUB }            from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
 include { ASSEMBLY_SUB }               from "${params.petagenomeDir}/nf/lv2/assembly.nf"
@@ -178,11 +177,8 @@ workflow BACTERIOME_PIPELINE_SUB {
     reads                // 入力リードペア [ pair_id, [R1, R2] ]
 
     main:
-    // 0. 最上流：ペアの同期チェック ＆ 修復
-    synced_reads = SYNC_PAIR_SUB(p, reads)
-
-    // 1. FASTP による QC・トリミング（同期済みのリードを入力）
-    fp = FASTP_SUB(p, synced_reads.out)
+    // 1. FASTP による QC・トリミング
+    fp = FASTP_SUB(p, reads.out)
 
     // 2. ホスト除去
     host_removed = REMOVE_HOST_SUB(p, host_ref, fp.out)
@@ -233,7 +229,6 @@ workflow BACTERIOME_PIPELINE_SUB {
 
     emit:
     raw_reads            = reads
-    synced_reads         = synced_reads.out // 同期済みのリードも参照できるように追加
     fastp_reads          = fp.out
     host_removed_reads   = host_removed.reads
     contigs              = asm_res.asm
@@ -286,7 +281,6 @@ workflow BACTERIOME_PIPELINE_ALL {
 
     out_ch = BACTERIOME_PIPELINE_SUB(p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads)
 
-    out_ch.synced_reads.view         { i -> "SYNCED READS        : $i" }
     out_ch.fastp_reads.view          { i -> "FASTP PASSED READS  : $i" }
     out_ch.host_removed_reads.view   { i -> "HOST REMOVED READS  : $i" }
     out_ch.contigs.view              { i -> "ASSEMBLY CONTIGS    : $i" }

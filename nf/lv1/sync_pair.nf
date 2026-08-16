@@ -6,8 +6,8 @@ params.memory  = 16
 params.threads = 4
 
 // 2. このモジュール・タスク固有の推奨・上限値
-def SYNC_MAX_MEMORY  = 32  
-def SYNC_MAX_THREADS = 16  // seqkit はマルチスレッド処理に対応している
+def SYNC_MAX_MEMORY  = 16  
+def SYNC_MAX_THREADS = 16  // seqkit はマルチスレッドに対応
 
 // 3. 上限値による動的クリッピング
 params.sync_pair_memory  = Math.min(params.memory as Integer, SYNC_MAX_MEMORY)
@@ -35,13 +35,11 @@ process sync_pair {
         tuple val(pair_id), path("${pair_id}/sync_{1,2}.fastq.gz", arity: '2')
 
     script:
-        // 入力パスからファイル名（例: ERR1620255_..._R1_001.fastq.gz）を抽出しておく
-        def r1_name = new File("${reads[0]}").name
-        def r2_name = new File("${reads[1]}").name
         """
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
 
+        # seqkit pair を用いた高速ペアリング
         seqkit pair \
             -j ${threads} \
             -1 ${reads[0]} \
@@ -50,9 +48,19 @@ process sync_pair {
             -f \
             --quiet
 
-        # seqkit pair が出力した元のファイル名でキャプチャしてリネーム移動
-        mv ${pair_id}_seqkit_tmp/${r1_name} ${pair_id}/sync_1.fastq.gz
-        mv ${pair_id}_seqkit_tmp/${r2_name} ${pair_id}/sync_2.fastq.gz
+        # seqkit pair は入力と同じファイル名で _seqkit_tmp 以下に出力するため、
+        # 生成されたファイルを検出して sync_1.fastq.gz / sync_2.fastq.gz にリネームする
+        
+        R1_OUT=\$(ls ${pair_id}_seqkit_tmp/*_R1*.fastq.gz ${pair_id}_seqkit_tmp/*_1*.fastq.gz 2>/dev/null | head -n 1)
+        R2_OUT=\$(ls ${pair_id}_seqkit_tmp/*_R2*.fastq.gz ${pair_id}_seqkit_tmp/*_2*.fastq.gz 2>/dev/null | head -n 1)
+
+        if [ -z "\$R1_OUT" ] || [ -z "\$R2_OUT" ]; then
+            echo "Error: seqkit pair did not produce expected output files." >&2
+            exit 1
+        fi
+
+        mv "\$R1_OUT" ${pair_id}/sync_1.fastq.gz
+        mv "\$R2_OUT" ${pair_id}/sync_2.fastq.gz
         
         # 一時ディレクトリの削除
         rm -rf ${pair_id}_seqkit_tmp
