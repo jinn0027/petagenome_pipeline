@@ -88,9 +88,9 @@ count = 1
 with open(out_faa, "w") as ofaa, open(out_fna, "w") as ofna, open(mapping, "w") as fmap:
     for old_id in common_keys:
         new_id = f"GENE{count:09d}"
-        ofaa.write(f">{new_id}\\n{faa_dict[old_id]}\\n")
-        ofna.write(f">{new_id}\\n{fna_dict[old_id]}\\n")
-        fmap.write(f"{new_id}\\t{old_id}\\n")
+        ofaa.write(f">{new_id}\n{faa_dict[old_id]}\n")
+        ofna.write(f">{new_id}\n{fna_dict[old_id]}\n")
+        fmap.write(f"{new_id}\t{old_id}\n")
         count += 1
 EOF
         """
@@ -157,14 +157,23 @@ workflow NR_CATALOG_SUB {
 
     main:
     input_ch = faa.join(fna)
-    sanitized = sanitize_and_rename(input_ch)
+    sanitized = sanitize_and_rename(input_ch) // [id, sanitized_faa, sanitized_fna, mapping]
 
+    // 1. MMseqs2 用に入力を成形
     cluster_in = sanitized.map { id, faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
     ref_db     = BUILD_REF_DB_PROT_SUB(p, cluster_in)
-    clustered  = CLUSTER_PROT_SUB(p, ref_db)
+    clustered  = CLUSTER_PROT_SUB(p, ref_db) // 想定出力: [id, rep_faa] (例: ["nr_prot", out.fasta])
 
-    sanitized_fna_ch = sanitized.map { id, faa_p, fna_p, mapping -> fna_p }
-    nr_fna = filter_fna_by_faa(sanitized_fna_ch.combine(clustered), clustered)
+    // 2. filter_fna_by_faa に渡すチャンネルの構造を明確に合わせる
+    // sanitized から [id, sanitized_fna] を取り出す
+    sanitized_fna_ch = sanitized.map { id, faa_p, fna_p, mapping -> tuple(id, fna_p) }
+
+    // combine するのではなく、同一IDまたは1対1の対応関係として適切に渡す
+    // ここでは clustered 側も [id, rep_faa] であることを前提にペアを組ませます
+    // もし clustered の id が "nr_prot" 固定の場合は、キーを合わせて join するかそのままタプルにします
+    
+    // 例: 両者のタプル形式を [id, path] に統一して渡す場合
+    nr_fna = filter_fna_by_faa(sanitized_fna_ch, clustered)
 
     mapping_ch = sanitized.map { id, faa_p, fna_p, mapping -> tuple(id, mapping) }
 
