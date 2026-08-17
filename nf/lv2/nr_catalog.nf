@@ -25,6 +25,33 @@ include { BUILD_REF_DB_PROT_SUB; CLUSTER_PROT_SUB } from "${params.petagenomeDir
 // 1. プロセス定義
 // ==========================================
 
+// 全サンプルの initial_mapping.tsv を1つにまとめるプロセス
+process merge_mappings {
+    tag "merge_mapping"
+    container = "${params.petagenomeDir}/modules/common/el9.sif"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
+
+    def gb      = "${params.nr_catalog_sanitize_memory}"
+    def threads = "${params.nr_catalog_sanitize_threads}"
+
+    memory params.executor == "sge" ? null : "${gb} GB"
+    cpus   params.executor == "sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
+    input:
+        path mapping_files
+
+    output:
+        path "id_mapping.tsv"
+
+    script:
+        """
+        echo "${processProfile(task)}" | tee prof.txt
+        cat ${mapping_files} > id_mapping.tsv
+        """
+}
+
 process sanitize_and_rename {
     tag "sanitize_${id}"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
@@ -165,7 +192,6 @@ workflow NR_CATALOG_SUB {
     ref_db     = BUILD_REF_DB_PROT_SUB(p, cluster_in)
     clustered_raw = CLUSTER_PROT_SUB(p, ref_db) 
 
-    // どのような形式で返ってきても確実に [id, rep_faa] の2要素タプルに整形する
     clustered = clustered_raw.map { item ->
         if (item instanceof List) {
             def path_val = item.find { it instanceof java.nio.file.Path || it instanceof File || (it.toString().endsWith('.fasta') || it.toString().endsWith('.faa')) }
@@ -175,17 +201,17 @@ workflow NR_CATALOG_SUB {
         return item
     }
 
-    // 2. 全サンプルの sanitized_fna をリストとして収集して渡す
     sanitized_fna_list = sanitized.map { id, faa_p, fna_p, mapping -> fna_p }.collect()
-
     nr_fna = filter_fna_by_faa(sanitized_fna_list, clustered)
 
-    mapping_ch = sanitized.map { id, faa_p, fna_p, mapping -> tuple(id, mapping) }
+    // 全サンプルの mapping ファイルを収集して1つに結合
+    mapping_files_list = sanitized.map { id, faa_p, fna_p, mapping -> mapping }.collect()
+    combined_mapping = merge_mappings(mapping_files_list)
 
     emit:
-    rep_faa = clustered
-    rep_fna = nr_fna
-    mapping = mapping_ch
+    rep_faa = clustered                                // [ "nr_prot", path/to/rep.faa ]
+    rep_fna = nr_fna                                   // [ "nr_catalog", path/to/nr_catalog.fna ]
+    mapping = combined_mapping                         // path/to/id_mapping.tsv (単体のパス)
 }
 
 // ==========================================

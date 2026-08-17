@@ -216,7 +216,7 @@ workflow BACTERIOME_PIPELINE_SUB {
 
     filtered_rep_faa = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.faa') }
     filtered_rep_fna = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.fna') }
-    filtered_mapping_res = filter_mapping_by_hits(nr_catalog_res.mapping.map { id, path -> path }, annotation_res.hit_ids)
+    filtered_mapping_res = filter_mapping_by_hits(nr_catalog_res.mapping, annotation_res.hit_ids)
 
     // 9. ORF マッピング
     samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, filtered_rep_fna, sample_orf_fna_ch)
