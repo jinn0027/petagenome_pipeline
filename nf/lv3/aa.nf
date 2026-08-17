@@ -1,7 +1,17 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+// 共通のパス抽出関数
+// タプル(List)であれば中からPath/File/ファイル名を探し、単体ならそのまま返す
+def extractPath = { item ->
+    if (item instanceof List) {
+        def found = item.find { it instanceof java.nio.file.Path || it instanceof File || it.toString().contains('.') }
+        return found ?: item[1]
+    }
+    return item
+}
+
+// 1. 全体デフォルト値の定義
 params.memory  = 16
 params.threads = 4
 
@@ -35,275 +45,151 @@ include { ANNOTATE_SAMPLES_SUB }         from "${params.petagenomeDir}/nf/lv2/an
 include { SUMMARIZE_KO_TAXID_SUB }       from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
 include { NR_CATALOG_SUB }               from "${params.petagenomeDir}/nf/lv2/nr_catalog.nf"
 
-// 全サンプルの FASTA (.faa や .fna) を単純に 1 つに結合する汎用プロセス
+// プロセス定義
 process merge_fasta {
     tag "${ext}"
-
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
-
-    def gb      = "${params.merge_fasta_memory}"
-    def threads = "${params.merge_fasta_threads}"
-
-    memory params.executor == "sge" ? null : "${gb} GB"
-    cpus   params.executor == "sge" ? null : threads
+    def gb = "${params.merge_fasta_memory}"; def threads = "${params.merge_fasta_threads}"
+    memory params.executor == "sge" ? null : "${gb} GB"; cpus params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
-
-    input:
-        tuple path(fasta_files, stageAs: "?/*"), val(ext)
-
-    output:
-        tuple val("merged_all_samples"), path("combined_orfs.${ext}"), emit: merged_fasta
-
-    script:
-        """
-        echo "${processProfile(task)}" | tee prof.txt
-        cat ${fasta_files} > combined_orfs.${ext}
-        """
+    input: tuple path(fasta_files, stageAs: "?/*"), val(ext)
+    output: tuple val("merged_all_samples"), path("combined_orfs.${ext}"), emit: merged_fasta
+    script: """ echo "${processProfile(task)}" | tee prof.txt; cat ${fasta_files} > combined_orfs.${ext} """
 }
 
-// hit_ids に含まれる ID のみにカタログ（FAA/FNA）をフィルタリングするプロセス
 process filter_catalog_by_hits {
     tag "${ext}"
-
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
-
-    def gb      = "${params.filter_catalog_memory}"
-    def threads = "${params.filter_catalog_threads}"
-
-    memory params.executor == "sge" ? null : "${gb} GB"
-    cpus   params.executor == "sge" ? null : threads
+    def gb = "${params.filter_catalog_memory}"; def threads = "${params.filter_catalog_threads}"
+    memory params.executor == "sge" ? null : "${gb} GB"; cpus params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
-
-    input:
-        tuple path(fasta_file), val(ext)
-        path hit_ids
-
-    output:
-        tuple val("filtered_catalog"), path("filtered_catalog.${ext}"), emit: filtered_fasta
-
-    script:
-        """
+    input: tuple path(fasta_file), val(ext); path hit_ids
+    output: tuple val("filtered_catalog"), path("filtered_catalog.${ext}"), emit: filtered_fasta
+    script: """
         echo "${processProfile(task)}" | tee prof.txt
         python3 - << 'EOF'
-        valid_ids = set()
-        with open("${hit_ids}", "r") as f:
-            for line in f:
-                qid = line.strip()
-                if qid:
-                    valid_ids.add(qid)
-
-        input_fasta = "${fasta_file}"
-        output_fasta = "filtered_catalog.${ext}"
-
-        with open(input_fasta, "r") as fin, open(output_fasta, "w") as fout:
+        valid_ids = {line.strip() for line in open("${hit_ids}") if line.strip()}
+        with open("${fasta_file}", "r") as fin, open("filtered_catalog.${ext}", "w") as fout:
             write_flag = False
             for line in fin:
-                if line.startswith(">"):
-                    header = line.strip()[1:].split()[0]
-                    if header in valid_ids:
-                        fout.write(line)
-                        write_flag = True
-                    else:
-                        write_flag = False
-                else:
-                    if write_flag:
-                        fout.write(line)
+                if line.startswith(">"): write_flag = (line.strip()[1:].split()[0] in valid_ids)
+                if write_flag: fout.write(line)
         EOF
-        """
+    """
 }
 
-// アノテーションの hit_ids に基づいて id_mapping.tsv をフィルタリングするプロセス
 process filter_mapping_by_hits {
     tag "filter_mapping"
-
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
-
-    def gb      = "${params.filter_catalog_memory}"
-    def threads = "${params.filter_catalog_threads}"
-
-    memory params.executor == "sge" ? null : "${gb} GB"
-    cpus   params.executor == "sge" ? null : threads
+    def gb = "${params.filter_catalog_memory}"; def threads = "${params.filter_catalog_threads}"
+    memory params.executor == "sge" ? null : "${gb} GB"; cpus params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
-
-    input:
-        path id_mapping
-        path hit_ids
-
-    output:
-        tuple val("filtered_mapping"), path("filtered_id_mapping.tsv"), emit: filtered_mapping
-
-    script:
-        """
+    input: path id_mapping; path hit_ids
+    output: tuple val("filtered_mapping"), path("filtered_id_mapping.tsv"), emit: filtered_mapping
+    script: """
         echo "${processProfile(task)}" | tee prof.txt
         python3 - << 'EOF'
-        valid_ids = set()
-        with open("${hit_ids}", "r") as f:
-            for line in f:
-                qid = line.strip()
-                if qid:
-                    valid_ids.add(qid)
-
+        valid_ids = {line.strip() for line in open("${hit_ids}") if line.strip()}
         with open("${id_mapping}", "r") as fin, open("filtered_id_mapping.tsv", "w") as fout:
             for line in fin:
                 parts = line.strip().split("\t")
-                if not parts:
-                    continue
-                catalog_id = parts[0]
-                if catalog_id in valid_ids:
-                    fout.write(line)
+                if parts and parts[0] in valid_ids: fout.write(line)
         EOF
-        """
+    """
 }
 
 // ==========================================
-// 1. サブワークフロー（再利用可能な処理の本体）
+// 1. サブワークフロー
 // ==========================================
 
 workflow BACTERIOME_PIPELINE_SUB {
-    take:
-    p
-    host_ref             // ホストゲノム(FASTAまたはDB)
-    ref_or_db            // アノテーション用リファレンス
-    taxid_map            // uniprot_to_taxid.tsv
-    ko_map               // uniprot_to_ko.tsv
-    ko_name_map          // ko_to_name.tsv (任意)
-    taxid_name_map       // taxid_to_name.tsv (任意)
-    reads                // 入力リードペア [ pair_id, [R1, R2] ]
+    take: p; host_ref; ref_or_db; taxid_map; ko_map; ko_name_map; taxid_name_map; reads
 
     main:
     // 1. FASTP による QC・トリミング
     fp = FASTP_SUB(p, reads)
-
+    
     // 2. ホスト除去
     host_removed = REMOVE_HOST_SUB(p, host_ref, fp.out)
-
+    
     // 3. アセンブリ
     asm_res = ASSEMBLY_SUB(p, host_removed.reads)
-
+    
     // 4. Prodigal による ORF (遺伝子) 予測
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
+    // 5. merge_fasta 用に全サンプルの faa / fna リストを集約
     sample_orf_fna_ch = orf_res.out.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
-
     all_faa_files = orf_res.out.map { qry_id, faa, fna, gbk -> faa }.collect()
     all_fna_files = orf_res.out.map { qry_id, faa, fna, gbk -> fna }.collect()
 
-    merge_inputs_ch = all_faa_files.map { faa_list -> tuple(faa_list, "faa") }
-        .mix(all_fna_files.map { fna_list -> tuple(fna_list, "fna") })
-
+    merge_inputs_ch = all_faa_files.map { tuple(it, "faa") }.mix(all_fna_files.map { tuple(it, "fna") })
     merged_fastas = merge_fasta(merge_inputs_ch)
 
     merged_faa_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.faa') }
     merged_fna_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.fna') }
 
-    // 6. NRカタログ構築
+    // 6. NRカタログ構築 (MMseqs2によるクラスタリング ＆ NRCAT連番ID化 ＆ 対応表作成)
     nr_catalog_res = NR_CATALOG_SUB(p, merged_faa_fasta, merged_fna_fasta)
+    nr_rep_faa_path = nr_catalog_res.rep_faa.map(extractPath)
+    nr_rep_fna_path = nr_catalog_res.rep_fna.map(extractPath)
+    
+    // 7. アノテーション（クラスタリング＆リネーム済みの代表アミノ酸カタログ .faa 側に対して実行）
+    annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_rep_faa_path, taxid_map, ko_map)
+    annotated_path_ch = annotation_res.annotated.map(extractPath)
+    hit_ids_path_ch   = annotation_res.hit_ids.map(extractPath)
 
-    // 7. アノテーション
-    annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_catalog_res.rep_faa, taxid_map, ko_map)
-
-    // 8. フィルタリング
-    catalog_to_filter = nr_catalog_res.rep_faa.map { id, path -> tuple(path, "faa") }
-        .mix(nr_catalog_res.rep_fna.map { id, path -> tuple(path, "fna") })
-
-    filtered_catalogs = filter_catalog_by_hits(catalog_to_filter, annotation_res.hit_ids)
+    // 8. hit_ids に基づいてカタログ（FAAおよびFNA）、マッピングテーブル (id_mapping)をフィルタリング
+    catalog_to_filter = nr_rep_faa_path.map { tuple(it, "faa") }.mix(nr_rep_fna_path.map { tuple(it, "fna") })
+    filtered_catalogs = filter_catalog_by_hits(catalog_to_filter, hit_ids_path_ch)
 
     filtered_rep_faa = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.faa') }
     filtered_rep_fna = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.fna') }
     
-    // nr_catalog_res.mapping から確実にファイルパスだけを安全に抽出するガード処理
-    mapping_path_ch = nr_catalog_res.mapping.map { item ->
-        if (item instanceof List) {
-            def path_val = item.find { it instanceof java.nio.file.Path || it instanceof File || it.toString().endsWith('.tsv') }
-            return path_val ?: item[1]
-        }
-        return item
-    }
-    filtered_mapping_res = filter_mapping_by_hits(mapping_path_ch, annotation_res.hit_ids)
+    mapping_path_ch = nr_catalog_res.mapping.map(extractPath)
+    filtered_mapping_res = filter_mapping_by_hits(mapping_path_ch, hit_ids_path_ch)
 
-    // 9. ORF マッピング
+    // 9. ORF マッピング（各サンプルの ORF vs フィルタリング済みカタログ塩基配列 .fna）
     samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, filtered_rep_fna, sample_orf_fna_ch)
-
-    // 10. ORF -> TaxID / KO 対応テーブル構築
-    samples_anno_res = ANNOTATE_SAMPLES_SUB(p, samples_mapping_res.out, annotation_res.annotated)
-
-    // 11. 集計処理
+    
+    // 10. ORF -> TaxID / KO 対応テーブルの構築
+    samples_anno_res = ANNOTATE_SAMPLES_SUB(p, samples_mapping_res.out, annotated_path_ch)
+    
+    // 11. サンプルごとの KO / TaxID 比率の集計処理 
     summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
 
     emit:
-    raw_reads             = reads
-    fastp_reads           = fp.out
-    host_removed_reads    = host_removed.reads
-    contigs               = asm_res.asm
-    flt_seqs              = asm_res.flt_seqs
-    orfs                  = orf_res.out
-    annotated             = annotation_res.annotated
-    hit_ids               = annotation_res.hit_ids
-    nr_catalog_faa        = filtered_rep_faa
-    nr_catalog_fna        = filtered_rep_fna
-    id_mapping            = filtered_mapping_res.filtered_mapping
-    samples_map_out       = samples_mapping_res.out
-    samples_anno          = samples_anno_res.samples_anno
-    ko_summary            = summary_res.ko_summary
-    tax_summary           = summary_res.tax_summary
+    raw_reads=reads; fastp_reads=fp.out; host_removed_reads=host_removed.reads; contigs=asm_res.asm
+    flt_seqs=asm_res.flt_seqs; orfs=orf_res.out; annotated=annotated_path_ch; hit_ids=hit_ids_path_ch
+    nr_catalog_faa=filtered_rep_faa; nr_catalog_fna=filtered_rep_fna; id_mapping=filtered_mapping_res.filtered_mapping
+    samples_map_out=samples_mapping_res.out; samples_anno=samples_anno_res.samples_anno
+    ko_summary=summary_res.ko_summary; tax_summary=summary_res.tax_summary
 }
-
-// ==========================================
-// 2. コマンドライン (-entry) 用エントリーポイント
-// ==========================================
 
 workflow BACTERIOME_PIPELINE_ALL {
     p = createNullParamsChannel()
-
     def reads_list = params.bacteriome_pipeline_reads.split(';')
-
-    def individual_channels = reads_list.collect { reads_path ->
-        Channel.fromFilePairs(reads_path, checkIfExists: true)
-    }
-
+    def individual_channels = reads_list.collect { Channel.fromFilePairs(it, checkIfExists: true) }
     def reads_mixed = individual_channels.first()
-    if (individual_channels.size() > 1) {
-        individual_channels.tail().each { ch ->
-            reads_mixed = reads_mixed.mix(ch)
-        }
-    }
-
+    if (individual_channels.size() > 1) { individual_channels.tail().each { reads_mixed = reads_mixed.mix(it) } }
+    
     def index = 0
-    reads = reads_mixed.map { id, pair ->
-        def new_id = "${String.format('%02d', index++)}_${id}"
-        tuple(new_id, pair)
-    }
+    reads = reads_mixed.map { id, pair -> tuple("${String.format('%02d', index++)}_${id}", pair) }
 
     host_ref  = createSeqsChannel(params.remove_host_ref_fasta_or_db)
     ref_or_db = createSeqsChannel(params.annotate_catalog_prot_ref_or_db)
     taxid_map = file(params.taxid_map_path, checkIfExists: true)
     ko_map    = file(params.ko_map_path, checkIfExists: true)
-
-    ko_name_map      = (params.containsKey('ko_name_map_path') && params.ko_name_map_path) ? file(params.ko_name_map_path, checkIfExists: true) : file('NO_FILE')
+    ko_name_map    = (params.containsKey('ko_name_map_path') && params.ko_name_map_path) ? file(params.ko_name_map_path, checkIfExists: true) : file('NO_FILE')
     taxid_name_map = (params.containsKey('taxid_name_map_path') && params.taxid_name_map_path) ? file(params.taxid_name_map_path, checkIfExists: true) : file('NO_FILE')
 
     out_ch = BACTERIOME_PIPELINE_SUB(p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads)
-
-    out_ch.fastp_reads.view         { i -> "FASTP PASSED READS  : $i" }
-    out_ch.host_removed_reads.view   { i -> "HOST REMOVED READS  : $i" }
-    out_ch.contigs.view              { i -> "ASSEMBLY CONTIGS    : $i" }
-    out_ch.orfs.view                 { i -> "PRODIGAL ORFS       : $i" }
-    out_ch.annotated.view            { i -> "ANNOTATED TSV       : $i" }
-    out_ch.nr_catalog_faa.view       { i -> "NR CATALOG FAA      : $i" }
-    out_ch.nr_catalog_fna.view       { i -> "NR CATALOG FNA      : $i" }
-    out_ch.id_mapping.view           { i -> "ID MAPPING TSV      : $i" }
-    out_ch.samples_map_out.view      { i -> "SAMPLES MAP RESULT  : $i" }
-    out_ch.samples_anno.view         { i -> "SAMPLES KO TAXID TSV: $i" }
-    out_ch.ko_summary.view           { i -> "KO SUMMARY TSV      : $i" }
-    out_ch.tax_summary.view          { i -> "TAXID SUMMARY TSV   : $i" }
 }
 
-workflow {
-    BACTERIOME_PIPELINE_ALL()
-}
+workflow { BACTERIOME_PIPELINE_ALL() }
