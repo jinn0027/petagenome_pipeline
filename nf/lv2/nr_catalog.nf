@@ -43,7 +43,7 @@ process merge_mappings {
         path mapping_files
 
     output:
-        path "id_mapping.tsv"
+        path "id_mapping.tsv", emit: id_mapping
 
     script:
         """
@@ -58,7 +58,7 @@ process sanitize_and_rename {
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb     = "${params.nr_catalog_sanitize_memory}"
+    def gb      = "${params.nr_catalog_sanitize_memory}"
     def threads = "${params.nr_catalog_sanitize_threads}"
 
     memory params.executor == "sge" ? null : "${gb} GB"
@@ -129,7 +129,7 @@ process filter_fna_by_faa {
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb     = "${params.nr_catalog_filter_fna_memory}"
+    def gb      = "${params.nr_catalog_filter_fna_memory}"
     def threads = "${params.nr_catalog_filter_fna_threads}"
 
     memory params.executor == "sge" ? null : "${gb} GB"
@@ -206,12 +206,12 @@ workflow NR_CATALOG_SUB {
 
     // 全サンプルの mapping ファイルを収集して1つに結合
     mapping_files_list = sanitized.map { id, faa_p, fna_p, mapping -> mapping }.collect()
-    combined_mapping = merge_mappings(mapping_files_list)
+    combined_mapping = merge_mappings(mapping_files_list).id_mapping
 
     emit:
     rep_faa = clustered                                // [ "nr_prot", path/to/rep.faa ]
     rep_fna = nr_fna                                   // [ "nr_catalog", path/to/nr_catalog.fna ]
-    mapping = combined_mapping                         // path/to/id_mapping.tsv (単体のパス)
+    mapping = combined_mapping.map { path -> path }    // path/to/id_mapping.tsv (単体のパス)
 }
 
 // ==========================================

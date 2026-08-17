@@ -216,7 +216,16 @@ workflow BACTERIOME_PIPELINE_SUB {
 
     filtered_rep_faa = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.faa') }
     filtered_rep_fna = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.fna') }
-    filtered_mapping_res = filter_mapping_by_hits(nr_catalog_res.mapping, annotation_res.hit_ids)
+    
+    // nr_catalog_res.mapping から確実にファイルパスだけを安全に抽出するガード処理
+    mapping_path_ch = nr_catalog_res.mapping.map { item ->
+        if (item instanceof List) {
+            def path_val = item.find { it instanceof java.nio.file.Path || it instanceof File || it.toString().endsWith('.tsv') }
+            return path_val ?: item[1]
+        }
+        return item
+    }
+    filtered_mapping_res = filter_mapping_by_hits(mapping_path_ch, annotation_res.hit_ids)
 
     // 9. ORF マッピング
     samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, filtered_rep_fna, sample_orf_fna_ch)
@@ -228,21 +237,21 @@ workflow BACTERIOME_PIPELINE_SUB {
     summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
 
     emit:
-    raw_reads            = reads
-    fastp_reads          = fp.out
-    host_removed_reads   = host_removed.reads
-    contigs              = asm_res.asm
-    flt_seqs             = asm_res.flt_seqs
-    orfs                 = orf_res.out
-    annotated            = annotation_res.annotated
-    hit_ids              = annotation_res.hit_ids
-    nr_catalog_faa       = filtered_rep_faa
-    nr_catalog_fna       = filtered_rep_fna
-    id_mapping           = filtered_mapping_res.filtered_mapping
-    samples_map_out      = samples_mapping_res.out
-    samples_anno         = samples_anno_res.samples_anno
-    ko_summary           = summary_res.ko_summary
-    tax_summary          = summary_res.tax_summary
+    raw_reads             = reads
+    fastp_reads           = fp.out
+    host_removed_reads    = host_removed.reads
+    contigs               = asm_res.asm
+    flt_seqs              = asm_res.flt_seqs
+    orfs                  = orf_res.out
+    annotated             = annotation_res.annotated
+    hit_ids               = annotation_res.hit_ids
+    nr_catalog_faa        = filtered_rep_faa
+    nr_catalog_fna        = filtered_rep_fna
+    id_mapping            = filtered_mapping_res.filtered_mapping
+    samples_map_out       = samples_mapping_res.out
+    samples_anno          = samples_anno_res.samples_anno
+    ko_summary            = summary_res.ko_summary
+    tax_summary           = summary_res.tax_summary
 }
 
 // ==========================================
@@ -281,7 +290,7 @@ workflow BACTERIOME_PIPELINE_ALL {
 
     out_ch = BACTERIOME_PIPELINE_SUB(p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads)
 
-    out_ch.fastp_reads.view          { i -> "FASTP PASSED READS  : $i" }
+    out_ch.fastp_reads.view         { i -> "FASTP PASSED READS  : $i" }
     out_ch.host_removed_reads.view   { i -> "HOST REMOVED READS  : $i" }
     out_ch.contigs.view              { i -> "ASSEMBLY CONTIGS    : $i" }
     out_ch.orfs.view                 { i -> "PRODIGAL ORFS       : $i" }
