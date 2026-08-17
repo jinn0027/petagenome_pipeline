@@ -1,16 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// 共通のパス抽出関数
-// タプル(List)であれば中からPath/File/ファイル名を探し、単体ならそのまま返す
-def extractPath = { item ->
-    if (item instanceof List) {
-        def found = item.find { it instanceof java.nio.file.Path || it instanceof File || it.toString().contains('.') }
-        return found ?: item[1]
-    }
-    return item
-}
-
 // 1. 全体デフォルト値の定義
 params.memory  = 16
 params.threads = 4
@@ -26,8 +16,8 @@ def FILTER_CATALOG_MAX_THREADS = 2
 // 3. 上限値による動的クリッピング
 params.sync_pair_memory     = Math.min(params.memory as Integer, SYNC_PAIR_MAX_MEMORY)
 params.sync_pair_threads    = Math.min(params.threads as Integer, SYNC_PAIR_MAX_THREADS)
-params.merge_fasta_memory    = Math.min(params.memory as Integer, MERGE_FASTA_MAX_MEMORY)
-params.merge_fasta_threads   = Math.min(params.threads as Integer, MERGE_FASTA_MAX_THREADS)
+params.merge_fasta_memory   = Math.min(params.memory as Integer, MERGE_FASTA_MAX_MEMORY)
+params.merge_fasta_threads  = Math.min(params.threads as Integer, MERGE_FASTA_MAX_THREADS)
 params.filter_catalog_memory    = Math.min(params.memory as Integer, FILTER_CATALOG_MAX_MEMORY)
 params.filter_catalog_threads   = Math.min(params.threads as Integer, FILTER_CATALOG_MAX_THREADS)
 
@@ -39,11 +29,11 @@ include { FASTP_SUB }                  from "${params.petagenomeDir}/nf/lv1/fast
 include { REMOVE_HOST_SUB }            from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
 include { ASSEMBLY_SUB }               from "${params.petagenomeDir}/nf/lv2/assembly.nf"
 include { PRODIGAL_SUB }               from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
-include { ANNOTATE_CATALOG_SUB }         from "${params.petagenomeDir}/nf/lv2/annotate_catalog_prot.nf"
+include { ANNOTATE_CATALOG_SUB }       from "${params.petagenomeDir}/nf/lv2/annotate_catalog_prot.nf"
+include { NR_CATALOG_SUB }             from "${params.petagenomeDir}/nf/lv2/nr_catalog.nf"
 include { ALIGN_SAMPLES_TO_CATALOG_SUB } from "${params.petagenomeDir}/nf/lv2/align_samples_to_catalog.nf"
-include { ANNOTATE_SAMPLES_SUB }         from "${params.petagenomeDir}/nf/lv2/annotate_samples.nf"
-include { SUMMARIZE_KO_TAXID_SUB }       from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
-include { NR_CATALOG_SUB }               from "${params.petagenomeDir}/nf/lv2/nr_catalog.nf"
+include { ANNOTATE_SAMPLES_SUB }       from "${params.petagenomeDir}/nf/lv2/annotate_samples.nf"
+include { SUMMARIZE_KO_TAXID_SUB }     from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
 
 // プロセス定義
 process merge_fasta {
@@ -137,13 +127,13 @@ workflow BACTERIOME_PIPELINE_SUB {
 
     // 6. NRカタログ構築 (MMseqs2によるクラスタリング ＆ NRCAT連番ID化 ＆ 対応表作成)
     nr_catalog_res = NR_CATALOG_SUB(p, merged_faa_fasta, merged_fna_fasta)
-    nr_rep_faa_path = nr_catalog_res.rep_faa.map(extractPath)
-    nr_rep_fna_path = nr_catalog_res.rep_fna.map(extractPath)
+    nr_rep_faa_path = nr_catalog_res.rep_faa.map { id, path -> path }
+    nr_rep_fna_path = nr_catalog_res.rep_fna.map { id, path -> path }
     
     // 7. アノテーション（クラスタリング＆リネーム済みの代表アミノ酸カタログ .faa 側に対して実行）
     annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_rep_faa_path, taxid_map, ko_map)
-    annotated_path_ch = annotation_res.annotated.map(extractPath)
-    hit_ids_path_ch   = annotation_res.hit_ids.map(extractPath)
+    annotated_path_ch = annotation_res.annotated.map { id, path -> path }
+    hit_ids_path_ch   = annotation_res.hit_ids.map { id, path -> path }
 
     // 8. hit_ids に基づいてカタログ（FAAおよびFNA）、マッピングテーブル (id_mapping)をフィルタリング
     catalog_to_filter = nr_rep_faa_path.map { tuple(it, "faa") }.mix(nr_rep_fna_path.map { tuple(it, "fna") })
@@ -152,7 +142,7 @@ workflow BACTERIOME_PIPELINE_SUB {
     filtered_rep_faa = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.faa') }
     filtered_rep_fna = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.fna') }
     
-    mapping_path_ch = nr_catalog_res.mapping.map(extractPath)
+    mapping_path_ch = nr_catalog_res.mapping.map { id, path -> path }
     filtered_mapping_res = filter_mapping_by_hits(mapping_path_ch, hit_ids_path_ch)
 
     // 9. ORF マッピング（各サンプルの ORF vs フィルタリング済みカタログ塩基配列 .fna）

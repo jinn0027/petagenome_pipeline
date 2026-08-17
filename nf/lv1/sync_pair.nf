@@ -7,7 +7,7 @@ params.threads = 4
 
 // 2. このモジュール・タスク固有の推奨・上限値
 def SYNC_MAX_MEMORY  = 16  
-def SYNC_MAX_THREADS = 16  // seqkit はマルチスレッドに対応
+def SYNC_MAX_THREADS = 16  // seqkit はマルチスレッドに対応しています
 
 // 3. 上限値による動的クリッピング
 params.sync_pair_memory  = Math.min(params.memory as Integer, SYNC_MAX_MEMORY)
@@ -18,6 +18,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 
 process sync_pair {
     tag "${pair_id}"
+    // seqkit が入っているコンテナを指定
     container = "${params.petagenomeDir}/modules/seqkit/seqkit.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
@@ -40,11 +41,15 @@ process sync_pair {
         mkdir -p ${pair_id}
 
         # seqkit pair を用いた高速ペアリング
+        # -u (あるいは --save-unpaired) を外し、正しくマッチしたものだけを出力させる
+        # ヘッダーのパース正規表現を --id-regexp で指定し、どんな命名規則でも確実にIDを認識させる
+        
         seqkit pair \
             -j ${threads} \
             -1 ${reads[0]} \
             -2 ${reads[1]} \
             -O ${pair_id}_seqkit_tmp \
+            --id-regexp "^(\\S+)" \
             -f \
             --quiet
 

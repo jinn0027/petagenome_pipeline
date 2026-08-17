@@ -99,7 +99,7 @@ workflow ALIGN_SAMPLES_TO_CATALOG_WITH_DB {
 // デフォルトエントリーポイント
 workflow {
     if (params.align_samples_to_catalog_is_prebuilt_db) {
-        ALIGN_SAMMPLES_TO_CATALOG_WITH_DB()
+        ALIGN_SAMPLES_TO_CATALOG_WITH_DB()
     } else {
         ALIGN_SAMPLES_TO_CATALOG_ALL()
     }

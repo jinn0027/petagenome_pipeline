@@ -37,18 +37,18 @@ process fastp {
         """
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
-        fastp \\
-            -w ${threads} \\
-            --detect_adapter_for_pe \\
-            --low_complexity_filter \\
-            -i ${reads[0]} \\
-            -I ${reads[1]} \\
-            -o ${pair_id}/out_1.fastq.gz \\
-            -O ${pair_id}/out_2.fastq.gz \\
-            --cut_front --cut_tail \\
-            --cut_mean_quality ${getParam(p, params, 'fastp_cut_mean_quality')} \\
-            --length_required ${getParam(p, params, 'fastp_reads_minlength')} \\
-            --json ${pair_id}_fastp.json \\
+        fastp \
+            -w ${threads} \
+            --detect_adapter_for_pe \
+            --low_complexity_filter \
+            -i ${reads[0]} \
+            -I ${reads[1]} \
+            -o ${pair_id}/out_1.fastq.gz \
+            -O ${pair_id}/out_2.fastq.gz \
+            --cut_front --cut_tail \
+            --cut_mean_quality ${getParam(p, params, 'fastp_cut_mean_quality')} \
+            --length_required ${getParam(p, params, 'fastp_reads_minlength')} \
+            --json ${pair_id}_fastp.json \
             --html ${pair_id}_fastp.html
         """
 }
@@ -86,7 +86,7 @@ workflow FASTP_ALL {
     reads = createPairsChannel(params.fastp_reads)
 
     out_ch = FASTP_SUB(p, reads)
-    out_ch.out.view { i -> "$i" }
+    out_ch.view { i -> "$i" }
 }
 
 // デフォルトエントリーポイント

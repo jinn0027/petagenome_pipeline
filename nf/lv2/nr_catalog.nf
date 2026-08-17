@@ -25,7 +25,6 @@ include { BUILD_REF_DB_PROT_SUB; CLUSTER_PROT_SUB } from "${params.petagenomeDir
 // 1. プロセス定義
 // ==========================================
 
-// 全サンプルの initial_mapping.tsv を1つにまとめるプロセス
 process merge_mappings {
     tag "merge_mapping"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
@@ -137,7 +136,7 @@ process filter_fna_by_faa {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        path sanitized_fnas       // 複数のfnaファイルをまとめて受け取る
+        path sanitized_fnas
         tuple val(rep_id), path(rep_faa)
     output:
         tuple val("nr_catalog"), path("nr_catalog.fna")
@@ -185,38 +184,39 @@ workflow NR_CATALOG_SUB {
 
     main:
     input_ch = faa.join(fna)
-    sanitized = sanitize_and_rename(input_ch) // [id, sanitized_faa, sanitized_fna, mapping]
+    sanitized = sanitize_and_rename(input_ch)
 
-    // 1. MMseqs2 用に入力を成形
+    // 1. MMseqs2 用の入力: [id, faa_path] のタプルを明示的に作成
     cluster_in = sanitized.map { id, faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
-    ref_db     = BUILD_REF_DB_PROT_SUB(p, cluster_in)
+    
+    ref_db = BUILD_REF_DB_PROT_SUB(p, cluster_in)
     clustered_raw = CLUSTER_PROT_SUB(p, ref_db) 
 
-    clustered = clustered_raw.map { item ->
-        if (item instanceof List) {
-            def path_val = item.find { it instanceof java.nio.file.Path || it instanceof File || (it.toString().endsWith('.fasta') || it.toString().endsWith('.faa')) }
-            def id_val = item[0] instanceof CharSequence ? item[0] : "nr_prot"
-            return tuple(id_val, path_val)
-        }
-        return item
+    // 2. 整合性の担保: CLUSTER_PROT_SUB の出力が何であれ、[id, path] タプルに変換
+    // 構造を特定し、Pathオブジェクトを確実に抽出してtupleにする
+    clustered = clustered_raw.map { 
+        // 戻り値が [id, path] であると仮定されている出力の場合のデコード
+        // もし単一のPathなら [id, path] に補完
+        def path = (it instanceof List || it instanceof Object[]) ? it.find { x -> x instanceof java.nio.file.Path } : it
+        tuple("nr_prot", path)
     }
 
+    // 3. 入力リストの準備: sanitized から直接 Path を取得
     sanitized_fna_list = sanitized.map { id, faa_p, fna_p, mapping -> fna_p }.collect()
+    
+    // 4. filter_fna_by_faa への入力: 確実に [id, path] を渡す
+    // プロセス定義 input は tuple val(rep_id), path(rep_faa) を期待しているため整合する
     nr_fna = filter_fna_by_faa(sanitized_fna_list, clustered)
 
-    // 全サンプルの mapping ファイルを収集して1つに結合
+    // 5. マッピングの結合: マッピングファイル群をまとめる
     mapping_files_list = sanitized.map { id, faa_p, fna_p, mapping -> mapping }.collect()
     combined_mapping = merge_mappings(mapping_files_list).id_mapping
 
     emit:
-    rep_faa = clustered                                // [ "nr_prot", path/to/rep.faa ]
-    rep_fna = nr_fna                                   // [ "nr_catalog", path/to/nr_catalog.fna ]
-    mapping = combined_mapping.map { path -> path }    // path/to/id_mapping.tsv (単体のパス)
+    rep_faa = clustered         // [ "nr_prot", Path ]
+    rep_fna = nr_fna            // [ "nr_catalog", Path ]
+    mapping = combined_mapping  // Path
 }
-
-// ==========================================
-// 3. コマンドライン (-entry) 用エントリーポイント
-// ==========================================
 
 workflow NR_CATALOG_ALL {
     p             = createNullParamsChannel()
