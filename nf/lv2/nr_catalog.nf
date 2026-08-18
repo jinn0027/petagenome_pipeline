@@ -25,30 +25,30 @@ include { BUILD_REF_DB_PROT_SUB; CLUSTER_PROT_SUB } from "${params.petagenomeDir
 // 1. プロセス定義
 // ==========================================
 
-process merge_mappings {
-    tag "merge_mapping"
+// 複数ファイルの単純な結合用プロセス
+process merge_input_sequences {
+    tag "merge_inputs"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
-    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb      = "${params.nr_catalog_sanitize_memory}"
     def threads = "${params.nr_catalog_sanitize_threads}"
     memory params.executor == "sge" ? null : "${gb} GB"
     cpus   params.executor == "sge" ? null : threads
-    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        path mapping_files
+        path(faas)
+        path(fnas)
     output:
-        tuple val("nr_catalog"), path("id_mapping.tsv")
+        tuple path("merged.faa"), path("merged.fna")
     script:
         """
-        echo "${processProfile(task)}" | tee prof.txt
-        cat ${mapping_files} > id_mapping.tsv
+        cat ${faas} > merged.faa
+        cat ${fnas} > merged.fna
         """
 }
 
 process sanitize_and_rename {
-    tag "sanitize_${id}"
+    tag "sanitize_all"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
@@ -61,9 +61,9 @@ process sanitize_and_rename {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple val(id), path(faa), path(fna)
+        tuple path(faa), path(fna)
     output:
-        tuple val(id), path("sanitized.faa"), path("sanitized.fna"), path("initial_mapping.tsv")
+        tuple path("sanitized.faa"), path("sanitized.fna"), path("initial_mapping.tsv")
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
@@ -132,25 +132,30 @@ process filter_fna_by_faa {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        path sanitized_fnas
-        tuple val(rep_id), path(rep_faa)
+        tuple path(sanitized_fnas), val(rep_id), path(rep_faa)
+
     output:
         tuple val("nr_catalog"), path("nr_catalog.fna")
+
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
         python3 - << 'EOF'
+import glob, os
+
 rep_ids = set()
 with open("${rep_faa}", "r") as f:
     for line in f:
         if line.startswith(">"):
-            rep_id = line.strip()[1:].split()[0]
-            rep_ids.add(rep_id)
+            rid = line.strip()[1:].split()[0]
+            rep_ids.add(rid)
 
 output_fna = "nr_catalog.fna"
 
+input_fna_files = [f for f in glob.glob("*.fna") if f != output_fna]
+
 with open(output_fna, "w") as fout:
-    for input_fna in "${sanitized_fnas}".split():
+    for input_fna in sorted(input_fna_files):
         with open(input_fna, "r") as fin:
             write_flag = False
             for line in fin:
@@ -179,34 +184,38 @@ workflow NR_CATALOG_SUB {
     fna
 
     main:
-    input_ch = faa.join(fna)
-    sanitized = sanitize_and_rename(input_ch)
-
-    // 1. MMseqs2 用の入力: [id, faa_path] のタプルを明示的に作成
-    cluster_in = sanitized.map { id, faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
+    // 1. 全てのFAA/FNAを収集してまずマージ
+    all_faa = faa.map { id, path -> path }.collect()
+    all_fna = fna.map { id, path -> path }.collect()
     
+    merged = merge_input_sequences(all_faa, all_fna)
+
+    // 2. マージされたファイルに対して1回だけサニタイズを実行
+    sanitized = sanitize_and_rename(merged)
+
+    // 3. MMseqs2 用の入力: [ "nr_prot", sanitized.faa ]
+    cluster_in = sanitized.map { faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
+
+    // 4. クラスタリング用のDB作成
     ref_db = BUILD_REF_DB_PROT_SUB(p, cluster_in)
     clustered_faa = CLUSTER_PROT_SUB(p, ref_db).out.map { id, fasta, tsv -> tuple(id, fasta) }
 
-    // 3. 入力リストの準備: sanitized から直接 Path を取得
-    sanitized_fna_list = sanitized.map { id, faa_p, fna_p, mapping -> fna_p }.collect()
+    // 4. フィルタリング用の入力組み立て ([sanitized.fna], rep_id, rep_faa)
+    filter_in = sanitized.map { faa_p, fna_p, mapping -> [fna_p] }.combine(clustered_faa)
     
-    // 4. filter_fna_by_faa への入力: 確実に [id, path] を渡す
-    // プロセス定義 input は tuple val(rep_id), path(rep_faa) を期待しているため整合する
-    nr_fna = filter_fna_by_faa(sanitized_fna_list, clustered_faa)
+    nr_fna = filter_fna_by_faa(filter_in)
 
-    // 5. マッピングの結合: マッピングファイル群をまとめる
-    mapping_files_list = sanitized.map { id, faa_p, fna_p, mapping -> mapping }.collect()
-    nr_mapping = merge_mappings(mapping_files_list)
-
+    // 5. マッピングの出力（1つになった initial_mapping.tsv をそのまま利用）
+    nr_mapping = sanitized.map { faa_p, fna_p, mapping -> tuple("nr_catalog", mapping) }
+    
     emit:
-    rep_faa = clustered_faa     // [ "nr_prot", Path ]
-    rep_fna = nr_fna            // [ "nr_catalog", Path ]
-    mapping = nr_mapping        // [ "nr_catalog", Path ]
+    rep_faa = clustered_faa      // [ "nr_prot", Path ]
+    rep_fna = nr_fna             // [ "nr_catalog", Path ]
+    mapping = nr_mapping         // [ "nr_catalog", Path ]
 }
 
 workflow NR_CATALOG_ALL {
-    p             = createNullParamsChannel()
+    p                = createNullParamsChannel()
     catalog_faa = createSeqsChannel(params.nr_catalog_faa)
     catalog_fna = createSeqsChannel(params.nr_catalog_fna)
 
