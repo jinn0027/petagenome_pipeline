@@ -30,20 +30,16 @@ process merge_mappings {
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
-
     def gb      = "${params.nr_catalog_sanitize_memory}"
     def threads = "${params.nr_catalog_sanitize_threads}"
-
     memory params.executor == "sge" ? null : "${gb} GB"
     cpus   params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
         path mapping_files
-
     output:
-        path "id_mapping.tsv", emit: id_mapping
-
+        tuple val("nr_catalog"), path("id_mapping.tsv")
     script:
         """
         echo "${processProfile(task)}" | tee prof.txt
@@ -190,32 +186,23 @@ workflow NR_CATALOG_SUB {
     cluster_in = sanitized.map { id, faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
     
     ref_db = BUILD_REF_DB_PROT_SUB(p, cluster_in)
-    clustered_raw = CLUSTER_PROT_SUB(p, ref_db) 
-
-    // 2. 整合性の担保: CLUSTER_PROT_SUB の出力が何であれ、[id, path] タプルに変換
-    // 構造を特定し、Pathオブジェクトを確実に抽出してtupleにする
-    clustered = clustered_raw.map { 
-        // 戻り値が [id, path] であると仮定されている出力の場合のデコード
-        // もし単一のPathなら [id, path] に補完
-        def path = (it instanceof List || it instanceof Object[]) ? it.find { x -> x instanceof java.nio.file.Path } : it
-        tuple("nr_prot", path)
-    }
+    clustered_faa = CLUSTER_PROT_SUB(p, ref_db) 
 
     // 3. 入力リストの準備: sanitized から直接 Path を取得
     sanitized_fna_list = sanitized.map { id, faa_p, fna_p, mapping -> fna_p }.collect()
     
     // 4. filter_fna_by_faa への入力: 確実に [id, path] を渡す
     // プロセス定義 input は tuple val(rep_id), path(rep_faa) を期待しているため整合する
-    nr_fna = filter_fna_by_faa(sanitized_fna_list, clustered)
+    nr_fna = filter_fna_by_faa(sanitized_fna_list, clustered_faa)
 
     // 5. マッピングの結合: マッピングファイル群をまとめる
     mapping_files_list = sanitized.map { id, faa_p, fna_p, mapping -> mapping }.collect()
-    combined_mapping = merge_mappings(mapping_files_list).id_mapping
+    nr_mapping = merge_mappings(mapping_files_list)
 
     emit:
-    rep_faa = clustered         // [ "nr_prot", Path ]
+    rep_faa = clustered_faa     // [ "nr_prot", Path ]
     rep_fna = nr_fna            // [ "nr_catalog", Path ]
-    mapping = combined_mapping  // Path
+    mapping = nr_mapping        // [ "nr_catalog", Path ]
 }
 
 workflow NR_CATALOG_ALL {
