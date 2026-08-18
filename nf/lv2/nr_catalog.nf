@@ -17,7 +17,7 @@ params.nr_catalog_sanitize_threads   = Math.min(params.threads as Integer, SANIT
 params.nr_catalog_filter_fna_memory  = Math.min(params.memory as Integer, FILTER_FNA_MAX_MEMORY)
 params.nr_catalog_filter_fna_threads = Math.min(params.threads as Integer, FILTER_FNA_MAX_THREADS)
 
-include { createNullParamsChannel; clusterOptions; processProfile; apptainerContainerOptions } \
+include { createNullParamsChannel; createSeqsChannel; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 include { BUILD_REF_DB_PROT_SUB; CLUSTER_PROT_SUB } from "${params.petagenomeDir}/nf/lv1/mmseqs2.nf"
 
@@ -186,7 +186,7 @@ workflow NR_CATALOG_SUB {
     cluster_in = sanitized.map { id, faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
     
     ref_db = BUILD_REF_DB_PROT_SUB(p, cluster_in)
-    clustered_faa = CLUSTER_PROT_SUB(p, ref_db) 
+    clustered_faa = CLUSTER_PROT_SUB(p, ref_db).out.map { id, fasta, tsv -> tuple(id, fasta) }
 
     // 3. 入力リストの準備: sanitized から直接 Path を取得
     sanitized_fna_list = sanitized.map { id, faa_p, fna_p, mapping -> fna_p }.collect()

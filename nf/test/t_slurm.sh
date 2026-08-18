@@ -55,6 +55,8 @@ shortFnaX2Gz1="${dataDir}/s_6_1_x2.fasta.gz"
 shortFaaGz1="${dataDir}/1.faa.gz"
 shortFaa2="${dataDir}/2.faa"
 shortFna1="${dataDir}/q.fa"
+aFna="${dataDir}/a.fna"
+aFaa="${dataDir}/a.faa"
 
 inPairs="/home/data202502/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
 
@@ -135,7 +137,7 @@ case ${test} in
             nextflow run ${nfDir}/lv2/annotate_catalog_prot.nf -entry BUILD_REF_DB_ONLY ${args} \
                      --annotate_catalog_prot_aligner mmseqs2 \
                      --annotate_catalog_prot_ref_fasta ${ref} \
-		     --mmseqs2_ref_type 1
+                     --mmseqs2_ref_type 1
             mv ${outdir}/BUILD_REF_DB_ONLY:BUILD_REF_DB_SUB:mmseqs2_makerefdb/00_uniprot ${db}
         fi
         nextflow run ${nfDir}/lv2/annotate_catalog_prot.nf -entry ANNOTATE_WITH_DB ${args} \
@@ -143,11 +145,16 @@ case ${test} in
                  --annotate_catalog_prot_is_prebuilt_db "true" \
                  --annotate_catalog_prot_prebuilt_db ${db} \
                  --annotate_catalog_prot_orfs ${shortFnaGz1} \
-		 --annotate_catalog_prot_taxid_map ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
-		 --annotate_catalog_prot_ko_map ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
+                 --annotate_catalog_prot_taxid_map ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
+                 --annotate_catalog_prot_ko_map ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
                  --prodigal_procedure "meta" \
                  --mmseqs2_ref_type 1 \
                  --mmseqs2_qry_type 1
+        ;;
+    "nr_catalog")
+        nextflow run ${nfDir}/lv2/nr_catalog.nf -entry NR_CATALOG_ALL ${args} \
+                 --nr_catalog_faa "${aFaa}" \
+                 --nr_catalog_fna "${aFna}"
         ;;
     "aa")
         nextflow run ${nfDir}/lv3/aa.nf ${args} \
