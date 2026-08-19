@@ -132,15 +132,24 @@ process filter_fna_by_faa {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple path(sanitized_fna), val(rep_id), path(rep_faa)
+        tuple(path(sanitized_fna), val(rep_id), path(rep_faa))
 
     output:
-        tuple val("nr_catalog"), path("nr_catalog.fna")
+        tuple(val("nr_catalog"), path("nr_catalog.fna"))
 
     script:
         """
-        echo "b.XXXX ${rep_id}" | tee xx.txt
-        echo "c.XXXX ${rep_faa}" | tee -a xx.txt
+        echo "=== [DEBUG] Process Started ===" > debug_vars.log
+        echo "sanitized_fna: ${sanitized_fna}" >> debug_vars.log
+        echo "rep_id:        ${rep_id}" >> debug_vars.log
+        echo "rep_faa:       ${rep_faa}" >> debug_vars.log
+        
+        # ファイルの存在確認と中身のプレビュー（最初の一行など）
+        echo "--- sanitized_fna head ---" >> debug_vars.log
+        head -n 2 "${sanitized_fna}" >> debug_vars.log
+        
+        echo "--- rep_faa head ---" >> debug_vars.log
+        head -n 2 "${rep_faa}" >> debug_vars.log
         echo "${processProfile(task)}" | tee prof.txt
         python3 - << 'EOF'
 rep_ids = set()
@@ -149,6 +158,7 @@ with open("${rep_faa}", "r") as f:
         if line.startswith(">"):
             rid = line.strip()[1:].split()[0]
             rep_ids.add(rid)
+print(f"Loaded {len(rep_ids)} representative IDs.", file=sys.stderr)
 
 input_fna = "${sanitized_fna}"
 output_fna = "nr_catalog.fna"
@@ -202,12 +212,26 @@ workflow NR_CATALOG_SUB {
     clustered_faa.view { i -> "4.XXXX clustered_faa $i"}
 
     // 5. フィルタリング用の入力組み立て (sanitized.fna, rep_id, rep_faa)
+    // .combine() を使わず、双方のチャンネルを .cross() または単に共通の元データからマッピングして直結
     filter_in = sanitized
-        .combine(clustered_faa)
-        .map { faa_p, fna_p, mapping, rep_id, rep_faa ->
+        .cross(clustered_faa)
+        .map { sanitized_tuple, clustered_tuple ->
+            def fna_p  = sanitized_tuple[1]
+            def rep_id = clustered_tuple[0]
+            def rep_faa = clustered_tuple[1]
             tuple(fna_p, rep_id, rep_faa)
         }
     filter_in.view { i -> "5.XXXX filter_in $i" }
+    
+    // ここで「プロセスに渡る直前」の各要素を個別にビューで確認する
+    filter_in.view { fna, id, faa -> 
+        """
+        [PRE-PROCESS MONITOR]
+        - FNA Path : ${fna} (Exists? ${fna.toFile().exists()})
+        - Rep ID   : ${id}
+        - FAA Path : ${faa} (Exists? ${faa.toFile().exists()})
+        """
+    }    
     
     nr_fna = filter_fna_by_faa(filter_in)
     nr_fna.view { i -> "6.XXXX nr_fna $i"}

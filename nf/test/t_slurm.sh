@@ -57,6 +57,12 @@ shortFaa2="${dataDir}/2.faa"
 shortFna1="${dataDir}/q.fa"
 aFna="${dataDir}/a.fna"
 aFaa="${dataDir}/a.faa"
+bFna="${dataDir}/b.fna"
+bFaa="${dataDir}/b.faa"
+cFna="${dataDir}/c.fna"
+cFaa="${dataDir}/c.faa"
+dFna="${dataDir}/d.fna"
+dFaa="${dataDir}/d.faa"
 
 inPairs="/home/data202502/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
 
@@ -153,11 +159,11 @@ case ${test} in
         ;;
     "nr_catalog")
         nextflow run ${nfDir}/lv2/nr_catalog.nf -entry NR_CATALOG_ALL ${args} \
-                 --nr_catalog_faa "${aFaa}" \
-                 --nr_catalog_fna "${aFna}"
+                 --nr_catalog_faa "${aFaa};${bFaa};${cFaa};${dFaa}" \
+                 --nr_catalog_fna "${aFna};${bFna};${cFna};${dFna}"
         ;;
     "aa")
-        nextflow run ${nfDir}/lv3/aa.nf ${args} \
+        nextflow run ${nfDir}/lv3/aa.nf --resume ${args} \
                  --remove_host_aligner "bwa_mem2" \
                  --remove_host_is_prebuilt_db "true" \
                  --remove_host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db" \
