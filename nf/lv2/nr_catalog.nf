@@ -132,17 +132,17 @@ process filter_fna_by_faa {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-        tuple path(sanitized_fnas), val(rep_id), path(rep_faa)
+        tuple path(sanitized_fna), val(rep_id), path(rep_faa)
 
     output:
         tuple val("nr_catalog"), path("nr_catalog.fna")
 
     script:
         """
+        echo "b.XXXX ${rep_id}" | tee xx.txt
+        echo "c.XXXX ${rep_faa}" | tee -a xx.txt
         echo "${processProfile(task)}" | tee prof.txt
         python3 - << 'EOF'
-import glob, os
-
 rep_ids = set()
 with open("${rep_faa}", "r") as f:
     for line in f:
@@ -150,25 +150,22 @@ with open("${rep_faa}", "r") as f:
             rid = line.strip()[1:].split()[0]
             rep_ids.add(rid)
 
+input_fna = "${sanitized_fna}"
 output_fna = "nr_catalog.fna"
 
-input_fna_files = [f for f in glob.glob("*.fna") if f != output_fna]
-
-with open(output_fna, "w") as fout:
-    for input_fna in sorted(input_fna_files):
-        with open(input_fna, "r") as fin:
-            write_flag = False
-            for line in fin:
-                if line.startswith(">"):
-                    orig_id = line.strip()[1:].split()[0]
-                    if orig_id in rep_ids:
-                        fout.write(line)
-                        write_flag = True
-                    else:
-                        write_flag = False
-                else:
-                    if write_flag:
-                        fout.write(line)
+with open(input_fna, "r") as fin, open(output_fna, "w") as fout:
+    write_flag = False
+    for line in fin:
+        if line.startswith(">"):
+            orig_id = line.strip()[1:].split()[0]
+            if orig_id in rep_ids:
+                fout.write(line)
+                write_flag = True
+            else:
+                write_flag = False
+        else:
+            if write_flag:
+                fout.write(line)
 EOF
         """
 }
@@ -189,24 +186,35 @@ workflow NR_CATALOG_SUB {
     all_fna = fna.map { id, path -> path }.collect()
     
     merged = merge_input_sequences(all_faa, all_fna)
+    merged.view { i -> "1.XXXX merged $i"}
 
     // 2. マージされたファイルに対して1回だけサニタイズを実行
     sanitized = sanitize_and_rename(merged)
+    sanitized.view { i -> "2.XXXX sanitized $i"}
 
     // 3. MMseqs2 用の入力: [ "nr_prot", sanitized.faa ]
     cluster_in = sanitized.map { faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
+    cluster_in.view { i -> "3.XXXX cluster_in $i"}
 
     // 4. クラスタリング用のDB作成
     ref_db = BUILD_REF_DB_PROT_SUB(p, cluster_in)
     clustered_faa = CLUSTER_PROT_SUB(p, ref_db).out.map { id, fasta, tsv -> tuple(id, fasta) }
+    clustered_faa.view { i -> "4.XXXX clustered_faa $i"}
 
-    // 4. フィルタリング用の入力組み立て ([sanitized.fna], rep_id, rep_faa)
-    filter_in = sanitized.map { faa_p, fna_p, mapping -> [fna_p] }.combine(clustered_faa)
+    // 5. フィルタリング用の入力組み立て (sanitized.fna, rep_id, rep_faa)
+    filter_in = sanitized
+        .combine(clustered_faa)
+        .map { faa_p, fna_p, mapping, rep_id, rep_faa ->
+            tuple(fna_p, rep_id, rep_faa)
+        }
+    filter_in.view { i -> "5.XXXX filter_in $i" }
     
     nr_fna = filter_fna_by_faa(filter_in)
+    nr_fna.view { i -> "6.XXXX nr_fna $i"}
 
-    // 5. マッピングの出力（1つになった initial_mapping.tsv をそのまま利用）
+    // 6. マッピングの出力（1つになった initial_mapping.tsv をそのまま利用）
     nr_mapping = sanitized.map { faa_p, fna_p, mapping -> tuple("nr_catalog", mapping) }
+    nr_mapping.view { i -> "7.XXXX mapping $i" }
     
     emit:
     rep_faa = clustered_faa      // [ "nr_prot", Path ]
