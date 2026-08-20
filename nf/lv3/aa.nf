@@ -167,15 +167,21 @@ workflow BACTERIOME_PIPELINE_SUB {
     summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
 
     emit:
-    raw_reads          = reads
-    fastp_reads        = fp.out
-    host_removed_reads = host_removed.reads
-    contigs            = asm_res.asm
-    flt_seqs           = asm_res.flt_seqs
-    orfs               = orf_res.out
-    nr_catalog         = nr_catalog_res.rep_faa
-    annotated          = annotated_path_ch
-    hit_ids            = hit_ids_path_ch
+    raw_reads             = reads
+    fastp_reads           = fp.out
+    host_removed_reads    = host_removed.reads
+    contigs               = asm_res.asm
+    flt_seqs              = asm_res.flt_seqs
+    orfs                  = orf_res.out
+    nr_catalog            = nr_catalog_res.rep_faa
+    annotated             = annotated_path_ch
+    hit_ids               = hit_ids_path_ch
+    filtered_rep_faa      = filtered_rep_faa
+    filtered_rep_fna      = filtered_rep_fna
+    filtered_mapping      = filtered_mapping_res.filtered_mapping
+    samples_mapping       = samples_mapping_res.out
+    samples_annotation    = samples_anno_res.samples_anno
+    summary               = summary_res.out
 }
 
 workflow BACTERIOME_PIPELINE_ALL {
