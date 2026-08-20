@@ -189,7 +189,7 @@ workflow BACTERIOME_PIPELINE_ALL {
         error "【パラメータ不足】 '--remove_host_ref_fasta_or_db' が指定されていません。"
     }
     if (!params.annotate_catalog_prot_ref_or_db) {
-        error "【パラメータ不足】 '--annotate_catalog_ref_or_db' が指定されていません。"
+        error "【パラメータ不足】 '--annotate_catalog_prot_ref_or_db' が指定されていません。"
     }
 
     def checkMandatoryFile = { paramName, pathStr ->
@@ -224,7 +224,7 @@ workflow BACTERIOME_PIPELINE_ALL {
     reads = reads_mixed.map { id, pair -> tuple("${String.format('%02d', index++)}_${id}", pair) }
 
     host_ref  = createSeqsChannel(params.remove_host_ref_fasta_or_db)
-    ref_or_db = createSeqsChannel(ref_or_db_path)
+    ref_or_db = createSeqsChannel(params.annotate_catalog_prot_ref_or_db)
 
     // サブワークフロー呼び出し
     out_ch = BACTERIOME_PIPELINE_SUB(p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads)
