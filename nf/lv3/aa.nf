@@ -104,15 +104,19 @@ workflow BACTERIOME_PIPELINE_SUB {
     main:
     // 1. FASTP による QC・トリミング
     fp = FASTP_SUB(p, reads)
+    fp.out.view { "DEBUG [FASTP]: $it" }
     
     // 2. ホスト除去
     host_removed = REMOVE_HOST_SUB(p, host_ref, fp.out)
+    host_removed.reads.view { "DEBUG [REMOVE_HOST]: $it" }
     
     // 3. アセンブリ
     asm_res = ASSEMBLY_SUB(p, host_removed.reads)
+    asm_res.flt_seqs.view { "DEBUG [ASSEMBLY flt_seqs]: $it" }
     
     // 4. Prodigal による ORF (遺伝子) 予測
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
+    orf_res.out.view { "DEBUG [PRODIGAL]: $it" }
 
     // 5. merge_fasta 用に全サンプルの faa / fna リストを集約
     sample_orf_fna_ch = orf_res.out.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
@@ -124,18 +128,26 @@ workflow BACTERIOME_PIPELINE_SUB {
 
     merged_faa_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.faa') }
     merged_fna_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.fna') }
+    
+    merged_faa_fasta.view { "DEBUG [MERGED_FAA]: $it" }
+    merged_fna_fasta.view { "DEBUG [MERGED_FNA]: $it" }
 
     // 6. NRカタログ構築 (MMseqs2によるクラスタリング ＆ NRCAT連番ID化 ＆ 対応表作成)
     nr_catalog_res = NR_CATALOG_SUB(p, merged_faa_fasta, merged_fna_fasta)
+    nr_catalog_res.rep_faa.view { "DEBUG [NR_CATALOG_REP_FAA]: $it" }
+    
     nr_rep_faa_path = nr_catalog_res.rep_faa.map { id, path -> path }
     nr_rep_fna_path = nr_catalog_res.rep_fna.map { id, path -> path }
     
-    // 7. アノテーション（クラスタリング＆リネーム済みの代表アミノ酸カタログ .faa 側に対して実行）
+    // 7. アノテーション
     annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_rep_faa_path, taxid_map, ko_map)
     annotated_path_ch = annotation_res.annotated.map { id, path -> path }
     hit_ids_path_ch   = annotation_res.hit_ids.map { id, path -> path }
 
-    // 8. hit_ids に基づいてカタログ（FAAおよびFNA）、マッピングテーブル (id_mapping)をフィルタリング
+    annotated_path_ch.view { "DEBUG [ANNOTATED]: $it" }
+    hit_ids_path_ch.view { "DEBUG [HIT_IDS]: $it" }
+
+    // 8. hit_ids に基づいてカタログ等をフィルタリング
     catalog_to_filter = nr_rep_faa_path.map { tuple(it, "faa") }.mix(nr_rep_fna_path.map { tuple(it, "fna") })
     filtered_catalogs = filter_catalog_by_hits(catalog_to_filter, hit_ids_path_ch)
 
@@ -145,40 +157,76 @@ workflow BACTERIOME_PIPELINE_SUB {
     mapping_path_ch = nr_catalog_res.mapping.map { id, path -> path }
     filtered_mapping_res = filter_mapping_by_hits(mapping_path_ch, hit_ids_path_ch)
 
-    // 9. ORF マッピング（各サンプルの ORF vs フィルタリング済みカタログ塩基配列 .fna）
+    // 9. ORF マッピング
     samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, filtered_rep_fna, sample_orf_fna_ch)
     
     // 10. ORF -> TaxID / KO 対応テーブルの構築
     samples_anno_res = ANNOTATE_SAMPLES_SUB(p, samples_mapping_res.out, annotated_path_ch)
     
-    // 11. サンプルごとの KO / TaxID 比率の集計処理 
+    // 11. サンプルごとの集計処理 
     summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
 
     emit:
-    raw_reads=reads; fastp_reads=fp.out; host_removed_reads=host_removed.reads; contigs=asm_res.asm
-    flt_seqs=asm_res.flt_seqs; orfs=orf_res.out; annotated=annotated_path_ch; hit_ids=hit_ids_path_ch
-    nr_catalog_faa=filtered_rep_faa; nr_catalog_fna=filtered_rep_fna; id_mapping=filtered_mapping_res.filtered_mapping
-    samples_map_out=samples_mapping_res.out; samples_anno=samples_anno_res.samples_anno
-    ko_summary=summary_res.ko_summary; tax_summary=summary_res.tax_summary
+    raw_reads          = reads
+    fastp_reads        = fp.out
+    host_removed_reads = host_removed.reads
+    contigs            = asm_res.asm
+    flt_seqs           = asm_res.flt_seqs
+    orfs               = orf_res.out
+    nr_catalog         = nr_catalog_res.rep_faa
+    annotated          = annotated_path_ch
+    hit_ids            = hit_ids_path_ch
 }
 
 workflow BACTERIOME_PIPELINE_ALL {
+    // ==========================================
+    // 1. 必須パラメータ・ファイルの厳格バリデーション
+    // ==========================================
+    if (!params.bacteriome_pipeline_reads) {
+        error "【パラメータ不足】 '--bacteriome_pipeline_reads' が指定されていません。"
+    }
+    if (!params.remove_host_ref_fasta_or_db) {
+        error "【パラメータ不足】 '--remove_host_ref_fasta_or_db' が指定されていません。"
+    }
+    if (!params.annotate_catalog_prot_ref_or_db) {
+        error "【パラメータ不足】 '--annotate_catalog_ref_or_db' が指定されていません。"
+    }
+
+    def checkMandatoryFile = { paramName, pathStr ->
+        if (!pathStr) {
+            error "【パラメータ不足】 '--${paramName}' が指定されていません。"
+        }
+        def f = file(pathStr)
+        if (!f.exists()) {
+            error "【ファイル非存在エラー】 '--${paramName}' で指定されたファイルが存在しません: ${pathStr}"
+        }
+        return f
+    }
+
+    taxid_map      = checkMandatoryFile('taxid_map_path', params.taxid_map_path)
+    ko_map         = checkMandatoryFile('ko_map_path', params.ko_map_path)
+    ko_name_map    = checkMandatoryFile('ko_name_map_path', params.ko_name_map_path)
+    taxid_name_map = checkMandatoryFile('taxid_name_map_path', params.taxid_name_map_path)
+
+    // ==========================================
+    // 2. データフロー構築
+    // ==========================================
     p = createNullParamsChannel()
+
     def reads_list = params.bacteriome_pipeline_reads.split(';')
     def individual_channels = reads_list.collect { Channel.fromFilePairs(it, checkIfExists: true) }
     def reads_mixed = individual_channels.first()
-    if (individual_channels.size() > 1) { individual_channels.tail().each { reads_mixed = reads_mixed.mix(it) } }
+    if (individual_channels.size() > 1) { 
+        individual_channels.tail().each { reads_mixed = reads_mixed.mix(it) } 
+    }
     
     def index = 0
     reads = reads_mixed.map { id, pair -> tuple("${String.format('%02d', index++)}_${id}", pair) }
 
     host_ref  = createSeqsChannel(params.remove_host_ref_fasta_or_db)
-    ref_or_db = createSeqsChannel(params.annotate_catalog_prot_ref_or_db)
-    taxid_map = file(params.taxid_map_path, checkIfExists: true)
-    ko_map    = file(params.ko_map_path, checkIfExists: true)
-    ko_name_map    = (params.containsKey('ko_name_map_path') && params.ko_name_map_path) ? file(params.ko_name_map_path, checkIfExists: true) : file('NO_FILE')
-    taxid_name_map = (params.containsKey('taxid_name_map_path') && params.taxid_name_map_path) ? file(params.taxid_name_map_path, checkIfExists: true) : file('NO_FILE')
+    ref_or_db = createSeqsChannel(ref_or_db_path)
 
+    // サブワークフロー呼び出し
     out_ch = BACTERIOME_PIPELINE_SUB(p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads)
 }
 
