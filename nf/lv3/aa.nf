@@ -181,7 +181,7 @@ workflow BACTERIOME_PIPELINE_SUB {
     filtered_mapping      = filtered_mapping_res.filtered_mapping
     samples_mapping       = samples_mapping_res.out
     samples_annotation    = samples_anno_res.samples_anno
-    summary               = summary_res.out
+    summary               = summary_res
 }
 
 workflow BACTERIOME_PIPELINE_ALL {
