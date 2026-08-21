@@ -37,28 +37,58 @@ if [ ! -f uniprot_sprot.fasta.gz  ] ; then
     wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz 
 fi
 
-if [ ! -f uniprot_to_taxid.tsv  ] || [ ! -f uniprot_to_ko.tsv ] ; then
+if [ ! -f uniprot_to_taxid.tsv  ] || [ ! -f uniprot_to_refseq.tsv ] || [ ! -f uniprot_to_gene.tsv ] || [ ! -f uniprot_to_go.tsv ]; then
     if [ ! -f idmapping_selected.tab.gz ] ; then
 	wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz
     fi
-    zcat idmapping_selected.tab.gz | awk -F'\t' ' { print $1 "\t" $12 > "uniprot_to_ko.tsv"; print $1 "\t" $3 > "uniprot_to_taxid.tsv"; } '
-    sed -i 's#; #;#g' uniprot_to_ko.tsv
-    sed -i 's#; #;#g' uniprot_to_taxid.tsv
+    zcat idmapping_selected.tab.gz | awk -F'\t' ' { print $1 "\t" $3 > "uniprot_to_taxid.tsv"; print $1 "\t" $4 > "uniprot_to_refseq.tsv"; print $1 "\t" $5 > "uniprot_to_gene.tsv" ; print $1 "\t" $6 > "uniprot_to_go.tsv" ; } '
+    for tsv in $(ls uniprot_to_*.tsv)
+    do
+	sed -i 's#; #;#g' ${tsv}
+    done
+fi
+
+if [ ! -f refseq_to_ko.tsv ] || [ ! -f ko_to_name.tsv ] ; then
+    if [ ! -f e7.og_info_kegg_go.tsv.gz ] ; then
+	wget https://eggnogdb.org/public/eggnog7/e7.og_info_kegg_go.tsv.gz
+    fi
+    
+    zcat e7.og_info_kegg_go.tsv.gz | awk -F'\t' '{
+        # $6がタンパク質リスト、$7がKO、$8がKO名
+    	proteins = $6;
+    	ko = $7;
+	name = $8;
+    
+        if (proteins != "" && ko != "") {
+            n = split(proteins, p_arr, ",");
+            for (i=1; i<=n; i++) {
+                # 必要に応じてここで RefSeq などのIDフォーマットにフィルタリング
+                print p_arr[i] "\t" ko > "refseq_to_ko.tsv1";
+                print ko "\t" name > "ko_to_name.tsv1";
+            }
+        }
+    }'
+
+    # 2. ソート・ユニーク化と整形
+    for tsv in refseq_to_ko.tsv ko_to_name.tsv; do
+        if [ -f "${tsv}1" ]; then
+            sort -u "${tsv}1" > "${tsv}"
+            sed -i 's#; #;#g' "${tsv}"
+            sed -i 's#, #,#g' "${tsv}"
+        fi
+    done
+
+    # 3. 一時ファイルの削除
+    rm -f *.tsv1
+fi
+
+
+if [ ! -f uniprot_to_ko.tsv ] ; then
+    python ${MY_DIR}/etc/join_mapping.py -ab uniprot_to_refseq.tsv -bc refseq_to_ko.tsv -o uniprot_to_ko.tsv
 fi
 
 # -----------------------------------------------------------------
-# 1. KO ID -> KO Definition (KEGG API から取得)
-# -----------------------------------------------------------------
-if [ ! -f ko_to_name.tsv ]; then
-    echo "Downloading KEGG KO list..."
-    # KEGG REST API から ko と Definition の対応表を取得
-    # 出力形式: ko:K00001\talcohol dehydrogenase [EC:1.1.1.1]
-    curl -s https://rest.kegg.jp/list/ko | \
-        awk -F'\t' 'BEGIN{OFS="\t"} {gsub(/^ko:/, "", $1); print $1, $2}' > ko_to_name.tsv
-fi
-
-# -----------------------------------------------------------------
-# 2. TaxID -> Scientific Name (NCBI Taxonomy dump から取得)
+# TaxID -> Scientific Name (NCBI Taxonomy dump から取得)
 # -----------------------------------------------------------------
 if [ ! -f taxid_to_name.tsv ]; then
     echo "Downloading NCBI Taxonomy names..."

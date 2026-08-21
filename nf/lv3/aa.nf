@@ -26,7 +26,7 @@ include { createNullParamsChannel; createSeqsChannel; getParam; clusterOptions; 
 
 // 各種サブワークフローのインポート
 include { FASTP_SUB }                  from "${params.petagenomeDir}/nf/lv1/fastp.nf"
-include { REMOVE_HOST_SUB }            from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
+include { REMOVE_HOST_SUB }          from "${params.petagenomeDir}/nf/lv2/remove_host.nf"
 include { ASSEMBLY_SUB }               from "${params.petagenomeDir}/nf/lv2/assembly.nf"
 include { PRODIGAL_SUB }               from "${params.petagenomeDir}/nf/lv1/prodigal.nf"
 include { ANNOTATE_CATALOG_SUB }       from "${params.petagenomeDir}/nf/lv2/annotate_catalog_prot.nf"
@@ -45,7 +45,7 @@ process merge_fasta {
     memory params.executor == "sge" ? null : "${gb} GB"; cpus params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input: tuple path(fasta_files, stageAs: "?/*"), val(ext)
-    output: tuple val("merged_all_samples"), path("combined_orfs.${ext}"), emit: merged_fasta
+    output: tuple val("merged_all_samples"), path("combined_orfs.${ext}")
     script: """ echo "${processProfile(task)}" | tee prof.txt; cat ${fasta_files} > combined_orfs.${ext} """
 }
 
@@ -58,12 +58,13 @@ process filter_catalog_by_hits {
     memory params.executor == "sge" ? null : "${gb} GB"; cpus params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input: tuple path(fasta_file), val(ext); path hit_ids
-    output: tuple val("filtered_catalog"), path("filtered_catalog.${ext}"), emit: filtered_fasta
+    // 修正: 出力ファイル名に拡張子を明示的に含めて `.faa` と `.fna` の競合を防止
+    output: tuple val("filtered_catalog"), path("filtered_catalog_${ext}.${ext}")
     script: """
         echo "${processProfile(task)}" | tee prof.txt
         python3 - << 'EOF'
         valid_ids = {line.strip() for line in open("${hit_ids}") if line.strip()}
-        with open("${fasta_file}", "r") as fin, open("filtered_catalog.${ext}", "w") as fout:
+        with open("${fasta_file}", "r") as fin, open("filtered_catalog_${ext}.${ext}", "w") as fout:
             write_flag = False
             for line in fin:
                 if line.startswith(">"): write_flag = (line.strip()[1:].split()[0] in valid_ids)
@@ -81,7 +82,7 @@ process filter_mapping_by_hits {
     memory params.executor == "sge" ? null : "${gb} GB"; cpus params.executor == "sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     input: path id_mapping; path hit_ids
-    output: tuple val("filtered_mapping"), path("filtered_id_mapping.tsv"), emit: filtered_mapping
+    output: tuple val("filtered_mapping"), path("filtered_id_mapping.tsv")
     script: """
         echo "${processProfile(task)}" | tee prof.txt
         python3 - << 'EOF'
@@ -112,6 +113,7 @@ workflow BACTERIOME_PIPELINE_SUB {
     
     // 3. アセンブリ
     asm_res = ASSEMBLY_SUB(p, host_removed.reads)
+    asm_res.asm.view { "DEBUG [ASSEMBLY asm]: $it" }
     asm_res.flt_seqs.view { "DEBUG [ASSEMBLY flt_seqs]: $it" }
     
     // 4. Prodigal による ORF (遺伝子) 予測
@@ -120,69 +122,88 @@ workflow BACTERIOME_PIPELINE_SUB {
 
     // 5. merge_fasta 用に全サンプルの faa / fna リストを集約
     sample_orf_fna_ch = orf_res.out.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
+    sample_orf_fna_ch.view{ "DEBUG [sample_orf_fna_ch]: $it" }
     all_faa_files = orf_res.out.map { qry_id, faa, fna, gbk -> faa }.collect()
+    all_faa_files.view{ "DEBUG [all_faa_files]: $it" }
     all_fna_files = orf_res.out.map { qry_id, faa, fna, gbk -> fna }.collect()
+    all_fna_files.view{ "DEBUG [all_fna_files]: $it" }
 
     merge_inputs_ch = all_faa_files.map { tuple(it, "faa") }.mix(all_fna_files.map { tuple(it, "fna") })
+    merge_inputs_ch.view{ "DEBUG [merge_inputs_ch]: $it" }
     merged_fastas = merge_fasta(merge_inputs_ch)
+    merged_fastas.view{ "DEBUG [merged_fastas]: $it" }
 
-    merged_faa_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.faa') }
-    merged_fna_fasta = merged_fastas.merged_fasta.filter { id, path -> path.name.endsWith('.fna') }
-    
-    merged_faa_fasta.view { "DEBUG [MERGED_FAA]: $it" }
-    merged_fna_fasta.view { "DEBUG [MERGED_FNA]: $it" }
+    merged_faa_fasta = merged_fastas.filter { id, path -> path.name.endsWith('.faa') }
+    merged_faa_fasta.view{ "DEBUG [merged_faa_fastas]: $it" }
+    merged_fna_fasta = merged_fastas.filter { id, path -> path.name.endsWith('.fna') }
+    merged_fna_fasta.view{ "DEBUG [merged_fna_fastas]: $it" }
 
     // 6. NRカタログ構築 (MMseqs2によるクラスタリング ＆ NRCAT連番ID化 ＆ 対応表作成)
     nr_catalog_res = NR_CATALOG_SUB(p, merged_faa_fasta, merged_fna_fasta)
-    nr_catalog_res.rep_faa.view { "DEBUG [NR_CATALOG_REP_FAA]: $it" }
+    nr_catalog_res.rep_faa.view { "DEBUG [NR_CATALOG rep_faa]: $it" }
+    nr_catalog_res.rep_fna.view { "DEBUG [NR_CATALOG rep_fna]: $it" }
+    nr_catalog_res.mapping.view { "DEBUG [NR_CATALOG mapping]: $it" }
     
     nr_rep_faa_path = nr_catalog_res.rep_faa.map { id, path -> path }
+    nr_rep_faa_path.view{ "DEBUG [nr_rep_faa_path]: $it" }
     nr_rep_fna_path = nr_catalog_res.rep_fna.map { id, path -> path }
+    nr_rep_fna_path.view{ "DEBUG [nr_rep_fna_path]: $it" }
     
     // 7. アノテーション
-    annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_rep_faa_path, taxid_map, ko_map)
+    annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_catalog_res.rep_faa, taxid_map, ko_map)
+    annotation_res.annotated.view { "DEBUG [ANNOTATE_CATALOG annotated]: $it" }
+    annotation_res.hit_ids.view { "DEBUG [ANNOTATE_CATALOG hit_ids]: $it" }
+
     annotated_path_ch = annotation_res.annotated.map { id, path -> path }
-    hit_ids_path_ch   = annotation_res.hit_ids.map { id, path -> path }
-
     annotated_path_ch.view { "DEBUG [ANNOTATED]: $it" }
+    hit_ids_path_ch   = annotation_res.hit_ids.map { id, path -> path }
     hit_ids_path_ch.view { "DEBUG [HIT_IDS]: $it" }
-
+    
     // 8. hit_ids に基づいてカタログ等をフィルタリング
     catalog_to_filter = nr_rep_faa_path.map { tuple(it, "faa") }.mix(nr_rep_fna_path.map { tuple(it, "fna") })
     filtered_catalogs = filter_catalog_by_hits(catalog_to_filter, hit_ids_path_ch)
+    filtered_catalogs.view { "DEBUG [FILTERED_CATALOGS]: $it" }
 
-    filtered_rep_faa = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.faa') }
-    filtered_rep_fna = filtered_catalogs.filtered_fasta.filter { id, path -> path.name.endsWith('.fna') }
+    filtered_rep_faa = filtered_catalogs.filter { id, path -> path.name.endsWith('.faa') }
+    filtered_rep_faa.view { "DEBUG [FILTERED_REP_FAA]: $it" }
+    filtered_rep_fna = filtered_catalogs.filter { id, path -> path.name.endsWith('.fna') }
+    filtered_rep_fna.view { "DEBUG [FILTERED_REP_FNA]: $it" }
     
     mapping_path_ch = nr_catalog_res.mapping.map { id, path -> path }
     filtered_mapping_res = filter_mapping_by_hits(mapping_path_ch, hit_ids_path_ch)
+    filtered_mapping_res.view { "DEBUG [FILTERED_MAPPING]: $it" }
 
     // 9. ORF マッピング
     samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, filtered_rep_fna, sample_orf_fna_ch)
+    samples_mapping_res.out.view { "DEBUG [SAMPLES_MAPPING]: $it" }
     
     // 10. ORF -> TaxID / KO 対応テーブルの構築
     samples_anno_res = ANNOTATE_SAMPLES_SUB(p, samples_mapping_res.out, annotated_path_ch)
+    samples_anno_res.samples_anno.view { "DEBUG [SAMPLES_ANNO]: $it" }
     
     // 11. サンプルごとの集計処理 
     summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
+    summary_res.ko_summary.view { "DEBUG [KO_SUMMARY]: $it" }
+    summary_res.tax_summary.view { "DEBUG [TAX_SUMMARY]: $it" }
 
     emit:
-    raw_reads             = reads
-    fastp_reads           = fp.out
-    host_removed_reads    = host_removed.reads
-    contigs               = asm_res.asm
-    flt_seqs              = asm_res.flt_seqs
-    orfs                  = orf_res.out
-    nr_catalog            = nr_catalog_res.rep_faa
-    annotated             = annotated_path_ch
-    hit_ids               = hit_ids_path_ch
-    filtered_rep_faa      = filtered_rep_faa
-    filtered_rep_fna      = filtered_rep_fna
-    filtered_mapping      = filtered_mapping_res.filtered_mapping
-    samples_mapping       = samples_mapping_res.out
-    samples_annotation    = samples_anno_res.samples_anno
-    ko_summary            = summary_res.ko_summary
-    tax_summary           = summary_res.tax_summary    
+    raw_reads              = reads
+    fastp_reads            = fp.out
+    host_removed_reads     = host_removed.reads
+    contigs                = asm_res.asm
+    flt_seqs               = asm_res.flt_seqs
+    orfs                   = orf_res.out
+    nr_catalog_faa         = nr_catalog_res.rep_faa
+    nr_catalog_fna         = nr_catalog_res.rep_fna
+    annotated              = annotated_path_ch
+    hit_ids                = hit_ids_path_ch
+    filtered_rep_faa       = filtered_rep_faa
+    filtered_rep_fna       = filtered_rep_fna
+    filtered_mapping       = filtered_mapping_res
+    samples_mapping        = samples_mapping_res.out
+    samples_annotation     = samples_anno_res.samples_anno
+    ko_summary             = summary_res.ko_summary
+    tax_summary            = summary_res.tax_summary    
 }
 
 workflow BACTERIOME_PIPELINE_ALL {

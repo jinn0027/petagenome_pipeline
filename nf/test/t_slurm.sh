@@ -20,7 +20,8 @@ mkdir -p ${TMPDIR}
 MY_FILE="${BASH_SOURCE[0]}"
 MY_DIR="$(cd "$(dirname "${MY_FILE}")" && pwd)"
 
-date=$(date +"%Y%m%d%H%M%S")
+#date=$(date +"%Y%m%d%H%M%S")
+date="aaa"
 
 #threads=16
 threads=64
@@ -94,7 +95,7 @@ test=${1:-"remove_host"}
 #test=${1:-"pool_contigs"}
 #test=${1:-"circular_contigs"}
 
-nextflow clean -f
+#nextflow clean -f
 
 test=${test%.*}
 
@@ -163,7 +164,7 @@ case ${test} in
                  --nr_catalog_fna "${aFna};${bFna};${cFna};${dFna}"
         ;;
     "aa")
-        nextflow run ${nfDir}/lv3/aa.nf --resume ${args} \
+        nextflow run ${nfDir}/lv3/aa.nf -resume ${args} \
                  --remove_host_aligner "bwa_mem2" \
                  --remove_host_is_prebuilt_db "true" \
                  --remove_host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db" \
