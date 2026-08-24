@@ -69,19 +69,24 @@ hit_ids_file   = sys.argv[5]
 taxid_dict = {}
 with open(taxid_map_file, 'r', encoding='utf-8') as f:
     for line in f:
-        parts = line.rstrip().split("\\t", 1)
-        if len(parts) == 2 and parts[1]:
-            taxid_dict[parts[0]] = parts[1]
+        parts = line.rstrip('\\r\\n').split('\\t')
+        if len(parts) >= 2 and parts[1].strip():
+            taxid_dict[parts[0].strip()] = parts[1].strip()
+
+print(f"DEBUG: Loaded {len(taxid_dict)} taxid entries.")
 
 ko_dict = {}
 with open(ko_map_file, 'r', encoding='utf-8') as f:
     for line in f:
-        parts = line.rstrip().split("\\t", 1)
-        if len(parts) == 2 and parts[1]:
-            ko_dict[parts[0]] = parts[1]
+        parts = line.rstrip('\\r\\n').split('\\t')
+        if len(parts) >= 2 and parts[1].strip():
+            ko_dict[parts[0].strip()] = parts[1].strip()
+
+print(f"DEBUG: Loaded {len(ko_dict)} ko entries.")
 
 cols_header = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore", "taxid", "ko"]
 hit_id_set = set()
+match_count = 0
 
 with open(fmt6_file, 'r', encoding='utf-8') as fin, open(out_file, 'w', encoding='utf-8') as fout:
     fout.write("\\t".join(cols_header) + "\\n")
@@ -89,24 +94,34 @@ with open(fmt6_file, 'r', encoding='utf-8') as fin, open(out_file, 'w', encoding
     for line in fin:
         if line.startswith('#'):
             continue
-        line_clean = line.rstrip()
+        line_clean = line.rstrip('\\r\\n')
         cols = line_clean.split("\\t")
         if len(cols) < 2:
             continue
         
         qseqid = cols[0]
         sseqid = cols[1]
-        taxid  = taxid_dict.get(sseqid, "N/A")
-        ko     = ko_dict.get(sseqid, "N/A")
+        sseqid_base = sseqid.split('.')[0]
+        
+        taxid = taxid_dict.get(sseqid)
+        if not taxid:
+            taxid = taxid_dict.get(sseqid_base, "N/A")
+            
+        ko = ko_dict.get(sseqid)
+        if not ko:
+            ko = ko_dict.get(sseqid_base, "N/A")
         
         # 両方 N/A の場合は出力から除外
         if taxid == "N/A" and ko == "N/A":
             continue
         
+        match_count += 1
         # ヒットしたクエリIDを記録
         hit_id_set.add(qseqid)
         
         fout.write(f"{line_clean}\\t{taxid}\\t{ko}\\n")
+
+print(f"DEBUG: Successfully matched {match_count} lines.")
 
 # ヒットした配列IDのリストを出力
 with open(hit_ids_file, 'w', encoding='utf-8') as f_ids:
@@ -123,10 +138,10 @@ EOF
 workflow ANNOTATE_CATALOG_SUB {
     take:
     p
-    ref_or_db       // リファレンスFASTA または ビルド済みDB
-    orfs            // Prodigal等の出力から抽出した [ qry_id, out.faa ]
-    taxid_map       // uniprot_to_taxid.tsv (File path or Channel)
-    ko_map          // uniprot_to_ko.tsv (File path or Channel)
+    ref_or_db        // リファレンスFASTA または ビルド済みDB
+    orfs             // Prodigal等の出力から抽出した [ qry_id, out.faa ]
+    taxid_map        // uniprot_to_taxid.tsv (File path or Channel)
+    ko_map           // uniprot_to_ko.tsv (File path or Channel)
 
     main:
     // A. DB の準備（タンパク質用サブワークフローを呼び出し）

@@ -30,7 +30,7 @@ process merge_input_sequences {
     tag "merge_inputs"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
-    def gb       = "${params.nr_catalog_sanitize_memory}"
+    def gb        = "${params.nr_catalog_sanitize_memory}"
     def threads = "${params.nr_catalog_sanitize_threads}"
     memory params.executor == "sge" ? null : "${gb} GB"
     cpus   params.executor == "sge" ? null : threads
@@ -53,7 +53,7 @@ process sanitize_and_rename {
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb       = "${params.nr_catalog_sanitize_memory}"
+    def gb        = "${params.nr_catalog_sanitize_memory}"
     def threads = "${params.nr_catalog_sanitize_threads}"
 
     memory params.executor == "sge" ? null : "${gb} GB"
@@ -118,14 +118,13 @@ EOF
         """
 }
 
-// 復帰させた filter_fna_by_faa プロセス
 process filter_fna_by_faa {
     tag "filter_fna"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
-    def gb       = "${params.nr_catalog_filter_fna_memory}"
+    def gb        = "${params.nr_catalog_filter_fna_memory}"
     def threads = "${params.nr_catalog_filter_fna_threads}"
 
     memory params.executor == "sge" ? null : "${gb} GB"
@@ -176,41 +175,46 @@ workflow NR_CATALOG_SUB {
     all_fna = fna.map { id, path -> path }.collect()
     
     merged = merge_input_sequences(all_faa, all_fna)
-    //merged.view { i -> "1.XXXX merged $i"}
+    merged.view { "DEBUG [NR_CATALOG merged]: $it" }
 
     // 2. マージされたファイルに対して1回だけサニタイズを実行
     sanitized = sanitize_and_rename(merged)
-    //sanitized.view { i -> "2.XXXX sanitized $i"}
+    sanitized.view { "DEBUG [NR_CATALOG sanitized]: $it" }
+
+    // 複数の処理（cluster, filter, mapping）で使うため、チャンネルを事前に分岐
+    sanitized_for_cluster = sanitized.map { faa, fna, map -> tuple(faa, fna, map) }
+    sanitized_for_filter  = sanitized.map { faa, fna, map -> tuple(faa, fna, map) }
+    sanitized_for_mapping = sanitized.map { faa, fna, map -> tuple(faa, fna, map) }
 
     // 3. MMseqs2 用の入力: [ "nr_prot", sanitized.faa ]
-    cluster_in = sanitized.map { faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
-    //cluster_in.view { i -> "3.XXXX cluster_in $i"}
+    cluster_in = sanitized_for_cluster.map { faa_p, fna_p, mapping -> tuple("nr_prot", faa_p) }
+    cluster_in.view { "DEBUG [NR_CATALOG cluster_in]: $it" }
 
     // 4. クラスタリング用のDB作成
     ref_db = BUILD_REF_DB_PROT_SUB(p, cluster_in)
     clustered_faa = CLUSTER_PROT_SUB(p, ref_db).out.map { id, fasta, tsv -> tuple(id, fasta) }
-    //clustered_faa.view { i -> "4.XXXX clustered_faa $i"}
+    clustered_faa.view { "DEBUG [NR_CATALOG clustered_faa]: $it" }
 
-    // 5. filter_in の構築および filter_fna_by_faa 呼び出しの復帰
-    filter_in = sanitized
-        .cross(clustered_faa)
-        .map { sanitized_tuple, clustered_tuple ->
-            def fna_p  = sanitized_tuple[1]
-            def rep_id = clustered_tuple[0]
-            def rep_faa = clustered_tuple[1]
-            tuple(fna_p, rep_id, rep_faa)
+    // 5. filter_in の構築および filter_fna_by_faa 呼び出し
+    // .combine() は要素をフラット化するため、5つの要素を直接受け取る
+    filter_in = sanitized_for_filter
+        .combine(clustered_faa)
+        .map { sanitized_faa, sanitized_fna, mapping, rep_id, rep_faa ->
+            tuple(sanitized_fna, rep_id, rep_faa)
         }
-    nr_fna = filter_fna_by_faa(filter_in)
-    //nr_fna.view { i -> "5.XXXX nr_fna (filtered) $i"}
+    filter_in.view { "DEBUG [NR_CATALOG filter_in]: $it" }
 
-    // 6. マッピングの出力（1つになった initial_mapping.tsv をそのまま利用）
-    nr_mapping = sanitized.map { faa_p, fna_p, mapping -> tuple("nr_catalog", mapping) }
-    //nr_mapping.view { i -> "7.XXXX mapping $i" }
+    nr_fna = filter_fna_by_faa(filter_in)
+    nr_fna.view { "DEBUG [NR_CATALOG nr_fna]: $it" }
+
+    // 6. マッピングの出力
+    nr_mapping = sanitized_for_mapping.map { faa_p, fna_p, mapping -> tuple("nr_catalog", mapping) }
+    nr_mapping.view { "DEBUG [NR_CATALOG nr_mapping]: $it" }
     
     emit:
     rep_faa = clustered_faa      // [ "nr_prot", Path ]
-    rep_fna = nr_fna             // [ "nr_catalog", Path ]
-    mapping = nr_mapping         // [ "nr_catalog", Path ]
+    rep_fna = nr_fna               // [ "nr_catalog", Path ]
+    mapping = nr_mapping           // [ "nr_catalog", Path ]
 }
 
 workflow NR_CATALOG_ALL {
@@ -220,9 +224,9 @@ workflow NR_CATALOG_ALL {
 
     out_ch = NR_CATALOG_SUB(p, catalog_faa, catalog_fna)
 
-    out_ch.rep_faa.view { i -> "REP_FAA: $i" }
-    out_ch.rep_fna.view { i -> "REP_FNA: $i" }
-    out_ch.mapping.view { i -> "MAPPING: $i" }
+    out_ch.rep_faa.view { "DEBUG [REP_FAA]: $it" }
+    out_ch.rep_fna.view { "DEBUG [REP_FNA]: $it" }
+    out_ch.mapping.view { "DEBUG [MAPPING]: $it" }
 }
 
 workflow {
