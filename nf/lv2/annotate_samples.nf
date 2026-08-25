@@ -118,16 +118,16 @@ process assign_taxid_ko_to_samples {
                 n = anno_count[orf_id]
                 for (i = 1; i <= n; i++) {
                     print orf_in_sample_id, \
-                          orf_id, \
-                          c_pident, \
-                          c_evalue, \
-                          c_bitscore, \
-                          orf_sseqid[orf_id, i], \
-                          orf_taxid[orf_id, i], \
-                          orf_ko[orf_id, i], \
-                          orf_pident[orf_id, i], \
-                          orf_evalue[orf_id, i], \
-                          orf_bitscore[orf_id, i]
+                        orf_id, \
+                        c_pident, \
+                        c_evalue, \
+                        c_bitscore, \
+                        orf_sseqid[orf_id, i], \
+                        orf_taxid[orf_id, i], \
+                        orf_ko[orf_id, i], \
+                        orf_pident[orf_id, i], \
+                        orf_evalue[orf_id, i], \
+                        orf_bitscore[orf_id, i]
                 }
             } else {
                 print orf_in_sample_id, \
@@ -160,15 +160,17 @@ process assign_taxid_ko_to_samples {
 workflow ANNOTATE_SAMPLES_SUB {
     take:
     p
-    samples_map_out // tuple(qry_id, path_m8)      <- 2要素
-    annotated_res  // tuple(ref_id, path_tsv)      <- 2要素
+    samples_map_out // tuple(qry_id, path_m8)     <- 2要素
+    annotated_res  // tuple(ref_id, path_tsv)     <- 2要素
 
     main:
-    // 2要素 + 2要素 の combine（計4要素）を受け取り、
-    // プロセスへ渡す 3要素 [ qry_id, map_m8, anno_tsv ] へ正確にマッピング
+    // 2要素のチャンネル同士を combine し、安全に各要素を取り出して3要素のタプルに再構築
     joined_ch = samples_map_out
         .combine(annotated_res)
-        .map { qry_id, map_m8, ref_id, anno_tsv ->
+        .map { left, right ->
+            def qry_id   = left[0]
+            def map_m8   = left[1]
+            def anno_tsv = right[1]
             tuple(qry_id, map_m8, anno_tsv)
         }
 
