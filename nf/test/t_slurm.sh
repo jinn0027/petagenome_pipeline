@@ -183,12 +183,14 @@ case ${test} in
 #                 --mmseqs2_qry_type 1 \
 #                 --host_is_prebuilt_db "false" \
 #                 --bacteriome_pipeline_reads "${longFnqGzPair}"
-#                 --host_ref_fasta_or_db "${dataDir}/ecoli_1K_1.fa.gz" \
+#                 --host_ref_fasta_or_db "${dataDir}/ecoli_1K_1.fa.gz"
+    	cp -f out/BACTERIOME_PIPELINE_BUILD_CATALOG:BUILD_CATALOG_SUB:filter_fna_catalog_by_hits/filtered_catalog_fna.fna catalog
+    	cp -f out/BACTERIOME_PIPELINE_BUILD_CATALOG:BUILD_CATALOG_SUB:ANNOTATE_CATALOG_SUB:annotate_catalog/nr_prot_annotated.tsv catalog
         ;;
     "bb")
-    	catalog_fna=out/BACTERIOME_PIPELINE_BUILD_CATALOG:BUILD_CATALOG_SUB:filter_fna_catalog_by_hits/filtered_catalog_fna.fna
-    	catalog_annotated=out/BACTERIOME_PIPELINE_BUILD_CATALOG:BUILD_CATALOG_SUB:ANNOTATE_CATALOG_SUB:annotate_catalog/nr_prot_annotated.tsv 
-        nextflow run ${nfDir}/lv3/aa.nf -resume -entry BACTERIOME_PIPELINE_ANALYZE_SAMPLES ${args} \
+    	catalog_fna=catalog/filtered_catalog_fna.fna
+    	catalog_annotated=catalog/nr_prot_annotated.tsv 
+        nextflow run ${nfDir}/lv3/aa.nf -resume -entry BACTERIOME_PIPELINE_ANALYZE_READS ${args} \
                  --remove_host_aligner "bwa_mem2" \
                  --remove_host_is_prebuilt_db "true" \
                  --remove_host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db" \

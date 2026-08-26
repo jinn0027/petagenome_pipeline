@@ -59,6 +59,20 @@ process merge_fasta {
     script: """ echo "${processProfile(task)}" | tee prof.txt; cat ${fasta_files} > combined_orfs.${ext} """
 }
 
+// ペアエンドリードを1つに結合するプロセス（MMseqs2のクエリ用）
+process cat_paired_reads {
+    tag "${qry_id}"
+    container = "${params.petagenomeDir}/modules/common/el9.sif"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
+    publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
+    input: tuple val(qry_id), path(reads) // reads は [r1, r2] のリスト
+    output: tuple val(qry_id), path("combined.fastq.gz")
+    script:
+    """
+    cat ${reads[0]} ${reads[1]} > combined.fastq.gz
+    """
+}
+
 process filter_faa_catalog_by_hits {
     tag "faa"
     container = "${params.petagenomeDir}/modules/common/el9.sif"
@@ -131,7 +145,7 @@ process filter_mapping_by_hits {
 // サブワークフロー定義
 // ==========================================
 
-// (0) 各サンプルの前処理・アセンブリ・ORF予測
+// (0-1) 各サンプルの前処理・アセンブリ・ORF予測（ORFS解析用）
 workflow PREPARE_ORFS_SUB {
     take: p; host_ref; reads
 
@@ -148,6 +162,18 @@ workflow PREPARE_ORFS_SUB {
     contigs            = asm_res.asm
     flt_seqs           = asm_res.flt_seqs
     orfs               = orf_res.out
+}
+
+// (0-2) クリーニング済みリードの準備（READS解析用）
+workflow PREPARE_CLEAN_READS_SUB {
+    take: p; host_ref; reads
+
+    main:
+    fp = FASTP_SUB(p, reads)
+    host_removed = REMOVE_HOST_SUB(p, host_ref, fp.out)
+
+    emit:
+    reads = host_removed.reads
 }
 
 // (1) カタログ構築ワークフロー
@@ -196,11 +222,37 @@ workflow BUILD_CATALOG_SUB {
 
 // (2) カタログへのマッピング・アノテーション・集計ワークフロー
 workflow ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB {
-    take: p; filtered_rep_fna; sample_orf_fna_ch; annotated_path_ch; ko_name_map; taxid_name_map
+    take: p; filtered_rep_fna; target_reads_ch; annotated_path_ch; ko_name_map; taxid_name_map
 
     main:
-    samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, filtered_rep_fna, sample_orf_fna_ch)
-    samples_anno_res = ANNOTATE_SAMPLES_SUB(p, samples_mapping_res.out.transpose(), annotated_path_ch)
+    samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, filtered_rep_fna, target_reads_ch)
+    
+    // 【期待される形式】: tuple(val(qry_id), path(m8_file))
+    samples_mapping_res.out.view { 
+        "[DEBUG VIEW] samples_mapping_res.out\n" +
+        "  - 期待される形式: tuple(val(qry_id), path(m8_file)) [例: ['01_sampleA', /path/to/out.m8]]\n" +
+        "  - 実際の値      : ${it}\n" +
+        "  - クラス        : ${it?.getClass()}"
+    }
+
+    // 【期待される形式】: path(annotated_tsv_file) または tuple(val(id), path(tsv)) 等
+    annotated_path_ch.view { 
+        "[DEBUG VIEW] annotated_path_ch\n" +
+        "  - 期待される形式: path(annotated_tsv_file) [例: /path/to/nr_prot_annotated.tsv]\n" +
+        "  - 実際の値      : ${it}\n" +
+        "  - クラス        : ${it?.getClass()}"
+    }
+    
+    samples_anno_res = ANNOTATE_SAMPLES_SUB(p, samples_mapping_res.out, annotated_path_ch)
+    
+    // 【期待される形式】: tuple(val(qry_id), path(annotated_sample_tsv))
+    samples_anno_res.samples_anno.view {
+        "[DEBUG VIEW] samples_anno_res.samples_anno\n" +
+        "  - 期待される形式: tuple(val(qry_id), path(annotated_sample_tsv))\n" +
+        "  - 実際の値      : ${it}\n" +
+        "  - クラス        : ${it?.getClass()}"
+    }
+
     summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
 
     emit:
@@ -259,23 +311,40 @@ workflow BACTERIOME_PIPELINE_BUILD_CATALOG {
     BUILD_CATALOG_SUB(p, ref_or_db, taxid_map, ko_map, orfs_res.orfs)
 }
 
-// サンプル解析のみ (2) ※カタログ関連のパスを汎用パラメータ名で受け取る
-workflow BACTERIOME_PIPELINE_ANALYZE_SAMPLES {
+// サンプル解析（ORF配列ベース）
+workflow BACTERIOME_PIPELINE_ANALYZE_ORFS {
     def (p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads) = setupReadsAndRefs()
 
-    def catalog_fna_path       = checkMandatoryFile('catalog_fna', params.catalog_fna)
+    def catalog_fna_path        = checkMandatoryFile('catalog_fna', params.catalog_fna)
     def catalog_annotated_path = checkMandatoryFile('catalog_annotated', params.catalog_annotated)
 
-    // チャネル化
     filtered_rep_fna_ch = Channel.value(tuple("filtered_catalog", file(catalog_fna_path)))
-    annotated_ch        = Channel.value(file(catalog_annotated_path))
+    annotated_ch         = Channel.value(file(catalog_annotated_path))
 
-    // workflow(0) からサンプルごとのORF予測結果を引き継ぐ
     orfs_res = PREPARE_ORFS_SUB(p, host_ref, reads)
     sample_orf_fna_ch = orfs_res.orfs.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
 
-    // workflow(2) を起動
     ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB(p, filtered_rep_fna_ch, sample_orf_fna_ch, annotated_ch, ko_name_map, taxid_name_map)
+}
+
+// サンプル解析（クリーニング済みリード直接ベース・アセンブリ/ORF予測なし）
+workflow BACTERIOME_PIPELINE_ANALYZE_READS {
+    def (p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads) = setupReadsAndRefs()
+
+    def catalog_fna_path        = checkMandatoryFile('catalog_fna', params.catalog_fna)
+    def catalog_annotated_path = checkMandatoryFile('catalog_annotated', params.catalog_annotated)
+
+    filtered_rep_fna_ch = Channel.value(tuple("filtered_catalog", file(catalog_fna_path)))
+    annotated_ch         = Channel.value(file(catalog_annotated_path))
+
+    // 前処理（fastp + ホスト除去）のみを実行
+    clean_reads_res = PREPARE_CLEAN_READS_SUB(p, host_ref, reads)
+
+    // ペアエンドのリード（R1/R2）を1つのファイルに結合
+    combined_reads_ch = cat_paired_reads(clean_reads_res.reads)
+
+    // 結合されたクリーンリードを直接マッピングモジュールへ投入
+    ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB(p, filtered_rep_fna_ch, combined_reads_ch, annotated_ch, ko_name_map, taxid_name_map)
 }
 
 workflow { BACTERIOME_PIPELINE_ALL() }

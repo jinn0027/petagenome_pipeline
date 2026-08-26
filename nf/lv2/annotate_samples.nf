@@ -81,7 +81,7 @@ process assign_taxid_ko_to_samples {
         bitscore = \$c_bitscore
         
         taxid    = (NF >= c_taxid  && \$c_taxid  != "" && \$c_taxid  != " ") ? \$c_taxid  : "N/A"
-        ko       = (NF >= c_ko     && \$c_ko     != "" && \$c_ko     != " ") ? \$c_ko     : "N/A"
+        ko       = (NF >= c_ko      && \$c_ko      != "" && \$c_ko      != " ") ? \$c_ko      : "N/A"
 
         if ((taxid == "N/A" || taxid == "") && (ko == "N/A" || ko == "")) {
             next
@@ -160,21 +160,53 @@ process assign_taxid_ko_to_samples {
 workflow ANNOTATE_SAMPLES_SUB {
     take:
     p
-    samples_map_out // tuple(qry_id, path_m8)     <- 2要素
-    annotated_res  // tuple(ref_id, path_tsv)     <- 2要素
+    samples_map_out // tuple(qry_id, path_m8)
+    annotated_res   // path(tsv) または tuple(ref_id, path_tsv)
 
     main:
-    // 2要素のチャンネル同士を combine し、安全に各要素を取り出して3要素のタプルに再構築
+    // 【期待される形式】: samples_map_out は tuple(val(qry_id), path(m8_file))
+    samples_map_out.view {
+        "[DEBUG VIEW] ANNOTATE_SAMPLES_SUB: samples_map_out\n" +
+        "  - 期待される形式: tuple(val(qry_id), path(m8_file)) [例: ['02_ERR1620256', /path/to/out.m8]]\n" +
+        "  - 実際の値      : ${it}\n" +
+        "  - クラス        : ${it?.getClass()}"
+    }
+
+    // 【期待される形式】: annotated_res は単一の path(tsv) または 2要素タプル
+    annotated_res.view {
+        "[DEBUG VIEW] ANNOTATE_SAMPLES_SUB: annotated_res\n" +
+        "  - 期待される形式: path(tsv_file) または tuple(val(id), path(tsv_file))\n" +
+        "  - 実際の値      : ${it}\n" +
+        "  - クラス        : ${it?.getClass()}"
+    }
+
+    // annotated_res がタプルの場合と単体パスの場合の双方に対応できるように正規化
+    annotated_path_ch = annotated_res.map { it instanceof Path ? it : it[1] }
+
+    // 複数サンプルが流れてきても、カタログ（1つ）を結合できるように .first() や .collect() を活用して安全に結びつける
     joined_ch = samples_map_out
-        .combine(annotated_res)
-        .map { left, right ->
-            def qry_id   = left[0]
-            def map_m8   = left[1]
-            def anno_tsv = right[1]
+        .combine(annotated_path_ch.collect())
+        .map { qry_id, map_m8, anno_tsv ->
             tuple(qry_id, map_m8, anno_tsv)
         }
 
+    // 【期待される形式】: joined_ch は tuple(val(qry_id), path(m8_file), path(tsv_file)) の 3要素
+    joined_ch.view {
+        "[DEBUG VIEW] ANNOTATE_SAMPLES_SUB: joined_ch (Process Input)\n" +
+        "  - 期待される形式: tuple(val(qry_id), path(m8_file), path(tsv_file)) [3要素]\n" +
+        "  - 実際の値      : ${it}\n" +
+        "  - クラス        : ${it?.getClass()}"
+    }
+
     res = assign_taxid_ko_to_samples(joined_ch)
+
+    // 【期待される形式】: res.samples_anno は tuple(val(qry_id), path(annotated_sample_tsv))
+    res.samples_anno.view {
+        "[DEBUG VIEW] ANNOTATE_SAMPLES_SUB: res.samples_anno (Output)\n" +
+        "  - 期待される形式: tuple(val(qry_id), path(annotated_sample_tsv))\n" +
+        "  - 実際の値      : ${it}\n" +
+        "  - クラス        : ${it?.getClass()}"
+    }
 
     emit:
     samples_anno = res.samples_anno
@@ -187,7 +219,6 @@ workflow ANNOTATE_SAMPLES_SUB {
 workflow ANNOTATE_SAMPLES_ALL {
     p = createNullParamsChannel()
 
-    // 単体実行時も本番同様に tuple(qry_id, f) の 2要素チャンネルを生成
     samples_map_ch = Channel.fromPath(params.annotate_samples_m8_path)
                             .map { f -> 
                                 def qry_id = f.name.replaceAll(/_samples_map\.m8$/, '')
