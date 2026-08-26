@@ -24,7 +24,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 
 process bwa_mem2_makerefdb {
     tag "${ref_id}"
-    container = "${params.petagenomeDir}/modules/bwamem2/bwamem2.sif"
+    container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bwa_mem2_bwa_mem2_makerefdb_memory}"
@@ -49,7 +49,7 @@ process bwa_mem2_makerefdb {
 
 process bwa_mem2_mem {
     tag "${ref_id}_@_${qry_id}"
-    container = "${params.petagenomeDir}/modules/bwamem2/bwamem2.sif"
+    container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bwa_mem2_bwa_mem2_mem_memory}"
