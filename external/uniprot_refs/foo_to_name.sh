@@ -74,12 +74,12 @@ fi
 
 if [ ! -f ko_to_name.tsv ] ; then
     zcat e7.og_info_kegg_go.tsv.gz | awk -F'\t' '{
-        # $6がタンパク質リスト、$7がKO、$8がKO名
-        proteins = $6;
-        ko = $7;
+        # $7がKO、$8がKO名
+        raw_ko = $7;
         name = $8;
-    
-        if (ko != "" && name != "") {
+        if (raw_ko != "" && name != "") {
+            ko = raw_ko;
+            sub(/\|.*$/, "", ko);
             print ko "\t" name > "ko_to_name.tsv";
    	}
     }'

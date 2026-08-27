@@ -206,6 +206,25 @@ case ${test} in
                  --catalog_fna "${catalog_fna}" \
                  --catalog_annotated "${catalog_annotated}"
         ;;
+    "cc")
+    	catalog_fna=catalog/filtered_catalog_fna.fna
+    	catalog_annotated=catalog/nr_prot_annotated.tsv 
+        nextflow run ${nfDir}/lv3/aa.nf -resume -entry BACTERIOME_PIPELINE_ANALYZE_ORFS ${args} \
+                 --remove_host_aligner "bwa_mem2" \
+                 --remove_host_is_prebuilt_db "true" \
+                 --remove_host_ref_fasta_or_db "${extDir}/GRCh38/bwa_db" \
+                 --assembly_assembler "megahit" \
+                 --annotate_catalog_prot_aligner mmseqs2 \
+                 --annotate_catalog_prot_is_prebuilt_db "true" \
+                 --annotate_catalog_prot_ref_or_db ${extDir}/uniprot_refs/mmseqs2 \
+                 --taxid_map_path ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
+                 --ko_map_path ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
+                 --taxid_name_map_path ${extDir}/uniprot_refs/taxid_to_name.tsv \
+                 --ko_name_map_path ${extDir}/uniprot_refs/ko_to_name.tsv \
+                 --bacteriome_pipeline_reads "${inPairs}" \
+                 --catalog_fna "${catalog_fna}" \
+                 --catalog_annotated "${catalog_annotated}"
+        ;;
         
     "main")
         nextflow run ${nfDir}/toys/main.nf ${args} \
