@@ -73,15 +73,62 @@ if [ ! -f e7.og_info_kegg_go.tsv.gz ] ; then
 fi
 
 if [ ! -f ko_to_name.tsv ] ; then
+
     zcat e7.og_info_kegg_go.tsv.gz | awk -F'\t' '{
-        # $7がKO、$8がKO名
         raw_ko = $7;
-        name = $8;
-        if (raw_ko != "" && name != "") {
-            ko = raw_ko;
-            sub(/\|.*$/, "", ko);
-            print ko "\t" name > "ko_to_name.tsv";
-   	}
-    }'
+        raw_name = $8;
+
+        if (raw_ko != "") {
+            # KO の加工 (| 以降を削除)
+            split(raw_ko, ko_arr, "|");
+            ko = ko_arr[1];
+
+            # Name の加工 (";" および "," でも分割して、個別の名前にバラす)
+            if (raw_name != "") {
+                # まず ";" で分割
+                n_names = split(raw_name, name_parts, ";");
+                for (j=1; j<=n_names; j++) {
+                    # さらにカンマ "," が含まれている場合もあるので分割する
+                    n_sub = split(name_parts[j], sub_parts, ",");
+                    for (k=1; k<=n_sub; k++) {
+                        # 前後の空白を除去しつつ "|以降" を削る
+                        sub(/^[ \t]+|[ \t]+$/, "", sub_parts[k]);
+                        sub(/\|.*$/, "", sub_parts[k]);
+                        trimmed = sub_parts[k];
+
+                        if (trimmed != "") {
+                            # KOごとにユニークな名前を登録
+                            if (!((ko, trimmed) in registered)) {
+                                registered[ko, trimmed] = 1;
+                            
+                                # リストとして蓄積
+                                if (ko in ko_name_count) {
+                                    count = ++ko_name_count[ko];
+                                    ko_name_array[ko, count] = trimmed;
+                                } else {
+                                    ko_name_count[ko] = 1;
+                                    ko_name_array[ko, 1] = trimmed;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    END {
+        for (ko in ko_name_count) {
+            line = "";
+            for (i=1; i<=ko_name_count[ko]; i++) {
+                if (i == 1) {
+                    line = ko_name_array[ko, i];
+                } else {
+                    line = line ";" ko_name_array[ko, i];
+                }
+            }
+            print ko "\t" line;
+        }
+    }' > ko_to_name.tsv
+
 fi
 
