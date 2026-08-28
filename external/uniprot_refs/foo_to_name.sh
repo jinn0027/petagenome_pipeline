@@ -73,42 +73,34 @@ if [ ! -f e7.og_info_kegg_go.tsv.gz ] ; then
 fi
 
 if [ ! -f ko_to_name.tsv ] ; then
-
     zcat e7.og_info_kegg_go.tsv.gz | awk -F'\t' '{
         raw_ko = $7;
         raw_name = $8;
-
+    
         if (raw_ko != "") {
-            # KO の加工 (| 以降を削除)
             split(raw_ko, ko_arr, "|");
             ko = ko_arr[1];
-
-            # Name の加工 (";" および "," でも分割して、個別の名前にバラす)
+    
             if (raw_name != "") {
-                # まず ";" で分割
                 n_names = split(raw_name, name_parts, ";");
                 for (j=1; j<=n_names; j++) {
-                    # さらにカンマ "," が含まれている場合もあるので分割する
                     n_sub = split(name_parts[j], sub_parts, ",");
                     for (k=1; k<=n_sub; k++) {
-                        # 前後の空白を除去しつつ "|以降" を削る
                         sub(/^[ \t]+|[ \t]+$/, "", sub_parts[k]);
                         sub(/\|.*$/, "", sub_parts[k]);
                         trimmed = sub_parts[k];
-
+    
                         if (trimmed != "") {
-                            # KOごとにユニークな名前を登録
-                            if (!((ko, trimmed) in registered)) {
-                                registered[ko, trimmed] = 1;
+                            # 出現回数をカウント
+                            freq[ko, trimmed]++;
                             
-                                # リストとして蓄積
-                                if (ko in ko_name_count) {
-                                    count = ++ko_name_count[ko];
-                                    ko_name_array[ko, count] = trimmed;
-                                } else {
-                                    ko_name_count[ko] = 1;
-                                    ko_name_array[ko, 1] = trimmed;
-                                }
+                            # 初めて登場した (ko, trimmed) の組み合わせであれば、リスト用の配列に蓄積
+                            if (!((ko, trimmed) in seen)) {
+                                seen[ko, trimmed] = 1;
+                                
+                                # カウントを保持して後で配列化できるようにする
+                                idx = ++ko_count[ko];
+                                ko_elements[ko, idx] = trimmed;
                             }
                         }
                     }
@@ -117,18 +109,41 @@ if [ ! -f ko_to_name.tsv ] ; then
         }
     }
     END {
-        for (ko in ko_name_count) {
-            line = "";
-            for (i=1; i<=ko_name_count[ko]; i++) {
-                if (i == 1) {
-                    line = ko_name_array[ko, i];
+        for (ko in ko_count) {
+            n = ko_count[ko];
+            
+            # 配列から一時的な names 配列に移してソート
+            for (i = 1; i <= n; i++) {
+                names[i] = ko_elements[ko, i];
+            }
+    
+            # 出現回数（freq）の降順でソート（同率の場合は名前順）
+            for (i = 1; i <= n; i++) {
+                for (j = i + 1; j <= n; j++) {
+                    f_i = freq[ko, names[i]];
+                    f_j = freq[ko, names[j]];
+                    if (f_j > f_i || (f_j == f_i && names[j] < names[i])) {
+                        temp = names[i];
+                        names[i] = names[j];
+                        names[j] = temp;
+                    }
+                }
+            }
+    
+            # 頻度に応じて ">" または "=" で結合
+            line = names[1];
+            for (i = 2; i <= n; i++) {
+                prev_freq = freq[ko, names[i-1]];
+                curr_freq = freq[ko, names[i]];
+                
+                if (curr_freq == prev_freq) {
+                    line = line "=" names[i];
                 } else {
-                    line = line ";" ko_name_array[ko, i];
+                    line = line ">" names[i];
                 }
             }
             print ko "\t" line;
         }
     }' > ko_to_name.tsv
-
 fi
 
