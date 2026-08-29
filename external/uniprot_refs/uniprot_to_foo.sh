@@ -3,12 +3,21 @@ set -euo pipefail
 
 ### uniprot_to_{kegggenes,refseq,taxid,eggnog,biocyc,react}
 
-# 2026/06/10 version
 if [ ! -f idmapping.dat.gz ] ; then
     wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz
 fi
 
-if [ ! -f uniprot_to_tcdb.tsv ] ; then
+all_retrieved_from_idmapping=true
+for i in kegggenes refseq taxid eggnog biocyc biocyc react plantreact tcdb_raw phibase pharmacology z
+do
+    if [ ! -f uniprot_to_${i}.tsv ] ; then
+        echo uniprot_to_${i}.tsv
+        all_retrieved_from_idmapping=false
+        break
+    fi
+done
+
+if [ "${all_retrieved_from_idmapping}" = "false" ] ; then
     
     zcat idmapping.dat.gz | awk -F'\t' '
     {
@@ -38,7 +47,7 @@ if [ ! -f uniprot_to_tcdb.tsv ] ; then
             print ac "\t" val > "uniprot_to_plantreact.tsv";
         }
         else if (type == "TCDB") {
-            print ac "\t" val > "uniprot_to_tcdb.tsv";
+            print ac "\t" val > "uniprot_to_tcdb_raw.tsv";
         }
         else if (type == "PHI-base") {
             print ac "\t" val > "uniprot_to_phibase.tsv";
@@ -50,7 +59,7 @@ if [ ! -f uniprot_to_tcdb.tsv ] ; then
 
 fi
 
-if [ ! -f uniprot_to_tcdb_lough.tsv ] ; then
+if [ ! -f uniprot_to_tcdb.tsv ] ; then
     awk 'BEGIN { FS="\t"; OFS="\t" } {
         # 2列目のTC番号を "." で分割して、上位3つを取得
         n = split($2, a, ".")
@@ -58,7 +67,7 @@ if [ ! -f uniprot_to_tcdb_lough.tsv ] ; then
             family_id = a[1] "." a[2] "." a[3]
             print $1, family_id
         }
-    }' uniprot_to_tcdb.tsv > uniprot_to_tcdb_lough.tsv
+    }' uniprot_to_tcdb_raw.tsv > uniprot_to_tcdb.tsv
 fi
 
 ### uniprot_to_go.tsv
