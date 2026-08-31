@@ -4,16 +4,24 @@ nextflow.enable.dsl=2
 // ==========================================
 // 0. グローバル関数定義
 // ==========================================
-def checkMandatoryFile(paramName, pathStr) {
-    if (!pathStr) { error "【パラメータ不足】 '--${paramName}' が指定されていません。" }
+def checkMandatoryFile(paramName, pathVal) {
+    def pathStr = pathVal ? pathVal.toString().trim() : ""
+    if (pathStr.isEmpty()) { 
+        error "【パラメータ不足】 '--${paramName}' が指定されていません。" 
+    }
     def f = file(pathStr)
-    if (!f.exists()) { error "【ファイル非存在エラー】 '--${paramName}' で指定されたファイルが存在しません: ${pathStr}" }
+    if (!f.exists()) { 
+        error "【ファイル非存在エラー】 '--${paramName}' で指定されたファイルが存在しません: ${pathStr}" 
+    }
     return f
 }
 
 // 1. 全体デフォルト値の定義
 params.memory  = 16
 params.threads = 4
+
+// 動的な属性リストのデフォルト値（必要に応じて nextflow.config やコマンドラインで上書き可能）
+params.target_attrs = params.containsKey('target_attrs') ? params.target_attrs : ['taxid', 'ko']
 
 // 2. プロセス固有の上限設定
 def SYNC_PAIR_MAX_MEMORY = 32
@@ -43,7 +51,7 @@ include { ANNOTATE_CATALOG_SUB }     from "${params.petagenomeDir}/nf/lv2/annota
 include { NR_CATALOG_SUB }             from "${params.petagenomeDir}/nf/lv2/nr_catalog.nf"
 include { ALIGN_SAMPLES_TO_CATALOG_SUB } from "${params.petagenomeDir}/nf/lv2/align_samples_to_catalog.nf"
 include { ANNOTATE_SAMPLES_SUB }       from "${params.petagenomeDir}/nf/lv2/annotate_samples.nf"
-include { SUMMARIZE_KO_TAXID_SUB }     from "${params.petagenomeDir}/nf/lv2/summarize_ko_taxid.nf"
+include { SUMMARIZE_ANNOTATIONS_SUB }  from "${params.petagenomeDir}/nf/lv2/summarize_annotations.nf"
 
 // プロセス定義
 process merge_fasta {
@@ -145,7 +153,6 @@ process filter_mapping_by_hits {
 // サブワークフロー定義
 // ==========================================
 
-// (0-1) 各サンプルの前処理・アセンブリ・ORF予測（ORFS解析用）
 workflow PREPARE_ORFS_SUB {
     take: p; host_ref; reads
 
@@ -156,15 +163,14 @@ workflow PREPARE_ORFS_SUB {
     orf_res = PRODIGAL_SUB(p, asm_res.flt_seqs)
 
     emit:
-    raw_reads          = reads
-    fastp_reads        = fp.out
-    host_removed_reads = host_removed.reads
-    contigs            = asm_res.asm
-    flt_seqs           = asm_res.flt_seqs
-    orfs               = orf_res.out
+    raw_reads             = reads
+    fastp_reads           = fp.out
+    host_removed_reads    = host_removed.reads
+    contigs               = asm_res.asm
+    flt_seqs              = asm_res.flt_seqs
+    orfs                  = orf_res.out
 }
 
-// (0-2) クリーニング済みリードの準備（READS解析用）
 workflow PREPARE_CLEAN_READS_SUB {
     take: p; host_ref; reads
 
@@ -176,9 +182,8 @@ workflow PREPARE_CLEAN_READS_SUB {
     reads = host_removed.reads
 }
 
-// (1) カタログ構築ワークフロー
 workflow BUILD_CATALOG_SUB {
-    take: p; ref_or_db; taxid_map; ko_map; orf_res_out
+    take: p; ref_or_db; maps_map; orf_res_out
 
     main:
     sample_orf_fna_ch = orf_res_out.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
@@ -195,7 +200,7 @@ workflow BUILD_CATALOG_SUB {
     nr_rep_faa_path = nr_catalog_res.rep_faa.map { id, path -> path }
     nr_rep_fna_path = nr_catalog_res.rep_fna.map { id, path -> path }
 
-    annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_catalog_res.rep_faa, taxid_map, ko_map)
+    annotation_res = ANNOTATE_CATALOG_SUB(p, ref_or_db, nr_catalog_res.rep_faa, maps_map)
     annotated_path_ch = annotation_res.annotated.map { id, path -> path }
     hit_ids_path_ch   = annotation_res.hit_ids.map { id, path -> path }
 
@@ -210,56 +215,30 @@ workflow BUILD_CATALOG_SUB {
     filtered_mapping_res = filter_mapping_by_hits(mapping_to_filter)
 
     emit:
-    nr_catalog_faa     = nr_catalog_res.rep_faa
-    nr_catalog_fna     = nr_catalog_res.rep_fna
-    annotated          = annotated_path_ch
-    hit_ids            = hit_ids_path_ch
-    filtered_rep_faa   = filtered_rep_faa
-    filtered_rep_fna   = filtered_rep_fna
-    filtered_mapping   = filtered_mapping_res
-    sample_orf_fna     = sample_orf_fna_ch
+    nr_catalog_faa       = nr_catalog_res.rep_faa
+    nr_catalog_fna       = nr_catalog_res.rep_fna
+    annotated            = annotated_path_ch
+    hit_ids              = hit_ids_path_ch
+    filtered_rep_faa     = filtered_rep_faa
+    filtered_rep_fna     = filtered_rep_fna
+    filtered_mapping     = filtered_mapping_res
+    sample_orf_fna       = sample_orf_fna_ch
 }
 
-// (2) カタログへのマッピング・アノテーション・集計ワークフロー
 workflow ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB {
-    take: p; filtered_rep_fna; target_reads_ch; annotated_path_ch; ko_name_map; taxid_name_map
+    take: p; filtered_rep_fna; target_reads_ch; annotated_path_ch; name_maps_map
 
     main:
     samples_mapping_res = ALIGN_SAMPLES_TO_CATALOG_SUB(p, filtered_rep_fna, target_reads_ch)
     
-    // 【期待される形式】: tuple(val(qry_id), path(m8_file))
-    samples_mapping_res.out.view { 
-        "[DEBUG VIEW] samples_mapping_res.out\n" +
-        "  - 期待される形式: tuple(val(qry_id), path(m8_file)) [例: ['01_sampleA', /path/to/out.m8]]\n" +
-        "  - 実際の値      : ${it}\n" +
-        "  - クラス        : ${it?.getClass()}"
-    }
-
-    // 【期待される形式】: path(annotated_tsv_file) または tuple(val(id), path(tsv)) 等
-    annotated_path_ch.view { 
-        "[DEBUG VIEW] annotated_path_ch\n" +
-        "  - 期待される形式: path(annotated_tsv_file) [例: /path/to/nr_prot_annotated.tsv]\n" +
-        "  - 実際の値      : ${it}\n" +
-        "  - クラス        : ${it?.getClass()}"
-    }
-    
     samples_anno_res = ANNOTATE_SAMPLES_SUB(p, samples_mapping_res.out, annotated_path_ch)
     
-    // 【期待される形式】: tuple(val(qry_id), path(annotated_sample_tsv))
-    samples_anno_res.samples_anno.view {
-        "[DEBUG VIEW] samples_anno_res.samples_anno\n" +
-        "  - 期待される形式: tuple(val(qry_id), path(annotated_sample_tsv))\n" +
-        "  - 実際の値      : ${it}\n" +
-        "  - クラス        : ${it?.getClass()}"
-    }
-
-    summary_res = SUMMARIZE_KO_TAXID_SUB(p, samples_anno_res.samples_anno, ko_name_map, taxid_name_map)
+    summary_res = SUMMARIZE_ANNOTATIONS_SUB(p, samples_anno_res.samples_anno, name_maps_map)
 
     emit:
     samples_mapping    = samples_mapping_res.out
     samples_annotation = samples_anno_res.samples_anno
-    ko_summary         = summary_res.ko_summary
-    tax_summary        = summary_res.tax_summary
+    annotations_summary = summary_res.annotations_summary
 }
 
 
@@ -272,10 +251,33 @@ def setupReadsAndRefs() {
     if (!params.remove_host_ref_fasta_or_db) { error "【パラメータ不足】 '--remove_host_ref_fasta_or_db' が指定されていません。" }
     if (!params.annotate_catalog_prot_ref_or_db) { error "【パラメータ不足】 '--annotate_catalog_prot_ref_or_db' が指定されていません。" }
 
-    def taxid_map      = checkMandatoryFile('taxid_map_path', params.taxid_map_path)
-    def ko_map         = checkMandatoryFile('ko_map_path', params.ko_map_path)
-    def ko_name_map    = checkMandatoryFile('ko_name_map_path', params.ko_name_map_path)
-    def taxid_name_map = checkMandatoryFile('taxid_name_map_path', params.taxid_name_map_path)
+    // 文字列として渡された場合はカンマで分割してリスト化し、すでにリストの場合はそのまま維持する
+    def attrs = params.target_attrs instanceof Collection ? 
+                params.target_attrs : 
+                params.target_attrs.toString().split(',').collect { it.trim() }
+    
+    def maps = [:]
+    def name_maps = [:]
+
+    attrs.each { attr ->
+        def mapPathKey     = "${attr}_map_path"
+        def nameMapPathKey = "${attr}_name_map_path"
+
+        // paramsに値がないときはNextflowの仕様で警告が出るが、直接参照で確実に対象パスを取得する
+        def mapPathVal     = params[mapPathKey] ? params[mapPathKey].toString().trim() : null
+        def nameMapPathVal = params[nameMapPathKey] ? params[nameMapPathKey].toString().trim() : null
+
+        if (mapPathVal) {
+            maps[attr] = checkMandatoryFile(mapPathKey, mapPathVal)
+        }
+        println "DEBUG_CHECK: attr=${attr}, key=${mapPathKey}, val=${mapPathVal}"
+
+        if (nameMapPathVal) {
+            def f = file(nameMapPathVal)
+            name_maps[attr] = f.exists() ? f : null
+        }
+        println "DEBUG_CHECK: attr=${attr}, key=${nameMapPathKey}, val=${nameMapPathVal}"
+    }
 
     def p = createNullParamsChannel()
     def reads_list = params.bacteriome_pipeline_reads.split(';')
@@ -291,31 +293,31 @@ def setupReadsAndRefs() {
     def host_ref  = createSeqsChannel(params.remove_host_ref_fasta_or_db)
     def ref_or_db = createSeqsChannel(params.annotate_catalog_prot_ref_or_db)
 
-    return [p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads]
+    return [p, host_ref, ref_or_db, maps, name_maps, reads]
 }
 
 // 統合実行 (1) + (2) : 連続実行
 workflow BACTERIOME_PIPELINE_ALL {
-    def (p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads) = setupReadsAndRefs()
+    def (p, host_ref, ref_or_db, maps, name_maps, reads) = setupReadsAndRefs()
 
     orfs_res = PREPARE_ORFS_SUB(p, host_ref, reads)
-    catalog_res = BUILD_CATALOG_SUB(p, ref_or_db, taxid_map, ko_map, orfs_res.orfs)
-    summary_res = ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB(p, catalog_res.filtered_rep_fna, catalog_res.sample_orf_fna, catalog_res.annotated, ko_name_map, taxid_name_map)
+    catalog_res = BUILD_CATALOG_SUB(p, ref_or_db, maps, orfs_res.orfs)
+    summary_res = ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB(p, catalog_res.filtered_rep_fna, catalog_res.sample_orf_fna, catalog_res.annotated, name_maps)
 }
 
 // カタログ作成のみ (1)
 workflow BACTERIOME_PIPELINE_BUILD_CATALOG {
-    def (p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads) = setupReadsAndRefs()
+    def (p, host_ref, ref_or_db, maps, name_maps, reads) = setupReadsAndRefs()
 
     orfs_res = PREPARE_ORFS_SUB(p, host_ref, reads)
-    BUILD_CATALOG_SUB(p, ref_or_db, taxid_map, ko_map, orfs_res.orfs)
+    BUILD_CATALOG_SUB(p, ref_or_db, maps, orfs_res.orfs)
 }
 
 // サンプル解析（ORF配列ベース）
 workflow BACTERIOME_PIPELINE_ANALYZE_ORFS {
-    def (p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads) = setupReadsAndRefs()
+    def (p, host_ref, ref_or_db, maps, name_maps, reads) = setupReadsAndRefs()
 
-    def catalog_fna_path        = checkMandatoryFile('catalog_fna', params.catalog_fna)
+    def catalog_fna_path         = checkMandatoryFile('catalog_fna', params.catalog_fna)
     def catalog_annotated_path = checkMandatoryFile('catalog_annotated', params.catalog_annotated)
 
     filtered_rep_fna_ch = Channel.value(tuple("filtered_catalog", file(catalog_fna_path)))
@@ -324,27 +326,23 @@ workflow BACTERIOME_PIPELINE_ANALYZE_ORFS {
     orfs_res = PREPARE_ORFS_SUB(p, host_ref, reads)
     sample_orf_fna_ch = orfs_res.orfs.map { qry_id, faa, fna, gbk -> tuple(qry_id, fna) }
 
-    ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB(p, filtered_rep_fna_ch, sample_orf_fna_ch, annotated_ch, ko_name_map, taxid_name_map)
+    ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB(p, filtered_rep_fna_ch, sample_orf_fna_ch, annotated_ch, name_maps)
 }
 
-// サンプル解析（クリーニング済みリード直接ベース・アセンブリ/ORF予測なし）
+// サンプル解析（クリーニング済みリード直接ベース）
 workflow BACTERIOME_PIPELINE_ANALYZE_READS {
-    def (p, host_ref, ref_or_db, taxid_map, ko_map, ko_name_map, taxid_name_map, reads) = setupReadsAndRefs()
+    def (p, host_ref, ref_or_db, maps, name_maps, reads) = setupReadsAndRefs()
 
-    def catalog_fna_path        = checkMandatoryFile('catalog_fna', params.catalog_fna)
+    def catalog_fna_path         = checkMandatoryFile('catalog_fna', params.catalog_fna)
     def catalog_annotated_path = checkMandatoryFile('catalog_annotated', params.catalog_annotated)
 
     filtered_rep_fna_ch = Channel.value(tuple("filtered_catalog", file(catalog_fna_path)))
     annotated_ch         = Channel.value(file(catalog_annotated_path))
 
-    // 前処理（fastp + ホスト除去）のみを実行
     clean_reads_res = PREPARE_CLEAN_READS_SUB(p, host_ref, reads)
-
-    // ペアエンドのリード（R1/R2）を1つのファイルに結合
     combined_reads_ch = cat_paired_reads(clean_reads_res.reads)
 
-    // 結合されたクリーンリードを直接マッピングモジュールへ投入
-    ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB(p, filtered_rep_fna_ch, combined_reads_ch, annotated_ch, ko_name_map, taxid_name_map)
+    ANNOTATE_AND_SUMMARIZE_SAMPLES_SUB(p, filtered_rep_fna_ch, combined_reads_ch, annotated_ch, name_maps)
 }
 
 workflow { BACTERIOME_PIPELINE_ALL() }

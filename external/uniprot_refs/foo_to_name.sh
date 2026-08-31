@@ -20,7 +20,8 @@ if [ ! -f go_to_name.tsv ] ; then
             namespace=$2; 
             # タームのブロックが終わったら出力
             if (id != "" && name != "") {
-                print id "\t" name "\t" namespace;
+                #print id "\t" name "\t" namespace;
+                print id "\t" name;
             }
         }' go-basic.obo > go_to_name.tsv
 fi
