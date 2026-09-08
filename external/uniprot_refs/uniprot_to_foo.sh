@@ -131,6 +131,16 @@ EOF
 
 fi
 
+# uniprot_to_ec.tsv
+
+if [ ! -f uniprot_sprot.dat.gz ] ; then
+    wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz
+fi
+
+if [ ! -f uniprot_to_ec.tsv ] ; then
+    python uniprot_to_ec.py
+fi
+
 echo "抽出が完了しました。生成されたファイル一覧:"
 ls -lh uniprot_to_*.tsv
 

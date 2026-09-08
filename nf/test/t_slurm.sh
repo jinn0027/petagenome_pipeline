@@ -99,7 +99,9 @@ pipeline_args="\
     --annotate_catalog_prot_is_prebuilt_db true \
     --annotate_catalog_prot_ref_or_db ${extDir}/uniprot_refs/mmseqs2 \
     --bacteriome_pipeline_reads ${inPairs} \
-    --target_attrs taxid,ko,go,react,tcdb,biocyc,pharmacology,phibase \
+    --target_attrs ec,taxid,ko,go,react,tcdb,biocyc,pharmacology,phibase \
+    --ec_map_path ${extDir}/uniprot_refs/uniprot_to_ec.tsv \
+    --ec_name_map_path ${extDir}/uniprot_refs/ec_to_name.tsv \
     --taxid_map_path ${extDir}/uniprot_refs/uniprot_to_taxid.tsv \
     --taxid_name_map_path ${extDir}/uniprot_refs/taxid_to_name.tsv \
     --ko_map_path ${extDir}/uniprot_refs/uniprot_to_ko.tsv \
@@ -196,15 +198,15 @@ case ${test} in
         nextflow run ${nfDir}/lv3/aa.nf -resume -entry BACTERIOME_PIPELINE_BUILD_CATALOG ${args} ${pipeline_args}
 
     	cp -f out/BACTERIOME_PIPELINE_BUILD_CATALOG:BUILD_CATALOG_SUB:filter_fna_catalog_by_hits/filtered_catalog_fna.fna ${catalog_fna}
-    	cp -f out/BACTERIOME_PIPELINE_BUILD_CATALOG:BUILD_CATALOG_SUB:ANNOTATE_CATALOG_SUB:annotate_catalog/nr_prot_annotated.tsv ${catalog_annotated}
+	cp -f out/BACTERIOME_PIPELINE_BUILD_CATALOG:BUILD_CATALOG_SUB:ANNOTATE_CATALOG_SUB:annotate_catalog/nr_prot_annotated.tsv ${catalog_annotated}
         ;;
     "bb")
-        nextflow run ${nfDir}/lv3/aa.nf -resume -entry BACTERIOME_PIPELINE_ANALYZE_READS ${args} ${pipeline_args}
-        ;;
-    "cc")
         nextflow run ${nfDir}/lv3/aa.nf -resume -entry BACTERIOME_PIPELINE_ANALYZE_ORFS ${args} ${pipeline_args}
         ;;
         
+    "cc")
+        nextflow run ${nfDir}/lv3/aa.nf -resume -entry BACTERIOME_PIPELINE_ANALYZE_READS ${args} ${pipeline_args}
+        ;;
     "main")
         nextflow run ${nfDir}/toys/main.nf ${args} \
                  --main_reads "${longFnqGzPair}"

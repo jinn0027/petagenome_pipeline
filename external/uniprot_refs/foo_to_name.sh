@@ -148,3 +148,13 @@ if [ ! -f ko_to_name.tsv ] ; then
     }' > ko_to_name.tsv
 fi
 
+### ec_to_name.tsv
+
+if [ ! -f enzyme.dat ] ; then
+    wget https://ftp.expasy.org/databases/enzyme/enzyme.dat
+fi
+
+if [ ! -f ec_to_name.tsv ] ; then
+    python ec_to_name.py
+fi
+
