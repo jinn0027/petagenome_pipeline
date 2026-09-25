@@ -1,0 +1,19 @@
+Bootstrap: localimage
+From: ../common/el9.sif
+
+%setup
+
+%files
+
+%post
+    alias dnf="LD_LIBRARY_PATH=/usr/local/lib dnf"
+    pushd /opt
+        # install barrnap
+        /opt/miniconda3/bin/conda install -c bioconda -y -q \
+            barrnap=1.10.6
+    popd
+
+%environment
+
+%runscript
+
