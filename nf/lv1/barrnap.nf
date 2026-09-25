@@ -19,16 +19,16 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
     from "${params.petagenomeDir}/nf/common/utils"
 
 process extract_16s_fastq {
-    tag "${pair_id}_${region}" // タグに領域名も含めると分かりやすいです
+    tag "${pair_id}_${region}"
 
-    container = "${params.petagenomeDir}/modules/barrnap/barrnap_biopython.sif"
+    container = "${params.petagenomeDir}/modules/barrnap/barrnap.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
 
     def gb = "${params.extract_16s_memory}"
     def threads = "${params.extract_16s_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
-    cputils params.executor=="sge" ? null : threads
+    cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:

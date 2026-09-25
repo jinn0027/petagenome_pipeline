@@ -14,7 +14,7 @@ params.remove_host_extract_memory  = Math.min(params.memory as Integer, EXTRACT_
 params.remove_host_extract_threads = Math.min(params.threads as Integer, EXTRACT_MAX_THREADS)
 
 params.remove_host_aligner          = "bwa_mem2"
-params.remove_host_is_prebuilt_db   = false
+params.remove_host_is_prebuilt_db   = true
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; createSeqsChannel; createPairsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -119,7 +119,7 @@ workflow REMOVE_HOST_SUB {
 // A. DB (BWA/PZBWA インデックス) の作成のみを実行 (-entry BUILD_REF_DB_ONLY)
 workflow BUILD_REF_DB_ONLY {
     p        = createNullParamsChannel()
-    host_ref = createSeqsChannel(params.remove_host_ref_fasta)
+    host_ref = createSeqsChannel(params.remove_host_ref_fasta_or_db)
 
     db_out = BUILD_REF_DB_SUB(p, host_ref)
 
@@ -131,7 +131,7 @@ workflow BUILD_REF_DB_ONLY {
 // B. 未構築FASTAから全行程を実行 (-entry REMOVE_HOST_ALL)
 workflow REMOVE_HOST_ALL {
     p        = createNullParamsChannel()
-    host_ref = createSeqsChannel(params.remove_host_ref_fasta)
+    host_ref = createSeqsChannel(params.remove_host_ref_fasta_or_db)
     reads    = createPairsChannel(params.remove_host_reads)
 
     params.remove_host_is_prebuilt_db = false

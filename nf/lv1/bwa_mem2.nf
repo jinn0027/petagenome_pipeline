@@ -24,7 +24,7 @@ include { createNullParamsChannel; getParam; clusterOptions; processProfile; cre
 
 process bwa_mem2_makerefdb {
     tag "${ref_id}"
-    container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
+    container = "${params.petagenomeDir}/modules/bwamem2/bwamem2.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bwa_mem2_bwa_mem2_makerefdb_memory}"
@@ -40,16 +40,16 @@ process bwa_mem2_makerefdb {
         """
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${ref_id}
-        bwa \\
-            index \\
-            -p ${ref_id}/ref \\
+        bwa-mem2 \
+            index \
+            -p ${ref_id}/ref \
             ${ref}
         """
 }
 
 process bwa_mem2_mem {
     tag "${ref_id}_@_${qry_id}"
-    container = "${params.petagenomeDir}/modules/bwa/bwa.sif"
+    container = "${params.petagenomeDir}/modules/bwamem2/bwamem2.sif"
     containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
     publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
     def gb = "${params.bwa_mem2_bwa_mem2_mem_memory}"
@@ -65,13 +65,16 @@ process bwa_mem2_mem {
         tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
 
     script:
+        // Groovy変数として一度安全にローカル変数に受ける
+        def db = ref_db 
         """
-        echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${qry_id}
-        bwa \
+
+        # ここに本来のコマンドを記述
+        bwa-mem2 \
             mem \
             -t ${threads} \
-            ${ref_db}/ref \
+            ${db}/ref \
             ${qry} \
             > ${qry_id}/out.sam
         """
@@ -108,7 +111,7 @@ workflow MAP_SUB {
     main:
     // ref_db: [ ref_id, ref_db_path ]
     // qry:    [ qry_id, qry_path ]  (または [ qry_id, [read1, read2] ])
-    
+
     // [ ref_id, ref_path, qry_id, qry_path ] にフラット化
     in_ch = ref_db.combine(qry).map { ref_id, ref_path, qry_id, qry_path ->
         tuple(ref_id, ref_path, qry_id, qry_path)
@@ -118,6 +121,8 @@ workflow MAP_SUB {
     in_ch = p.combine(in_ch).map { p_val, ref_id, ref_path, qry_id, qry_path ->
         tuple(p_val, ref_id, ref_path, qry_id, qry_path)
     }
+
+    in_ch.view{i->"AAAAAAAAAAA $i"}
 
     out = bwa_mem2_mem(in_ch)
 
