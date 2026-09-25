@@ -28,15 +28,13 @@ process extract_16s_fastq {
     def gb = "${params.extract_16s_memory}"
     def threads = "${params.extract_16s_threads}"
     memory params.executor=="sge" ? null : "${gb} GB"
-    cpus params.executor=="sge" ? null : threads
+    cpus   params.executor=="sge" ? null : threads  // ★ cpr から cpus に修正
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
 
     input:
-    // ★ pair_id, contigs に加えて region を入道させる
     tuple val(pair_id), path(contigs), val(region)
 
     output:
-    // ★ 出力も領域ごとに独立したディレクトリ/ファイル名にする
     tuple val(pair_id), val(region), path("${pair_id}_${region}/${pair_id}_${region}*.fastq.gz")
 
     script:
@@ -70,7 +68,7 @@ PRIMERS = {
     'v1':  {'f': 'AGAGTTTGATCMTGGCTCAG', 'r': 'CTGCTGCCTCCCGTAGG'},        
     'v12': {'f': 'AGAGTTTGATCMTGGCTCAG', 'r': 'CGYCAATTCMTTTRWTTT'},   
     'v13': {'f': 'AGAGTTTGATCMTGGCTCAG', 'r': 'GWATTACCGCGGCKGCTG'},   
-    'v34': {'f': 'CCTACGGGAGGCAGCAG',    'r': 'GGACTACNVGGGTWTCTAAT'}, 
+    'v34': {'f': 'CCTACGGGAGGCAGCAG',    'r': 'GGACTACNVGGGTWTCTAAT'},  
     'v4':  {'f': 'GTGYCAGCMGCCGCGGTAA',    'r': 'GGACTACNVGGGTWTCTAAT'}  
 }
 
@@ -111,7 +109,7 @@ with open(gff_file) as f:
         seq = contigs[seqname].seq
         sub_seq = str(seq[start:end])
         if strand == "-":
-            sub_seq = str(SeqIO.Seq(sub_seq).reverse_complement())
+            sub_seq = rev_comp(sub_seq)
             
         for fm in f_pat.finditer(sub_seq):
             p1 = fm.start()
@@ -153,7 +151,7 @@ EOF
 workflow EXTRACT_16S_SUB {
     take:
     p
-    contigs_with_region // [pair_id, contigs, region] のチャネルを想定
+    contigs_with_region
 
     main:
     out = extract_16s_fastq(contigs_with_region)
@@ -167,7 +165,6 @@ workflow EXTRACT_16S_ALL {
     contigs = createPairsChannel(params.extract_16s_contigs)
     regions_ch = Channel.from(params.target_regions.tokenize(',')).map { it.trim() }
     
-    // 単体実行の際もコンティグと領域を組み合わせられるようにする
     combined_ch = contigs.combine(regions_ch)
 
     out_ch = EXTRACT_16S_SUB(p, combined_ch)
