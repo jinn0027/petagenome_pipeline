@@ -37,6 +37,19 @@ if [ ! -f uniprot_sprot.fasta.gz  ] ; then
     wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz 
 fi
 
+if [ ! -f uniprot_trembl.fasta.gz  ] ; then
+    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_trembl.fasta.gz
+fi
+
+exit
+
+pushd ${DIR_EXTERNAL}/uniprot
+./uniprot_to_foo.sh
+./foo_to_name.sh
+popd
+
+exit
+
 if [ ! -f uniprot_to_taxid.tsv  ] || [ ! -f uniprot_to_refseq.tsv ] || [ ! -f uniprot_to_gene.tsv ] || [ ! -f uniprot_to_go.tsv ]; then
     if [ ! -f idmapping_selected.tab.gz ] ; then
 	wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz

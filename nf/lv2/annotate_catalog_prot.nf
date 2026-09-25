@@ -5,7 +5,10 @@ nextflow.enable.dsl=2
 params.memory  = 16
 params.threads = 4
 
-// 2. プロセス固有の上限設定（巨大な TaxID/KO マッピング辞書をメモリ保持するため上限は 32GB を確保）
+// 動的な属性リストのデフォルト値
+params.target_attrs = params.containsKey('target_attrs') ? params.target_attrs : ['taxid', 'ko']
+
+// 2. プロセス固有の上限設定（巨大な複数マッピング辞書をメモリ保持するため上限は 32GB を確保）
 def ANNOTATE_CATALOG_MAX_MEMORY  = 32 
 def ANNOTATE_CATALOG_MAX_THREADS = 4
 
@@ -48,43 +51,41 @@ process annotate_catalog {
 
     input:
         tuple val(ref_id), val(qry_id), path(fmt6_result)
-        path taxid_map
-        path ko_map
+        val target_attrs                               // 例: ['taxid', 'ko']
+        path maps, stageAs: 'map_*'  // 複数マップファイルのステージング
 
     output:
         tuple val(qry_id), path("${qry_id}_annotated.tsv"), emit: annotated
-        tuple val(qry_id), path("${qry_id}_hit_ids.txt"),   emit: hit_ids
+        tuple val(qry_id), path("${qry_id}_hit_ids.txt"),    emit: hit_ids
 
     script:
+    def attrs_str = target_attrs.join(' ')
+    def maps_args = maps.collect { "\"${it}\"" }.join(' ')
     """
-    python3 - "${taxid_map}" "${ko_map}" "${fmt6_result}" "${qry_id}_annotated.tsv" "${qry_id}_hit_ids.txt" << 'EOF'
+    python3 - "${attrs_str}" "${fmt6_result}" "${qry_id}_annotated.tsv" "${qry_id}_hit_ids.txt" ${maps_args} << 'EOF'
 import sys
+import os
 
-taxid_map_file = sys.argv[1]
-ko_map_file    = sys.argv[2]
-fmt6_file      = sys.argv[3]
-out_file       = sys.argv[4]
-hit_ids_file   = sys.argv[5]
+target_attrs = sys.argv[1].split()
+fmt6_file    = sys.argv[2]
+out_file     = sys.argv[3]
+hit_ids_file = sys.argv[4]
+map_files    = sys.argv[5:]
 
-taxid_dict = {}
-with open(taxid_map_file, 'r', encoding='utf-8') as f:
-    for line in f:
-        parts = line.rstrip('\\r\\n').split('\\t')
-        if len(parts) >= 2 and parts[1].strip():
-            taxid_dict[parts[0].strip()] = parts[1].strip()
+# 属性ごとにマップ辞書を動적構築
+dicts = {}
+for attr, map_file in zip(target_attrs, map_files):
+    d = {}
+    if os.path.exists(map_file) and map_file != 'NO_FILE':
+        with open(map_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                parts = line.rstrip('\\r\\n').split('\\t')
+                if len(parts) >= 2 and parts[1].strip():
+                    d[parts[0].strip()] = parts[1].strip()
+    print(f"DEBUG: Loaded {len(d)} {attr} entries.")
+    dicts[attr] = d
 
-print(f"DEBUG: Loaded {len(taxid_dict)} taxid entries.")
-
-ko_dict = {}
-with open(ko_map_file, 'r', encoding='utf-8') as f:
-    for line in f:
-        parts = line.rstrip('\\r\\n').split('\\t')
-        if len(parts) >= 2 and parts[1].strip():
-            ko_dict[parts[0].strip()] = parts[1].strip()
-
-print(f"DEBUG: Loaded {len(ko_dict)} ko entries.")
-
-cols_header = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore", "taxid", "ko"]
+cols_header = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"] + target_attrs
 hit_id_set = set()
 match_count = 0
 
@@ -103,23 +104,27 @@ with open(fmt6_file, 'r', encoding='utf-8') as fin, open(out_file, 'w', encoding
         sseqid = cols[1]
         sseqid_base = sseqid.split('.')[0]
         
-        taxid = taxid_dict.get(sseqid)
-        if not taxid:
-            taxid = taxid_dict.get(sseqid_base, "N/A")
-            
-        ko = ko_dict.get(sseqid)
-        if not ko:
-            ko = ko_dict.get(sseqid_base, "N/A")
+        row_values = []
+        all_na = True
         
-        # 両方 N/A の場合は出力から除外
-        if taxid == "N/A" and ko == "N/A":
+        for attr in target_attrs:
+            d = dicts[attr]
+            val = d.get(sseqid)
+            if not val:
+                val = d.get(sseqid_base, "N/A")
+            row_values.append(val)
+            if val != "N/A":
+                all_na = False
+        
+        # 全ての属性が N/A の場合は出力から除外
+        if all_na:
             continue
         
         match_count += 1
-        # ヒットしたクエリIDを記録
         hit_id_set.add(qseqid)
         
-        fout.write(f"{line_clean}\\t{taxid}\\t{ko}\\n")
+        annot_str = "\\t".join(row_values)
+        fout.write(f"{line_clean}\\t{annot_str}\\n")
 
 print(f"DEBUG: Successfully matched {match_count} lines.")
 
@@ -138,10 +143,9 @@ EOF
 workflow ANNOTATE_CATALOG_SUB {
     take:
     p
-    ref_or_db        // リファレンスFASTA または ビルド済みDB
-    orfs             // Prodigal等の出力から抽出した [ qry_id, out.faa ]
-    taxid_map        // uniprot_to_taxid.tsv (File path or Channel)
-    ko_map           // uniprot_to_ko.tsv (File path or Channel)
+    ref_or_db      // リファレンスFASTA または ビルド済みDB
+    orfs           // Prodigal等の出力から抽出した [ qry_id, out.faa ]
+    maps_map       // Map [attr: path (または file('NO_FILE'))]
 
     main:
     // A. DB の準備（タンパク質用サブワークフローを呼び出し）
@@ -155,16 +159,34 @@ workflow ANNOTATE_CATALOG_SUB {
     // B. 相同性検索 (タンパク質用サブワークフローを呼び出し / 出力: [ ref_id, qry_id, out.m8 ])
     search_out = MAP_PROT_SUB(p, db, orfs)
 
-    // C. Map ファイルを value チャネル化して全サンプルに再利用可能にする (型チェックの安全化)
-    ch_taxid = (taxid_map?.getClass()?.name?.contains('Dataflow')) ? taxid_map : Channel.value(taxid_map)
-    ch_ko    = (ko_map?.getClass()?.name?.contains('Dataflow'))    ? ko_map    : Channel.value(ko_map)
+    // C. target_attrs の順序に合わせたマップファイルのリスト（Channel）を構築
+    def target_attrs = params.target_attrs instanceof Collection ? 
+                params.target_attrs : 
+                params.target_attrs.toString().split(',').collect { it.trim() }
 
-    // D. TaxID / KO の紐づけ ＆ フィルタリング
-    annotated_out = annotate_catalog(search_out, ch_taxid, ch_ko)
+    def maps_ch = Channel.value(
+        target_attrs.collect { attr -> 
+            maps_map[attr] ?: file('NO_FILE') 
+        }
+    )
+
+    // D. 複数属性の紐づけ ＆ フィルタリング
+    annotated_out = annotate_catalog(search_out, target_attrs, maps_ch)
 
     emit:
     annotated = annotated_out.annotated
     hit_ids   = annotated_out.hit_ids
+}
+
+// 互換性維持のためのラッパー（従来の税・KO個別引数で呼ばれた場合の救済）
+workflow ANNOTATE_CATALOG_SUB_LEGACY {
+    take: p; ref_or_db; orfs; taxid_map; ko_map
+    main:
+    def maps_map = [taxid: taxid_map, ko: ko_map]
+    res = ANNOTATE_CATALOG_SUB(p, ref_or_db, orfs, maps_map)
+    emit:
+    annotated = res.annotated
+    hit_ids   = res.hit_ids
 }
 
 // ==========================================
@@ -185,29 +207,55 @@ workflow BUILD_REF_DB_ONLY {
 
 // B. FASTA からリファレンス DB を構築して検索・アノテーションを行うワークフロー
 workflow ANNOTATE_ALL {
-    p         = createNullParamsChannel()
+    p           = createNullParamsChannel()
     ref_fasta = createSeqsChannel(params.annotate_catalog_prot_ref_fasta)
     orfs      = createSeqsChannel(params.annotate_catalog_prot_orfs)
-    taxid_map = file(params.annotate_catalog_prot_taxid_map)
-    ko_map    = file(params.annotate_catalog_prot_ko_map)
+    
+    def target_attrs = params.target_attrs instanceof Collection ? 
+                params.target_attrs : 
+                params.target_attrs.toString().split(',').collect { it.trim() }
+
+    def maps_map = [:]
+    target_attrs.each { attr ->
+        def mapPathKey = "${attr}_map_path"
+        
+        // paramsに値がないときはNextflowの仕様で警告が出るが、直接参照で確実に対象パスを取得する
+        def mapPathVal = params[mapPathKey] ? params[mapPathKey].toString().trim() : null
+        maps_map[attr] = mapPathVal ? file(mapPathVal, checkIfExists: true) : file('NO_FILE')
+        
+        println "DEBUG_CHECK: attr=${attr}, key=${mapPathKey}, val=${mapPathVal}"
+    }
 
     params.annotate_catalog_prot_is_prebuilt_db = false
 
-    out_ch = ANNOTATE_CATALOG_SUB(p, ref_fasta, orfs, taxid_map, ko_map)
+    out_ch = ANNOTATE_CATALOG_SUB(p, ref_fasta, orfs, maps_map)
     out_ch.annotated.view { i -> "ANNOTATED RESULT: $i" }
 }
 
 // C. 事前構築済み DB を使用して検索・アノテーションを行うワークフロー
 workflow ANNOTATE_WITH_DB {
-    p         = createNullParamsChannel()
+    p           = createNullParamsChannel()
     ref_db    = createSeqsChannel(params.annotate_catalog_prot_prebuilt_db)
     orfs      = createSeqsChannel(params.annotate_catalog_prot_orfs)
-    taxid_map = file(params.annotate_catalog_prot_taxid_map)
-    ko_map    = file(params.annotate_catalog_prot_ko_map)
+    
+    def target_attrs = params.target_attrs instanceof Collection ? 
+                params.target_attrs : 
+                params.target_attrs.toString().split(',').collect { it.trim() }
+
+    def maps_map = [:]
+    target_attrs.each { attr ->
+        def mapPathKey = "${attr}_map_path"
+        
+        // paramsに値がないときはNextflowの仕様で警告が出るが、直接参照で確実に対象パスを取得する
+        def mapPathVal = params[mapPathKey] ? params[mapPathKey].toString().trim() : null
+        maps_map[attr] = mapPathVal ? file(mapPathVal, checkIfExists: true) : file('NO_FILE')
+        
+        println "DEBUG_CHECK: attr=${attr}, key=${mapPathKey}, val=${mapPathVal}"
+    }
 
     params.annotate_catalog_prot_is_prebuilt_db = true
 
-    out_ch = ANNOTATE_CATALOG_SUB(p, ref_db, orfs, taxid_map, ko_map)
+    out_ch = ANNOTATE_CATALOG_SUB(p, ref_db, orfs, maps_map)
     out_ch.annotated.view { i -> "ANNOTATED RESULT (PREBUILT DB): $i" }
 }
 
