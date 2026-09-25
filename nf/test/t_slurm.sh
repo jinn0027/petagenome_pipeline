@@ -65,7 +65,8 @@ cFaa="${dataDir}/c.faa"
 dFna="${dataDir}/d.fna"
 dFaa="${dataDir}/d.faa"
 
-inPairs="/home/data202502/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+#inPairs="/home/data202502/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+inPairs="/mnt/pool3/scratch/ishikawa/petagenome_pipeline/data/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
 
 args="\
     --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
