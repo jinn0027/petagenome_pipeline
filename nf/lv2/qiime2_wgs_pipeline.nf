@@ -1,29 +1,31 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// 1. 全体デフォルト値の定義（未定義時のフォールバック）
+// 1. 全体デフォルト値の定義
 params.memory  = 32
 params.threads = 8
+
+// 2. タスク固有の上限値
+def QIIME2_WGS_MAX_MEMORY = 64
+def QIIME2_WGS_MAX_THREADS = 32
+
+params.qiime2_wgs_memory = Math.min(params.memory as Integer, QIIME2_WGS_MAX_MEMORY)
+params.qiime2_wgs_threads = Math.min(params.threads as Integer, QIIME2_WGS_MAX_THREADS)
 
 // パラメータの初期化
 params.qiime2_gg2_wgs_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_wgs_taxonomy     = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
-// Greengenes2 系統樹（.nwk）のパラメータを追加
-params.qiime2_gg2_wgs_tree         = "${params.petagenomeDir}/data/greengenes2/2024.09.taxonomy.id.nwk"
-// Woltka用のマップファイル
-params.qiime2_woltka_wol_map       = "${params.petagenomeDir}/data/greengenes2/wol_map.txt"
 
 // 必須パラメータのチェック
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
     error "Error: 'petagenomeDir' parameter is not specified. Please provide it."
 }
 
-include { createNullParamsChannel; createPairsChannel; createSeqsChannel; apptainerContainerOptions } from "${params.petagenomeDir}/nf/common/utils"
+include { createNullParamsChannel; createPairsChannel; apptainerContainerOptions } from "${params.petagenomeDir}/nf/common/utils"
 
-// 下位モジュール（lv1）のインポート
+// 下位モジュールのインポート
 include { FASTP_SUB } from "${params.petagenomeDir}/nf/lv1/fastp"
 include { BUILD_REF_DB_SUB; MAP_SUB } from "${params.petagenomeDir}/nf/lv1/bowtie2"
-include { QIIME2_WOLTKA_SUB } from "${params.petagenomeDir}/nf/lv1/qiime2_woltka"
 include { QIIME2_GREENGENES2_WGS_SUB } from "${params.petagenomeDir}/nf/lv1/qiime2_gg2_wgs"
 
 // ==========================================
@@ -68,8 +70,6 @@ workflow QIIME2_WGS_PIPELINE_SUB {
     reads
     backbone
     taxonomy
-    wol_map
-    tree_file  // 系統樹ファイルを追加
 
     main:
 
@@ -89,13 +89,13 @@ workflow QIIME2_WGS_PIPELINE_SUB {
     // B-2. Bowtie2 によるリファレンスへのマッピング
     bowtie2_out = MAP_SUB(p, ref_db, fastp_out)
 
-    // C. Woltka によるプロファイリング・カウントテーブル集計
-    // （※ Woltka サブワークフローには wol_map と taxonomy を渡す）
-    woltka_out = QIIME2_WOLTKA_SUB(p, bowtie2_out, wol_map, taxonomy)
-
-    // D. Greengenes2 (WGS用) による系統樹ベースのタクソノミ付与
-    // （※ GG2 サブワークフローには tree_file を渡す）
-    gg2_out = QIIME2_GREENGENES2_WGS_SUB(p, woltka_out, tree_file)
+    // C. Greengenes2 によるタクソノミ付与・集計（完全一致抽出）
+    gg2_out = QIIME2_GREENGENES2_WGS_SUB(
+        p, 
+        bowtie2_out, 
+        backbone, 
+        taxonomy
+    )
 
     emit:
     gg2_out = gg2_out
@@ -108,19 +108,15 @@ workflow QIIME2_WGS_PIPELINE_ALL {
     p            = createNullParamsChannel()
     reads        = createPairsChannel(params.qiime2_reads)
     
-    // 各種リファレンスファイルのロード
-    backbone_ch  = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
-    taxonomy_ch  = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
-    wol_map_ch   = Channel.value(file(params.qiime2_woltka_wol_map, checkIfExists: true))
-    tree_ch      = Channel.value(file(params.qiime2_gg2_wgs_tree, checkIfExists: true))
+    // 必要なリファレンスファイルのみロード
+    backbone_ch = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
+    taxonomy_ch = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
 
     out_ch = QIIME2_WGS_PIPELINE_SUB(
         p,
         reads,
         backbone_ch,
-        taxonomy_ch,
-        wol_map_ch,
-        tree_ch
+        taxonomy_ch
     )
 
     out_ch.gg2_out.view { i -> "QIIME2 WGS PIPELINE OUT: $i" }
