@@ -12,6 +12,11 @@ def QIIME2_GG2_WGS_MAX_THREADS = 32
 params.qiime2_gg2_wgs_memory  = Math.min(params.memory as Integer, QIIME2_GG2_WGS_MAX_MEMORY)
 params.qiime2_gg2_wgs_threads = Math.min(params.threads as Integer, QIIME2_GG2_WGS_MAX_THREADS)
 
+// ミスマッチ許容数のデフォルト設定（-1: 制限なし, 0: 完全一致, 1: 1塩基違いまで許可 ...）
+if (!params.containsKey('qiime2_gg2_wgs_max_mismatch')) {
+    params.qiime2_gg2_wgs_max_mismatch = -1
+}
+
 // リファレンスファイルのパスのデフォルト設定
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
     error "Error: 'petagenomeDir' parameter is not specified. Please provide it via command line or config."
@@ -31,6 +36,8 @@ process qiime2_greengenes2_wgs {
 
     def gb = "${params.qiime2_gg2_wgs_memory}"
     def threads = "${params.qiime2_gg2_wgs_threads}"
+    def max_mismatch = params.qiime2_gg2_wgs_max_mismatch
+    
     memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
@@ -73,13 +80,15 @@ process qiime2_greengenes2_wgs {
             TAX_TSV=\$(find exported_taxonomy -name "*.tsv" | head -n 1)
         fi
 
-        # 2. Pythonスクリプトにより、アライメント結果から完全一致（NM:i:0）のヒットを抽出し、
-        #    Greengenes2タクソノミを紐付けてカウントテーブルとタクソノミファイルを生成する
+        # 2. Pythonスクリプトにより、アライメント結果をパースし、
+        #    ミスマッチ数制限（max_mismatch）に応じてフィルタリングして集計する
         python3 - <<EOF
         import pandas as pd
 
+        max_mismatch = ${max_mismatch}
         print(f"Loading taxonomy from \${TAX_TSV}...")
-        # Greengenes2のバックボーンタクソノミ対応表を読み込み (列0: 配列ID, 列1: タクソノミー)
+        print(f"Mismatch threshold: {max_mismatch} (-1 means no restriction)")
+
         tax_df = pd.read_csv("\${TAX_TSV}", sep="\\t", header=None, index_col=0)
         tax_dict = tax_df[1].to_dict()
 
@@ -104,27 +113,28 @@ process qiime2_greengenes2_wgs {
                     unmapped += 1
                     continue
 
-                # 完全一致（ミスマッチ数 0: NM:i:0）の確認
-                is_exact_match = False
-                for tag in parts[11:]:
-                    if tag.startswith("NM:i:"):
-                        try:
-                            if int(tag.split(":")[2]) == 0:
-                                is_exact_match = True
-                        except ValueError:
-                            pass
-                        break
-
-                if not is_exact_match:
-                    unmapped += 1
-                    continue
+                # ミスマッチ数 (NM:i:N) の判定
+                if max_mismatch >= 0:
+                    is_valid_match = False
+                    for tag in parts[11:]:
+                        if tag.startswith("NM:i:"):
+                            try:
+                                nm_val = int(tag.split(":")[2])
+                                if nm_val <= max_mismatch:
+                                    is_valid_match = True
+                            except ValueError:
+                                pass
+                            break
+                    
+                    if not is_valid_match:
+                        unmapped += 1
+                        continue
 
                 mapped += 1
-                # 配列IDに対応するGreengenes2タクソノミーを取得
                 taxon = tax_dict.get(ref_id, "k__Unassigned; p__; c__; o__; f__; g__; s__")
                 counts[taxon] = counts.get(taxon, 0) + 1
 
-        print(f"Exact matched reads: {mapped}, Unmatched/Unmapped reads: {unmapped}")
+        print(f"Accepted reads: {mapped}, Filtered/Unmapped reads: {unmapped}")
 
         taxa_list = list(counts.keys())
         freq_list = list(counts.values())
@@ -136,7 +146,7 @@ process qiime2_greengenes2_wgs {
         })
         tax_out.to_csv("${pair_id}/taxonomy.tsv", sep="\\t", index=False)
 
-        # feature-table.tsv の出力 (16S版と同様の形式)
+        # feature-table.tsv の出力
         table_out = pd.DataFrame({
             "Taxonomy": taxa_list,
             "${pair_id}": freq_list

@@ -42,6 +42,8 @@ virsorterMga="${extDir}/mga_linux_ia64"
 virsorter2Db="${extDir}/virsorter2-data"
 metaphlanDb="${extDir}/metaphlan_db"
 
+wgsFnqGzPair="${extDir}/K1_sample29_wgs_R{1,2}.fastq.gz"
+
 longFnqGzPair="${dataDir}/ecoli_1K_{1,2}.fq.gz"
 longFnaPair="${dataDir}/NC_*.fna"
 longFnaGz1="${dataDir}/ecoli_1K_1.fa.gz"
@@ -114,7 +116,7 @@ case ${test} in
         nextflow run ${nfDir}/lv2/qiime2_wgs_pipeline.nf \
 		 -entry QIIME2_WGS_PIPELINE_ALL \
 		 ${args} \
-		 --qiime2_reads "${longFnqGzPair}" \
+		 --qiime2_reads "${wgsFnqGzPair}" \
                  --qiime2_gg2_wgs_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
                  --qiime2_gg2_wgs_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
                  --qiime2_woltka_wol_map "${extDir}/greengenes2_db/wol_map.txt" \
