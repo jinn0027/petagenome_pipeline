@@ -8,7 +8,9 @@ params.threads = 8
 // パラメータの初期化
 params.qiime2_gg2_wgs_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_wgs_taxonomy     = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
-// Woltka用のマップファイルなどのデフォルトパスも必要に応じて設定
+// Greengenes2 系統樹（.nwk）のパラメータを追加
+params.qiime2_gg2_wgs_tree         = "${params.petagenomeDir}/data/greengenes2/2024.09.taxonomy.id.nwk"
+// Woltka用のマップファイル
 params.qiime2_woltka_wol_map       = "${params.petagenomeDir}/data/greengenes2/wol_map.txt"
 
 // 必須パラメータのチェック
@@ -67,6 +69,7 @@ workflow QIIME2_WGS_PIPELINE_SUB {
     backbone
     taxonomy
     wol_map
+    tree_file  // 系統樹ファイルを追加
 
     main:
 
@@ -75,23 +78,24 @@ workflow QIIME2_WGS_PIPELINE_SUB {
 
     // B-0. .qza をプレーンな FASTA にエクスポート
     exported_ref = export_qiime2_fasta(backbone)
-    // createSeqsChannel が作る構造にあわせて、[ref_id, [path]] の形に明示的に構築する
     exported_ref_ch = exported_ref.map { fasta_path ->
-        def ref_id = "gg2_backbone" // 必要に応じた識別子
+        def ref_id = "gg2_backbone"
         return tuple(ref_id, [fasta_path])
     }
     
-    // B-1. Bowtie2 リファレンス DB の作成（エクスポートされた FASTA を使用）
+    // B-1. Bowtie2 リファレンス DB の作成
     ref_db = BUILD_REF_DB_SUB(p, exported_ref_ch)
 
     // B-2. Bowtie2 によるリファレンスへのマッピング
     bowtie2_out = MAP_SUB(p, ref_db, fastp_out)
 
     // C. Woltka によるプロファイリング・カウントテーブル集計
-    woltka_out = QIIME2_WOLTKA_SUB(p, bowtie2_out, wol_map, backbone, taxonomy)
+    // （※ Woltka サブワークフローには wol_map と taxonomy を渡す）
+    woltka_out = QIIME2_WOLTKA_SUB(p, bowtie2_out, wol_map, taxonomy)
 
-    // D. Greengenes2 (WGS用) によるフィルタリング・タクソノミ付与
-    gg2_out = QIIME2_GREENGENES2_WGS_SUB(p, woltka_out, backbone, taxonomy)
+    // D. Greengenes2 (WGS用) による系統樹ベースのタクソノミ付与
+    // （※ GG2 サブワークフローには tree_file を渡す）
+    gg2_out = QIIME2_GREENGENES2_WGS_SUB(p, woltka_out, tree_file)
 
     emit:
     gg2_out = gg2_out
@@ -101,20 +105,22 @@ workflow QIIME2_WGS_PIPELINE_SUB {
 // コマンドライン用エントリーポイント (-entry)
 // ==========================================
 workflow QIIME2_WGS_PIPELINE_ALL {
-    p           = createNullParamsChannel()
-    reads       = createPairsChannel(params.qiime2_reads)
+    p            = createNullParamsChannel()
+    reads        = createPairsChannel(params.qiime2_reads)
     
-    // Nextflowの標準機能（checkIfExists: true）で安全にファイル存在チェックを行う
-    backbone_ch = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
-    taxonomy_ch = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
-    wol_map_ch  = Channel.value(file(params.qiime2_woltka_wol_map, checkIfExists: true))
+    // 各種リファレンスファイルのロード
+    backbone_ch  = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
+    taxonomy_ch  = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
+    wol_map_ch   = Channel.value(file(params.qiime2_woltka_wol_map, checkIfExists: true))
+    tree_ch      = Channel.value(file(params.qiime2_gg2_wgs_tree, checkIfExists: true))
 
     out_ch = QIIME2_WGS_PIPELINE_SUB(
         p,
         reads,
         backbone_ch,
         taxonomy_ch,
-        wol_map_ch
+        wol_map_ch,
+        tree_ch
     )
 
     out_ch.gg2_out.view { i -> "QIIME2 WGS PIPELINE OUT: $i" }

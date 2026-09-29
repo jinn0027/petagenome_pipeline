@@ -12,13 +12,12 @@ def QIIME2_GG2_WGS_MAX_THREADS = 32
 params.qiime2_gg2_wgs_memory  = Math.min(params.memory as Integer, QIIME2_GG2_WGS_MAX_MEMORY)
 params.qiime2_gg2_wgs_threads = Math.min(params.threads as Integer, QIIME2_GG2_WGS_MAX_THREADS)
 
-// 必須パラメータのチェック
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
     error "Error: 'petagenomeDir' parameter is not specified. Please provide it via command line or config."
 }
 
-params.qiime2_gg2_wgs_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
-params.qiime2_gg2_wgs_taxonomy     = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
+// 系統樹ファイル（.nwk）を指定
+params.qiime2_gg2_wgs_tree = "${params.petagenomeDir}/data/greengenes2/2024.09.taxonomy.id.nwk"
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -37,8 +36,7 @@ process qiime2_greengenes2_wgs {
     
     input:
         tuple val(p), val(pair_id), path(table)
-        path backbone_fna
-        path taxonomy
+        path tree_file
 
     output:
         tuple val(pair_id), 
@@ -47,10 +45,7 @@ process qiime2_greengenes2_wgs {
 
     script:
         """
-        # Pythonの非推奨警告を抑制
         export PYTHONWARNINGS="ignore"
-
-        # コンテナ特有のキャッシュ・ホームディレクトリ競合を防ぐ環境変数
         export XDG_CONFIG_HOME=/tmp/qiime2_config
         export MPLCONFIGDIR=/tmp/matplotlib_config
         export NUMBA_CACHE_DIR=/tmp/numba_cache
@@ -59,21 +54,21 @@ process qiime2_greengenes2_wgs {
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
 
-        # 1. Greengenes2 を用いたWGSフィーチャーテーブルのフィルタリング・マッピング
-        qiime greengenes2 filter-features \
-            --i-table ${table} \
-            --i-backbone ${backbone_fna} \
-            --o-filtered-table filtered_table.qza
+        # 1. 系統樹ファイル（.nwk）を QIIME 2 アーティファクトとしてインポート
+        qiime tools import \
+            --type 'Phylogeny[Rooted]' \
+            --input-path ${tree_file} \
+            --output-path reference_tree.qza
 
-        # 2. フィルタリングされたテーブルからGreengenes2ベースのタクソノミーを抽出
+        # 2. 系統樹から、テーブルのフィーチャーに対応する Greengenes2 体系のタクソノミー情報を引き出す
         qiime greengenes2 taxonomy-from-table \
-            --i-table filtered_table.qza \
-            --i-reference-taxonomy ${taxonomy} \
+            --i-table ${table} \
+            --i-reference-taxonomy reference_tree.qza \
             --o-classification taxonomy.qza
 
         # 3. フィーチャーテーブルをTSVに変換
         qiime tools export \
-            --input-path filtered_table.qza \
+            --input-path ${table} \
             --output-path exported_table
         
         biom convert \
@@ -81,7 +76,7 @@ process qiime2_greengenes2_wgs {
             -o ${pair_id}/feature-table.tsv \
             --to-tsv
 
-        # 4. タクソノミー情報をTSVに変換
+        # 4. Greengenes2 体系に紐付けられたタクソノミー情報をTSVに変換
         qiime tools export \
             --input-path taxonomy.qza \
             --output-path exported_taxonomy
@@ -96,15 +91,11 @@ process qiime2_greengenes2_wgs {
         """
 }
 
-// ==========================================
-// 1. サブワークフロー
-// ==========================================
 workflow QIIME2_GREENGENES2_WGS_SUB {
     take:
     p
-    woltka_out 
-    backbone_fna
-    taxonomy
+    woltka_out   
+    tree_file    
 
     main:
     in_ch = woltka_out.map { pair_id, table ->
@@ -113,25 +104,18 @@ workflow QIIME2_GREENGENES2_WGS_SUB {
 
     out = qiime2_greengenes2_wgs(
         p.combine(in_ch).map { p_val, pair_id, table -> tuple(p_val, pair_id, table) },
-        backbone_fna,
-        taxonomy
+        tree_file
     )
 
     emit:
     out = out
 }
 
-// ==========================================
-// 2. コマンドライン用エントリーポイント
-// ==========================================
 workflow QIIME2_GREENGENES2_WGS_ALL {
     p           = createNullParamsChannel()
+    tree_ch     = Channel.value(file(params.qiime2_gg2_wgs_tree, checkIfExists: true))
 
-    // Nextflowの組み込み機能（checkIfExists: true）で安全にファイルを指定
-    backbone_ch = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
-    taxonomy_ch = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
-
-    woltka_dummy_ch = Channel.fromPath("${params.output}/woltka_table/*/table.qza")
+    woltka_dummy_ch = Channel.fromPath("${params.output}/qiime2_woltka/*/table.qza")
         .map { table_path ->
             def pair_id = table_path.parent.name
             return tuple(pair_id, table_path)
@@ -140,7 +124,10 @@ workflow QIIME2_GREENGENES2_WGS_ALL {
     QIIME2_GREENGENES2_WGS_SUB(
         p,
         woltka_dummy_ch,
-        backbone_ch,
-        taxonomy_ch
+        tree_ch
     )
+}
+
+workflow {
+    QIIME2_GREENGENES2_WGS_ALL()
 }

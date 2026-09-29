@@ -398,7 +398,8 @@ if [ ! -d greengenes2_db ] ; then
   # バックボーン配列や系統樹、分類情報などの取得（例: 2024.09版の場合）
   wget https://ftp.microbio.me/greengenes_release/2024.09/2024.09.backbone.full-length.fna.qza
   wget https://ftp.microbio.me/greengenes_release/2024.09/2024.09.backbone.tax.qza
-
+  wget https://ftp.microbio.me/greengenes_release/2024.09/2024.09.taxonomy.id.nwk
+  
   # wolkaで用いるリファレンスとtaxsonomyを紐づける対応表
   wget -r -np -nH --cut-dirs=2 ftp://ftp.microbio.me/pub/wol-20April2021/taxonomy/curated/taxid/taxid.map -O wol_map.txt
   
