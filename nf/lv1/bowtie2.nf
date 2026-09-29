@@ -48,6 +48,7 @@ process bowtie2_makerefdb {
         """
 }
 
+/*
 process bowtie2 {
     tag "${ref_id}_@_${qry_id}"
     container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
@@ -73,6 +74,50 @@ process bowtie2 {
             -x ${ref_db}/ref \\
             -U ${qry} \\
             > ${qry_id}/out.sam
+        """
+}
+*/
+
+process bowtie2 {
+    tag "${ref_id}_@_${qry_id}"
+    container = "${params.petagenomeDir}/modules/bowtie2/bowtie2.sif"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
+    publishDir "${params.output}/${task.process}/${ref_id}", mode: 'symlink', enabled: params.publish_output
+    def gb = "${params.bowtie2_bowtie2_memory}"
+    def threads = "${params.bowtie2_bowtie2_threads}"
+    memory params.executor=="sge" ? null : "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+    
+    input:
+        tuple val(p), val(ref_id), path(ref_db), val(qry_id), path(qry, arity: '1..2')
+    output:
+        tuple val(ref_id), val(qry_id), path("${qry_id}/out.sam", arity: '1')
+    script:
+        """
+        echo "${processProfile(task)}" | tee prof.txt
+        mkdir -p ${qry_id}
+
+        # 渡されたファイル数（1個または2個）を判定してオプションを切り替える
+        set -- ${qry}
+        if [ \$# -eq 2 ]; then
+            echo "Paired-end mode detected"
+            bowtie2 \
+                -p ${threads} \
+                --seed ${getParam(p, params, 'random_seed')} \
+                -x ${ref_db}/ref \
+                -1 \$1 \
+                -2 \$2 \
+                > ${qry_id}/out.sam
+        else
+            echo "Single-end mode detected"
+            bowtie2 \
+                -p ${threads} \
+                --seed ${getParam(p, params, 'random_seed')} \
+                -x ${ref_db}/ref \
+                -U \$1 \
+                > ${qry_id}/out.sam
+        fi
         """
 }
 

@@ -122,8 +122,6 @@ workflow MAP_SUB {
         tuple(p_val, ref_id, ref_path, qry_id, qry_path)
     }
 
-    in_ch.view{i->"AAAAAAAAAAA $i"}
-
     out = bwa_mem2_mem(in_ch)
 
     emit:

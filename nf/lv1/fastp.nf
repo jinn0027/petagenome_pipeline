@@ -29,6 +29,7 @@ process fastp {
     memory params.executor=="sge" ? null : "${gb} GB"
     cpus params.executor=="sge" ? null : threads
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+    
     input:
         tuple val(p), val(pair_id), path(reads, arity: '2')
     output:
@@ -56,16 +57,19 @@ process fastp {
 // ==========================================
 // 1. サブワークフロー（再利用可能な処理の本体）
 // ==========================================
-
-// fastp 処理の本体
 workflow FASTP_SUB {
     take:
     p
     reads
 
     main:
-    // [ p_val, pair_id, reads_path ] にフラット化
-    in_ch = p.combine(reads).map { p_val, pair_id, reads_path ->
+    // MAP_SUB のように、まずデータ側（reads）のタプル構造を明確に整えてから...
+    processed_reads = reads.map { pair_id, reads_path ->
+        tuple(pair_id, reads_path)
+    }
+
+    // パラメータ p と結合して最終的なプロセス入力タプルを組み立てる
+    in_ch = p.combine(processed_reads).map { p_val, pair_id, reads_path ->
         tuple(p_val, pair_id, reads_path)
     }
 
@@ -75,14 +79,11 @@ workflow FASTP_SUB {
     out = out
 }
 
-
 // ==========================================
 // 2. コマンドライン (-entry) 用エントリーポイント
 // ==========================================
-
-// A. メインの実行ワークフロー
 workflow FASTP_ALL {
-    p     = createNullParamsChannel()
+    p       = createNullParamsChannel()
     reads = createPairsChannel(params.fastp_reads)
 
     out_ch = FASTP_SUB(p, reads)
