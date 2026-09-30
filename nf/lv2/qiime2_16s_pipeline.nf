@@ -14,6 +14,7 @@ params.qiime2_trunc_len_r = 230
 params.qiime2_gg2_16s_target_region = 'v4'
 params.qiime2_gg2_16s_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_16s_taxonomy = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
+params.qiime2_gg2_16s_rrndb_stats = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.10_pantaxa_stats_RDP.tsv.gz"
 
 // 必須パラメータのチェック
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
@@ -37,6 +38,7 @@ workflow QIIME2_16S_PIPELINE_SUB {
     target_region
     backbone_fna
     taxonomy
+    rrndb_stats
 
     main:
     // A. DADA2 によるデノイジング
@@ -48,7 +50,8 @@ workflow QIIME2_16S_PIPELINE_SUB {
         dada2_out,
         target_region,
         backbone_fna,
-        taxonomy
+        taxonomy,
+        rrndb_stats
     )
 
     emit:
@@ -66,13 +69,15 @@ workflow QIIME2_16S_PIPELINE_ALL {
     // Nextflowの標準機能（checkIfExists: true）で安全にファイル存在チェックを行う
     backbone_ch = Channel.value(file(params.qiime2_gg2_16s_backbone_fna, checkIfExists: true))
     taxonomy_ch = Channel.value(file(params.qiime2_gg2_16s_taxonomy, checkIfExists: true))
+    rrndb_ch = Channel.value(file(params.qiime2_gg2_16s_rrndb_stats, checkIfExists: true))
 
     out_ch = QIIME2_16S_PIPELINE_SUB(
         p,
         reads,
         region_ch,
         backbone_ch,
-        taxonomy_ch
+        taxonomy_ch,
+        rrndb_ch
     )
 
     out_ch.gg2_out.view { i -> "QIIME2 16S PIPELINE OUT: $i" }

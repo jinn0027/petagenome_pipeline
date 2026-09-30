@@ -15,6 +15,7 @@ params.qiime2_wgs_threads = Math.min(params.threads as Integer, QIIME2_WGS_MAX_T
 // パラメータの初期化
 params.qiime2_gg2_wgs_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_wgs_taxonomy     = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
+params.qiime2_gg2_wgs_rrndb_stats  = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.10_pantaxa_stats_RDP.tsv.gz"
 
 // 必須パラメータのチェック
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
@@ -70,6 +71,7 @@ workflow QIIME2_WGS_PIPELINE_SUB {
     reads
     backbone
     taxonomy
+    rrndb_stats
 
     main:
 
@@ -94,7 +96,8 @@ workflow QIIME2_WGS_PIPELINE_SUB {
         p, 
         bowtie2_out, 
         backbone, 
-        taxonomy
+        taxonomy,
+        rrndb_stats
     )
 
     emit:
@@ -109,14 +112,16 @@ workflow QIIME2_WGS_PIPELINE_ALL {
     reads        = createPairsChannel(params.qiime2_reads)
     
     // 必要なリファレンスファイルのみロード
-    backbone_ch = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
-    taxonomy_ch = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
+    backbone_ch  = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
+    taxonomy_ch  = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
+    rrndb_ch     = Channel.value(file(params.qiime2_gg2_wgs_rrndb_stats, checkIfExists: true))
 
     out_ch = QIIME2_WGS_PIPELINE_SUB(
         p,
         reads,
         backbone_ch,
-        taxonomy_ch
+        taxonomy_ch,
+        rrndb_ch
     )
 
     out_ch.gg2_out.view { i -> "QIIME2 WGS PIPELINE OUT: $i" }

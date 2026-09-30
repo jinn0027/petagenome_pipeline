@@ -22,6 +22,7 @@ if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
 
 params.qiime2_gg2_16s_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_16s_taxonomy = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
+params.qiime2_gg2_16s_rrndb_stats = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.10_pantaxa_stats_RDP.tsv.gz"
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -43,6 +44,7 @@ process qiime2_greengenes2_16s {
         val target_region
         path backbone_fna
         path taxonomy
+        path rrndb_stats
 
     output:
         tuple val(pair_id), 
@@ -108,44 +110,12 @@ process qiime2_greengenes2_16s {
             find exported_taxonomy -name "*.tsv" -exec cp {} ${pair_id}/taxonomy.tsv
         fi
 
-        # 5. feature-table.tsv と taxonomy.tsv を結合し、カウント数順（降順）の taxonomy_counts.tsv を作成する
-        python3 - <<'EOF'
-import pandas as pd
-
-print("Generating taxonomy_counts.tsv for 16S...")
-
-skiprows = 0
-with open("${pair_id}/feature-table.tsv", "r") as f:
-    for i, line in enumerate(f):
-        if line.startswith("#OTU ID") or line.startswith("#Feature ID"):
-            skiprows = i
-            break
-
-table_df = pd.read_csv("${pair_id}/feature-table.tsv", sep="\t", skiprows=skiprows, index_col=0)
-
-if table_df.index.name and table_df.index.name.startswith("#"):
-    table_df.index.name = table_df.index.name.lstrip("#").strip()
-
-tax_df = pd.read_csv("${pair_id}/taxonomy.tsv", sep="\t", index_col=0)
-tax_col = tax_df.columns[0]
-tax_dict = tax_df[tax_col].to_dict()
-
-counts = table_df.sum(axis=1)
-
-tax_counts = {}
-for feat_id, count in counts.items():
-    taxon = tax_dict.get(str(feat_id), "k__Unassigned; p__; c__; o__; f__; g__; s__")
-    tax_counts[taxon] = tax_counts.get(taxon, 0) + count
-
-sample_name = table_df.columns[0] if len(table_df.columns) > 0 else "count"
-summary_out = pd.DataFrame({
-    "Taxonomy": list(tax_counts.keys()),
-    sample_name: list(tax_counts.values())
-}).sort_values(by=sample_name, ascending=False)
-
-summary_out.to_csv("${pair_id}/taxonomy_counts.tsv", sep="\t", index=False)
-print("taxonomy_counts.tsv generated successfully.")
-EOF
+        # 5. feature-table.tsv と taxonomy.tsv を結合し、rrnDBコピー数補正 & 全体和正規化を行い、カウント数順（降順）でソートする
+        python3 ${params.petagenomeDir}/scripts/Python/parse_taxonomy.py \
+            ${pair_id}/feature-table.tsv \
+            ${pair_id}/taxonomy.tsv \
+            ${rrndb_stats} \
+            ${pair_id}/taxonomy_counts.tsv
         """
 }
 
@@ -159,6 +129,7 @@ workflow QIIME2_GREENGENES2_16S_SUB {
     target_region
     backbone_fna
     taxonomy
+    rrndb_stats
 
     main:
     in_ch = dada2_out.map { pair_id, table, rep_seqs, stats, trans ->
@@ -169,7 +140,8 @@ workflow QIIME2_GREENGENES2_16S_SUB {
         p.combine(in_ch).map { p_val, pair_id, table, rep_seqs -> tuple(p_val, pair_id, table, rep_seqs) },
         target_region,
         backbone_fna,
-        taxonomy
+        taxonomy,
+        rrndb_stats
     )
 
     emit:
@@ -185,6 +157,7 @@ workflow QIIME2_GREENGENES2_16S_ALL {
     
     backbone_ch = Channel.value(file(params.qiime2_gg2_16s_backbone_fna, checkIfExists: true))
     taxonomy_ch = Channel.value(file(params.qiime2_gg2_16s_taxonomy, checkIfExists: true))
+    rrndb_ch = Channel.value(file(params.qiime2_gg2_16s_rrndb_stats, checkIfExists: true))
 
     dada2_dummy_ch = Channel.fromPath("${params.output}/qiime2_dada2/*/table.qza")
         .map { table_path ->
@@ -198,7 +171,8 @@ workflow QIIME2_GREENGENES2_16S_ALL {
         dada2_dummy_ch,
         region_ch,
         backbone_ch,
-        taxonomy_ch
+        taxonomy_ch,
+        rrndb_ch
     )
 }
 

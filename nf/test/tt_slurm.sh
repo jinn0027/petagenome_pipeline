@@ -110,7 +110,8 @@ case ${test} in
 		 ${args} \
 		 --qiime2_reads "${in16SPairs}" \
 		 --qiime2_gg2_16s_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
-		 --qiime2_gg2_16s_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza"
+		 --qiime2_gg2_16s_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
+		 --qiime2_gg2_16s_rrndb_stats "${extDir}/rrnDB-5.10_pantaxa_stats_RDP.tsv.zip"
         ;;
     "qq")
         nextflow run ${nfDir}/lv2/qiime2_wgs_pipeline.nf \
@@ -119,9 +120,9 @@ case ${test} in
 		 --qiime2_reads "${wgsFnqGzPair}" \
                  --qiime2_gg2_wgs_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
                  --qiime2_gg2_wgs_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
-                 --qiime2_woltka_wol_map "${extDir}/greengenes2_db/wol_map.txt" \
                  --qiime2_gg2_wgs_tree "${extDir}/greengenes2_db/2024.09.taxonomy.id.nwk" \
-		 --qiime2_gg2_wgs_max_mismatch 0
+		 --qiime2_gg2_wgs_max_mismatch 0 \
+		 --qiime2_gg2_wgs_rrndb_stats "${extDir}/rrnDB-5.10_pantaxa_stats_RDP.tsv.zip"
 	;;
     "dada")
         nextflow run ${nfDir}/lv1/qiime2_dada2.nf -entry QIIME2_DADA2_ALL ${args} --force \
