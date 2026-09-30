@@ -15,6 +15,12 @@ params.qiime2_gg2_wgs_threads = Math.min(params.threads as Integer, QIIME2_GG2_W
 // 3. rrnDBのコピー数探索モード ('right': 右側から細かい階層へ遡る, 'genus': 属レベル固定)
 params.qiime2_gg2_rrndb_mode = 'right'
 
+// 4. 機能アノテーション関連パラメータ
+if (!params.containsKey('annotation_table')) {
+    params.annotation_table = "${params.petagenomeDir}/data/greengenes2/genome_annotations_table.tsv"
+}
+params.functional_annotations = "KO,MetaCyc"
+
 // リファレンスファイルのパスのデフォルト設定
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
     error "Error: 'petagenomeDir' parameter is not specified. Please provide it via command line or config."
@@ -45,13 +51,16 @@ process qiime2_greengenes2_wgs {
         path taxonomy
         path rrndb_stats
         val rrndb_mode
+        path annotation_table
+        val target_annots
 
     output:
         tuple val(pair_id), 
               path("${pair_id}/feature-table.tsv"), 
               path("${pair_id}/representatives.fasta"),
               path("${pair_id}/taxonomy.tsv"),
-              path("${pair_id}/taxonomy_counts.tsv")
+              path("${pair_id}/taxonomy_counts.tsv"),
+              path("${pair_id}/*_functional_counts.tsv")
 
     script:
         """
@@ -107,12 +116,22 @@ process qiime2_greengenes2_wgs {
             find exported_taxonomy -name "*.tsv" -exec cp {} ${pair_id}/taxonomy.tsv
         fi
 
-        # 5. feature-table.tsv と taxonomy.tsv を結合し、rrnDBコピー数補正 & 全体和正規化を行い、カウント数順（降順）でソートする
+        # 5. feature-table.tsv と taxonomy.tsv を結合し、rrnDBコピー数補正 & 全体和正規化を行い、カウント数順（降順）でソートする (タクソノミ)
         python3 ${params.petagenomeDir}/scripts/Python/parse_taxonomy.py \
             ${pair_id}/feature-table.tsv \
             ${pair_id}/taxonomy.tsv \
             ${rrndb_stats} \
             ${pair_id}/taxonomy_counts.tsv \
+            --mode ${rrndb_mode}
+
+        # 6. アノテーションテーブルを紐づけて、rrnDB補正後の存在量を各機能（KO, MetaCycなど）に分配・集計する
+        python3 ${params.petagenomeDir}/scripts/Python/parse_functional_profiles.py \
+            ${pair_id}/feature-table.tsv \
+            ${pair_id}/taxonomy.tsv \
+            ${rrndb_stats} \
+            ${annotation_table} \
+            "${target_annots}" \
+            "${pair_id}" \
             --mode ${rrndb_mode}
         """
 }
@@ -128,15 +147,18 @@ workflow QIIME2_GREENGENES2_WGS_SUB {
     taxonomy
     rrndb_stats
     rrndb_mode
+    annotation_table
+    target_annots
 
     main:
-    // 修正: p.combine(input_ch) で要素数が 4個 (p_val, ref_id, pair_id, rep_seqs) になるため、引数4つで受けてタスク用に再構築
     out = qiime2_greengenes2_wgs(
         p.combine(input_ch).map { p_val, ref_id, pair_id, rep_seqs -> tuple(p_val, pair_id, rep_seqs) },
         backbone_fna,
         taxonomy,
         rrndb_stats,
-        rrndb_mode
+        rrndb_mode,
+        annotation_table,
+        target_annots
     )
 
     emit:
@@ -153,6 +175,8 @@ workflow QIIME2_GREENGENES2_WGS_ALL {
     backbone_ch = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
     taxonomy_ch = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
     rrndb_ch = Channel.value(file(params.qiime2_gg2_wgs_rrndb_stats, checkIfExists: true))
+    annotation_ch = Channel.value(file(params.annotation_table, checkIfExists: true))
+    annots_ch = Channel.value(params.functional_annotations)
 
     wgs_input_ch = Channel.fromPath("${params.output}/wgs_rep_seqs/*/rep-seqs.qza")
         .map { rep_path ->
@@ -167,7 +191,9 @@ workflow QIIME2_GREENGENES2_WGS_ALL {
         backbone_ch,
         taxonomy_ch,
         rrndb_ch,
-        mode_ch
+        mode_ch,
+        annotation_ch,
+        annots_ch
     )
 }
 

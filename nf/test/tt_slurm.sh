@@ -108,6 +108,8 @@ case ${test} in
 	NXF_DEBUG=2 nextflow run ${nfDir}/lv2/qiime2_16s_pipeline.nf \
 		 -entry QIIME2_16S_PIPELINE_ALL \
 		 ${args} \
+		 --annotation_table "${extDir}/greengenes2_db/genome_annotations_table.tsv" \
+		 --functional_annotations "KO,MetaCyc" \
 		 --qiime2_reads "${in16SPairs}" \
 		 --qiime2_gg2_16s_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
 		 --qiime2_gg2_16s_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
@@ -117,6 +119,8 @@ case ${test} in
         nextflow run ${nfDir}/lv2/qiime2_wgs_pipeline.nf \
 		 -entry QIIME2_WGS_PIPELINE_ALL \
 		 ${args} \
+		 --annotation_table "${extDir}/greengenes2_db/genome_annotations_table.tsv" \
+		 --functional_annotations "KO,MetaCyc" \
 		 --qiime2_reads "${wgsFnqGzPair}" \
                  --qiime2_gg2_wgs_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
                  --qiime2_gg2_wgs_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \

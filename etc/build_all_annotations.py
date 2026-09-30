@@ -1,4 +1,6 @@
 import lzma
+import json
+import csv
 from collections import defaultdict
 
 def build_all_genome_annotations(coords_path, uniref_map_path, map_paths_dict):
@@ -85,6 +87,43 @@ def build_all_genome_annotations(coords_path, uniref_map_path, map_paths_dict):
     print(f"\n   Done! Total genomes with annotations: {len(result):,}")
     return result
 
+def save_annotations_to_tsv(all_annotations, output_path):
+    """
+    ゲodムごとに、各種アノテーションをタブ区切り（リストはカンマ結合）でファイル出力する
+    """
+    print(f"Saving results to TSV: {output_path}...")
+    
+    # どのアノテーションカテゴリが存在するか動的に収集
+    categories = set()
+    for g_data in all_annotations.values():
+        categories.update(g_data.keys())
+    categories = sorted(list(categories))
+    
+    with open(output_path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f, delimiter="\t")
+        # ヘッダー行
+        header = ["GenomeID"] + categories
+        writer.writerow(header)
+        
+        # 各行（ゲノムごと）
+        for genome_id, data in all_annotations.items():
+            row = [genome_id]
+            for cat in categories:
+                # リストをカンマ区切りの文字列にして格納（空の場合は空文字）
+                items = data.get(cat, [])
+                row.append(",".join(items))
+            writer.writerow(row)
+    print("   TSV export completed.")
+
+def save_annotations_to_json(all_annotations, output_path):
+    """
+    Pythonの辞書構造のままJSON形式で保存する（後からの再利用に便利）
+    """
+    print(f"Saving results to JSON: {output_path}...")
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(all_annotations, f, ensure_ascii=False, indent=2)
+    print("   JSON export completed.")
+
 if __name__ == "__main__":
     coords_file = "./proteins/coords.txt.xz"
     uniref_file = "./function/uniref/uniref.map.xz"
@@ -99,9 +138,17 @@ if __name__ == "__main__":
         "RefSeq": "./function/refseq/refseq.map.xz"
     }
 
+    # アノテーションの構築
     all_annotations = build_all_genome_annotations(coords_file, uniref_file, target_maps)
 
     if all_annotations:
+        # 1. TSV形式で保存（エクセルや他のツール、R・Pythonでの読み込み用）
+        save_annotations_to_tsv(all_annotations, "genome_annotations_table.tsv")
+
+        # 2. JSON形式で保存（プログラムで構造を保持したまま読み込む用）
+        #save_annotations_to_json(all_annotations, "genome_annotations_dict.json")
+
+        # サンプルの表示
         sample_genome = list(all_annotations.keys())[0]
         print(f"\n[Sample] Genome ID: {sample_genome}")
         for ann_type, items in all_annotations[sample_genome].items():

@@ -16,7 +16,13 @@ params.qiime2_wgs_threads = Math.min(params.threads as Integer, QIIME2_WGS_MAX_T
 params.qiime2_gg2_wgs_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_wgs_taxonomy     = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
 params.qiime2_gg2_wgs_rrndb_stats  = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.10_pantaxa_stats_RDP.tsv.gz"
-params.qiime2_gg2_rrndb_mode       = 'right' // 追加: rrnDBコピー数探索モードのデフォルト
+params.qiime2_gg2_rrndb_mode       = 'right' // rrnDBコピー数探索モードのデフォルト
+
+// 機能アノテーション関連パラメータのデフォルト追加
+if (!params.containsKey('annotation_table')) {
+    params.annotation_table = "${params.petagenomeDir}/data/greengenes2/genome_annotations_table.tsv"
+}
+params.functional_annotations = "KO,MetaCyc"
 
 // 必須パラメータのチェック
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
@@ -73,7 +79,9 @@ workflow QIIME2_WGS_PIPELINE_SUB {
     backbone
     taxonomy
     rrndb_stats
-    rrndb_mode // 追加: 6つ目の入力として受け取る
+    rrndb_mode
+    annotation_table
+    target_annots
 
     main:
 
@@ -93,14 +101,16 @@ workflow QIIME2_WGS_PIPELINE_SUB {
     // B-2. Bowtie2 によるリファレンスへのマッピング
     bowtie2_out = MAP_SUB(p, ref_db, fastp_out)
 
-    // C. Greengenes2 によるタクソノミ付与・集計（完全一致抽出）
+    // C. Greengenes2 によるタクソノミ付与・集計 & 機能アノテーション集計
     gg2_out = QIIME2_GREENGENES2_WGS_SUB(
         p, 
         bowtie2_out, 
         backbone, 
         taxonomy,
         rrndb_stats,
-        rrndb_mode // 追加: 下位サブワークフローへ渡す
+        rrndb_mode,
+        annotation_table,
+        target_annots
     )
 
     emit:
@@ -111,10 +121,14 @@ workflow QIIME2_WGS_PIPELINE_SUB {
 // コマンドライン用エントリーポイント (-entry)
 // ==========================================
 workflow QIIME2_WGS_PIPELINE_ALL {
-    p          = createNullParamsChannel()
-    reads      = createPairsChannel(params.qiime2_reads)
-    mode_ch    = Channel.value(params.qiime2_gg2_rrndb_mode) // 追加: モードのチャンネル作成
+    p         = createNullParamsChannel()
+    reads     = createPairsChannel(params.qiime2_reads)
+    mode_ch   = Channel.value(params.qiime2_gg2_rrndb_mode)
     
+    // 機能アノテーション関連チャンネルの作成
+    annotation_ch = Channel.value(file(params.annotation_table, checkIfExists: true))
+    annots_ch     = Channel.value(params.functional_annotations)
+
     // 必要なリファレンスファイルのみロード
     backbone_ch  = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
     taxonomy_ch  = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
@@ -126,7 +140,9 @@ workflow QIIME2_WGS_PIPELINE_ALL {
         backbone_ch,
         taxonomy_ch,
         rrndb_ch,
-        mode_ch // 追加: 6つ目の引数として渡す
+        mode_ch,
+        annotation_ch,
+        annots_ch
     )
 
     out_ch.gg2_out.view { i -> "QIIME2 WGS PIPELINE OUT: $i" }

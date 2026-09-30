@@ -12,7 +12,13 @@ params.qiime2_dada2_trunc_len_f = 230
 params.qiime2_trunc_len_r = 230
 
 params.qiime2_gg2_16s_target_region = 'v4'
-params.qiime2_gg2_rrndb_mode = 'right' // 追加: rrnDBコピー数探索モードのデフォルト
+params.qiime2_gg2_rrndb_mode = 'right' // rrnDBコピー数探索モードのデフォルト
+
+// 機能アノテーション関連パラメータのデフォルト追加
+if (!params.containsKey('annotation_table')) {
+    params.annotation_table = "${params.petagenomeDir}/data/greengenes2/genome_annotations_table.tsv"
+}
+params.functional_annotations = "KO,MetaCyc"
 
 params.qiime2_gg2_16s_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_16s_taxonomy = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
@@ -41,13 +47,15 @@ workflow QIIME2_16S_PIPELINE_SUB {
     backbone_fna
     taxonomy
     rrndb_stats
-    rrndb_mode // 追加: 7つ目の入力として受け取る
+    rrndb_mode
+    annotation_table
+    target_annots
 
     main:
     // A. DADA2 によるデノイジング
     dada2_out = QIIME2_DADA2_SUB(p, reads)
 
-    // B. Greengenes2 (16S用) による系統配置・タクソノミ付与
+    // B. Greengenes2 (16S用) による系統配置・タクソノミ付与 & 機能アノテーション集計
     gg2_out = QIIME2_GREENGENES2_16S_SUB(
         p,
         dada2_out,
@@ -55,7 +63,9 @@ workflow QIIME2_16S_PIPELINE_SUB {
         backbone_fna,
         taxonomy,
         rrndb_stats,
-        rrndb_mode // 追加: 下位サブワークフローへ渡す
+        rrndb_mode,
+        annotation_table,
+        target_annots
     )
 
     emit:
@@ -69,7 +79,11 @@ workflow QIIME2_16S_PIPELINE_ALL {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.qiime2_reads)
     region_ch = Channel.value(params.qiime2_gg2_16s_target_region)
-    mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode) // 追加: モードのチャンネル作成
+    mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode)
+    
+    // 機能アノテーション関連チャンネルの作成
+    annotation_ch = Channel.value(file(params.annotation_table, checkIfExists: true))
+    annots_ch = Channel.value(params.functional_annotations)
 
     // Nextflowの標準機能（checkIfExists: true）で安全にファイル存在チェックを行う
     backbone_ch = Channel.value(file(params.qiime2_gg2_16s_backbone_fna, checkIfExists: true))
@@ -83,7 +97,9 @@ workflow QIIME2_16S_PIPELINE_ALL {
         backbone_ch,
         taxonomy_ch,
         rrndb_ch,
-        mode_ch // 追加: 7つ目の引数として渡す
+        mode_ch,
+        annotation_ch,
+        annots_ch
     )
 
     out_ch.gg2_out.view { i -> "QIIME2 16S PIPELINE OUT: $i" }
