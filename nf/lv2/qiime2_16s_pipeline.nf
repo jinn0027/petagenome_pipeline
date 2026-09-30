@@ -12,6 +12,8 @@ params.qiime2_dada2_trunc_len_f = 230
 params.qiime2_trunc_len_r = 230
 
 params.qiime2_gg2_16s_target_region = 'v4'
+params.qiime2_gg2_rrndb_mode = 'right' // 追加: rrnDBコピー数探索モードのデフォルト
+
 params.qiime2_gg2_16s_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_16s_taxonomy = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
 params.qiime2_gg2_16s_rrndb_stats = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.10_pantaxa_stats_RDP.tsv.gz"
@@ -39,6 +41,7 @@ workflow QIIME2_16S_PIPELINE_SUB {
     backbone_fna
     taxonomy
     rrndb_stats
+    rrndb_mode // 追加: 7つ目の入力として受け取る
 
     main:
     // A. DADA2 によるデノイジング
@@ -51,7 +54,8 @@ workflow QIIME2_16S_PIPELINE_SUB {
         target_region,
         backbone_fna,
         taxonomy,
-        rrndb_stats
+        rrndb_stats,
+        rrndb_mode // 追加: 下位サブワークフローへ渡す
     )
 
     emit:
@@ -65,6 +69,7 @@ workflow QIIME2_16S_PIPELINE_ALL {
     p = createNullParamsChannel()
     reads = createPairsChannel(params.qiime2_reads)
     region_ch = Channel.value(params.qiime2_gg2_16s_target_region)
+    mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode) // 追加: モードのチャンネル作成
 
     // Nextflowの標準機能（checkIfExists: true）で安全にファイル存在チェックを行う
     backbone_ch = Channel.value(file(params.qiime2_gg2_16s_backbone_fna, checkIfExists: true))
@@ -77,7 +82,8 @@ workflow QIIME2_16S_PIPELINE_ALL {
         region_ch,
         backbone_ch,
         taxonomy_ch,
-        rrndb_ch
+        rrndb_ch,
+        mode_ch // 追加: 7つ目の引数として渡す
     )
 
     out_ch.gg2_out.view { i -> "QIIME2 16S PIPELINE OUT: $i" }

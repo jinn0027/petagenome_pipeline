@@ -12,6 +12,9 @@ def QIIME2_GG2_WGS_MAX_THREADS = 32
 params.qiime2_gg2_wgs_memory = Math.min(params.memory as Integer, QIIME2_GG2_WGS_MAX_MEMORY)
 params.qiime2_gg2_wgs_threads = Math.min(params.threads as Integer, QIIME2_GG2_WGS_MAX_THREADS)
 
+// 3. rrnDBのコピー数探索モード ('right': 右側から細かい階層へ遡る, 'genus': 属レベル固定)
+params.qiime2_gg2_rrndb_mode = 'right'
+
 // リファレンスファイルのパスのデフォルト設定
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
     error "Error: 'petagenomeDir' parameter is not specified. Please provide it via command line or config."
@@ -41,6 +44,7 @@ process qiime2_greengenes2_wgs {
         path backbone_fna
         path taxonomy
         path rrndb_stats
+        val rrndb_mode
 
     output:
         tuple val(pair_id), 
@@ -62,6 +66,8 @@ process qiime2_greengenes2_wgs {
 
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
+
+        echo "rrnDB search mode: ${rrndb_mode}"
 
         # 1. WGS（Shotgun）向け Greengenes2 実行
         qiime greengenes2 shotgun \
@@ -106,7 +112,8 @@ process qiime2_greengenes2_wgs {
             ${pair_id}/feature-table.tsv \
             ${pair_id}/taxonomy.tsv \
             ${rrndb_stats} \
-            ${pair_id}/taxonomy_counts.tsv
+            ${pair_id}/taxonomy_counts.tsv \
+            --mode ${rrndb_mode}
         """
 }
 
@@ -116,17 +123,20 @@ process qiime2_greengenes2_wgs {
 workflow QIIME2_GREENGENES2_WGS_SUB {
     take:
     p
-    input_ch // tuple val(pair_id), path(rep_seqs)
+    input_ch // tuple val(ref_id), val(pair_id), path(rep_seqs)
     backbone_fna
     taxonomy
     rrndb_stats
+    rrndb_mode
 
     main:
+    // 修正: p.combine(input_ch) で要素数が 4個 (p_val, ref_id, pair_id, rep_seqs) になるため、引数4つで受けてタスク用に再構築
     out = qiime2_greengenes2_wgs(
-        p.combine(input_ch).map { p_val, pair_id, rep_seqs -> tuple(p_val, pair_id, rep_seqs) },
+        p.combine(input_ch).map { p_val, ref_id, pair_id, rep_seqs -> tuple(p_val, pair_id, rep_seqs) },
         backbone_fna,
         taxonomy,
-        rrndb_stats
+        rrndb_stats,
+        rrndb_mode
     )
 
     emit:
@@ -138,16 +148,17 @@ workflow QIIME2_GREENGENES2_WGS_SUB {
 // ==========================================
 workflow QIIME2_GREENGENES2_WGS_ALL {
     p = createNullParamsChannel()
+    mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode)
     
     backbone_ch = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
     taxonomy_ch = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
     rrndb_ch = Channel.value(file(params.qiime2_gg2_wgs_rrndb_stats, checkIfExists: true))
 
-    // WGS用の代表配列入力チャネルの想定（必要に応じてパスは適宜調整してください）
     wgs_input_ch = Channel.fromPath("${params.output}/wgs_rep_seqs/*/rep-seqs.qza")
         .map { rep_path ->
+            def ref_id = "gg2_backbone"
             def pair_id = rep_path.parent.name
-            return tuple(pair_id, rep_path)
+            return tuple(ref_id, pair_id, rep_path)
         }
 
     QIIME2_GREENGENES2_WGS_SUB(
@@ -155,7 +166,8 @@ workflow QIIME2_GREENGENES2_WGS_ALL {
         wgs_input_ch,
         backbone_ch,
         taxonomy_ch,
-        rrndb_ch
+        rrndb_ch,
+        mode_ch
     )
 }
 

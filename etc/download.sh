@@ -2,9 +2,11 @@
 
 #date=$(date +%Y%m%d)
 
-NEED_MODULES=$(pwd)/need_modules.txt
-DIR_MODULES=$(pwd)/../modules
-DIR_EXTERNAL=$(pwd)/../external
+CURRENT_DIR=$(pwd)
+
+NEED_MODULES=${CURRENT_DIR}/need_modules.txt
+DIR_MODULES=${CURRENT_DIR}/../modules
+DIR_EXTERNAL=${CURRENT_DIR}/../external
 
 function check_module () {
     module=$1
@@ -391,6 +393,7 @@ if check_module virsorter2 && [ ! -d virsorter2-data ] ; then
     fi
 fi
 
+# rrnDBをダウンロード
 if [ ! -f rrnDB-5.10_pantaxa_stats_RDP.tsv.zip ] ; then
   wget --no-check-certificate https://rrndb.umms.med.umich.edu/downloads/rrnDB-5.10_pantaxa_stats_RDP.tsv.zip
 fi
@@ -406,6 +409,9 @@ if [ ! -d greengenes2_db ] ; then
   
   # wolkaで用いるリファレンスとtaxsonomyを紐づける対応表
   wget -r -np -nH --cut-dirs=2 ftp://ftp.microbio.me/pub/wol-20April2021/taxonomy/curated/taxid/taxid.map -O wol_map.txt
+  wget -r -nH --cut-dirs=2 --no-parent --reject="index.html*" ftp://ftp.microbio.me/pub/wol-20April2021/
+
+  python3 ${CURRENT_DIR}/build_all_annotations.py
   
   popd
 fi

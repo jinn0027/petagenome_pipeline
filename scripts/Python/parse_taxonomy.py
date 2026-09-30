@@ -2,13 +2,24 @@
 import sys
 import pandas as pd
 import re
+import argparse
 
-table_path = sys.argv[1]
-taxonomy_path = sys.argv[2]
-rrndb_path = sys.argv[3]
-output_path = sys.argv[4]
+parser = argparse.ArgumentParser(description="Parse taxonomy and normalize by rrnDB copy number.")
+parser.add_argument("table_path", help="Path to feature-table.tsv")
+parser.add_argument("taxonomy_path", help="Path to taxonomy.tsv")
+parser.add_argument("rrndb_path", help="Path to rrnDB stats file")
+parser.add_argument("output_path", help="Path to output taxonomy_counts.tsv")
+parser.add_argument("--mode", default="right", choices=["right", "genus"], help="rrnDB copy number search mode ('right': fallback from fine to coarse, 'genus': genus level only)")
 
-print("Generating copy-number normalized and sorted taxonomy_counts.tsv...")
+args = parser.parse_args()
+
+table_path = args.table_path
+taxonomy_path = args.taxonomy_path
+rrndb_path = args.rrndb_path
+output_path = args.output_path
+rrndb_mode = args.mode
+
+print(f"Generating copy-number normalized and sorted taxonomy_counts.tsv (mode: {rrndb_mode})...")
 
 # rrnDB 統計ファイルの読み込み
 rrndb_df = pd.read_csv(rrndb_path, sep="\t", compression="infer")
@@ -18,17 +29,40 @@ matched_count = 0
 unmatched_count = 0
 unmatched_taxa_examples = []
 
+def clean_taxon_name(name):
+    # 余分なプレフィックス (g__, f__, o__ など) を削除
+    name = re.sub(r"^[a-z]__", "", name).strip()
+    # Greengenes2などで見られる末尾の付加コードなどをクレンジング
+    name = re.sub(r"_[A-Z]_[0-9]+", "", name)
+    name = re.sub(r"_[0-9]+$", "", name)
+    return name
+
 def get_copy_number(tax_str):
     global matched_count, unmatched_count, unmatched_taxa_examples
-    match_genus = re.search(r"g__([^;]+)", tax_str)
-    if match_genus:
-        g_name = match_genus.group(1)
-        g_clean = re.sub(r"_[A-Z]_[0-9]+", "", g_name)
-        g_clean = re.sub(r"_[0-9]+$", "", g_clean)
-        if g_clean in copy_dict:
-            matched_count += 1
-            return copy_dict[g_clean]
     
+    # 1. 属レベル固定モード ('genus')
+    if rrndb_mode == "genus":
+        match_genus = re.search(r"g__([^;]+)", tax_str)
+        if match_genus:
+            g_name = match_genus.group(1)
+            g_clean = clean_taxon_name(g_name)
+            if g_clean in copy_dict and g_clean:
+                matched_count += 1
+                return copy_dict[g_clean]
+    
+    # 2. 右側（細かい階層）から遡るモード ('right')
+    elif rrndb_mode == "right":
+        # セミコロンで分割し、有効な階層を後ろから順に評価
+        parts = [p.strip() for p in tax_str.split(";") if p.strip()]
+        for part in reversed(parts):
+            cleaned = clean_taxon_name(part)
+            if not cleaned or cleaned.lower() in ["unassigned", "incertae_sedis", "uncultured"]:
+                continue
+            if cleaned in copy_dict:
+                matched_count += 1
+                return copy_dict[cleaned]
+    
+    # マッチしなかった場合
     unmatched_count += 1
     if len(unmatched_taxa_examples) < 10:
         unmatched_taxa_examples.append(tax_str)

@@ -16,6 +16,7 @@ params.qiime2_wgs_threads = Math.min(params.threads as Integer, QIIME2_WGS_MAX_T
 params.qiime2_gg2_wgs_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_wgs_taxonomy     = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
 params.qiime2_gg2_wgs_rrndb_stats  = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.10_pantaxa_stats_RDP.tsv.gz"
+params.qiime2_gg2_rrndb_mode       = 'right' // 追加: rrnDBコピー数探索モードのデフォルト
 
 // 必須パラメータのチェック
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
@@ -72,6 +73,7 @@ workflow QIIME2_WGS_PIPELINE_SUB {
     backbone
     taxonomy
     rrndb_stats
+    rrndb_mode // 追加: 6つ目の入力として受け取る
 
     main:
 
@@ -97,7 +99,8 @@ workflow QIIME2_WGS_PIPELINE_SUB {
         bowtie2_out, 
         backbone, 
         taxonomy,
-        rrndb_stats
+        rrndb_stats,
+        rrndb_mode // 追加: 下位サブワークフローへ渡す
     )
 
     emit:
@@ -108,8 +111,9 @@ workflow QIIME2_WGS_PIPELINE_SUB {
 // コマンドライン用エントリーポイント (-entry)
 // ==========================================
 workflow QIIME2_WGS_PIPELINE_ALL {
-    p            = createNullParamsChannel()
-    reads        = createPairsChannel(params.qiime2_reads)
+    p          = createNullParamsChannel()
+    reads      = createPairsChannel(params.qiime2_reads)
+    mode_ch    = Channel.value(params.qiime2_gg2_rrndb_mode) // 追加: モードのチャンネル作成
     
     // 必要なリファレンスファイルのみロード
     backbone_ch  = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
@@ -121,7 +125,8 @@ workflow QIIME2_WGS_PIPELINE_ALL {
         reads,
         backbone_ch,
         taxonomy_ch,
-        rrndb_ch
+        rrndb_ch,
+        mode_ch // 追加: 6つ目の引数として渡す
     )
 
     out_ch.gg2_out.view { i -> "QIIME2 WGS PIPELINE OUT: $i" }

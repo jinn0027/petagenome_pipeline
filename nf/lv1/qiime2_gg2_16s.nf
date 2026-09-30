@@ -15,6 +15,9 @@ params.qiime2_gg2_16s_threads = Math.min(params.threads as Integer, QIIME2_GG2_1
 // 3. ターゲット領域の指定（デフォルトは V4）
 params.qiime2_gg2_16s_target_region = 'v4'
 
+// 4. rrnDBのコピー数探索モード ('right': 右側から細かい階層へ遡る, 'genus': 属レベル固定)
+params.qiime2_gg2_rrndb_mode = 'right'
+
 // リファレンスファイルのパスのデフォルト設定
 if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
     error "Error: 'petagenomeDir' parameter is not specified. Please provide it via command line or config."
@@ -22,7 +25,7 @@ if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
 
 params.qiime2_gg2_16s_backbone_fna = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.full-length.fna.qza"
 params.qiime2_gg2_16s_taxonomy = "${params.petagenomeDir}/data/greengenes2/2024.09.backbone.tax.qza"
-params.qiime2_gg2_16s_rrndb_stats = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.10_pantaxa_stats_RDP.tsv.gz"
+params.qiime2_gg2_16s_rrndb_stats = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.10_pantaxa_stats_RDP.tsv.zip"
 
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
@@ -45,6 +48,7 @@ process qiime2_greengenes2_16s {
         path backbone_fna
         path taxonomy
         path rrndb_stats
+        val rrndb_mode
 
     output:
         tuple val(pair_id), 
@@ -70,6 +74,7 @@ process qiime2_greengenes2_16s {
         mkdir -p ${pair_id}
 
         echo "Target region: ${target_region}"
+        echo "rrnDB search mode: ${rrndb_mode}"
 
         # 1. Greengenes2 実行（16S用）
         qiime greengenes2 ${gg2_command} \
@@ -115,7 +120,8 @@ process qiime2_greengenes2_16s {
             ${pair_id}/feature-table.tsv \
             ${pair_id}/taxonomy.tsv \
             ${rrndb_stats} \
-            ${pair_id}/taxonomy_counts.tsv
+            ${pair_id}/taxonomy_counts.tsv \
+            --mode ${rrndb_mode}
         """
 }
 
@@ -130,6 +136,7 @@ workflow QIIME2_GREENGENES2_16S_SUB {
     backbone_fna
     taxonomy
     rrndb_stats
+    rrndb_mode
 
     main:
     in_ch = dada2_out.map { pair_id, table, rep_seqs, stats, trans ->
@@ -141,7 +148,8 @@ workflow QIIME2_GREENGENES2_16S_SUB {
         target_region,
         backbone_fna,
         taxonomy,
-        rrndb_stats
+        rrndb_stats,
+        rrndb_mode
     )
 
     emit:
@@ -154,6 +162,7 @@ workflow QIIME2_GREENGENES2_16S_SUB {
 workflow QIIME2_GREENGENES2_16S_ALL {
     p = createNullParamsChannel()
     region_ch = Channel.value(params.qiime2_gg2_16s_target_region)
+    mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode)
     
     backbone_ch = Channel.value(file(params.qiime2_gg2_16s_backbone_fna, checkIfExists: true))
     taxonomy_ch = Channel.value(file(params.qiime2_gg2_16s_taxonomy, checkIfExists: true))
@@ -172,7 +181,8 @@ workflow QIIME2_GREENGENES2_16S_ALL {
         region_ch,
         backbone_ch,
         taxonomy_ch,
-        rrndb_ch
+        rrndb_ch,
+        mode_ch
     )
 }
 
