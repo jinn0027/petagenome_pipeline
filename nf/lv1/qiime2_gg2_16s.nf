@@ -48,7 +48,8 @@ process qiime2_greengenes2_16s {
         tuple val(pair_id), 
               path("${pair_id}/feature-table.tsv"), 
               path("${pair_id}/representatives.fasta"),
-              path("${pair_id}/taxonomy.tsv")
+              path("${pair_id}/taxonomy.tsv"),
+              path("${pair_id}/taxonomy_counts.tsv")
 
     script:
         def gg2_command = "non-v4-16s" 
@@ -104,8 +105,47 @@ process qiime2_greengenes2_16s {
         elif [ -f exported_taxonomy/consensus_assignments.tsv ]; then
             cp exported_taxonomy/consensus_assignments.tsv ${pair_id}/taxonomy.tsv
         else
-            find exported_taxonomy -name "*.tsv" -exec cp {} ${pair_id}/taxonomy.tsv \\;
+            find exported_taxonomy -name "*.tsv" -exec cp {} ${pair_id}/taxonomy.tsv
         fi
+
+        # 5. feature-table.tsv と taxonomy.tsv を結合し、カウント数順（降順）の taxonomy_counts.tsv を作成する
+        python3 - <<'EOF'
+import pandas as pd
+
+print("Generating taxonomy_counts.tsv for 16S...")
+
+skiprows = 0
+with open("${pair_id}/feature-table.tsv", "r") as f:
+    for i, line in enumerate(f):
+        if line.startswith("#OTU ID") or line.startswith("#Feature ID"):
+            skiprows = i
+            break
+
+table_df = pd.read_csv("${pair_id}/feature-table.tsv", sep="\t", skiprows=skiprows, index_col=0)
+
+if table_df.index.name and table_df.index.name.startswith("#"):
+    table_df.index.name = table_df.index.name.lstrip("#").strip()
+
+tax_df = pd.read_csv("${pair_id}/taxonomy.tsv", sep="\t", index_col=0)
+tax_col = tax_df.columns[0]
+tax_dict = tax_df[tax_col].to_dict()
+
+counts = table_df.sum(axis=1)
+
+tax_counts = {}
+for feat_id, count in counts.items():
+    taxon = tax_dict.get(str(feat_id), "k__Unassigned; p__; c__; o__; f__; g__; s__")
+    tax_counts[taxon] = tax_counts.get(taxon, 0) + count
+
+sample_name = table_df.columns[0] if len(table_df.columns) > 0 else "count"
+summary_out = pd.DataFrame({
+    "Taxonomy": list(tax_counts.keys()),
+    sample_name: list(tax_counts.values())
+}).sort_values(by=sample_name, ascending=False)
+
+summary_out.to_csv("${pair_id}/taxonomy_counts.tsv", sep="\t", index=False)
+print("taxonomy_counts.tsv generated successfully.")
+EOF
         """
 }
 
@@ -143,7 +183,6 @@ workflow QIIME2_GREENGENES2_16S_ALL {
     p = createNullParamsChannel()
     region_ch = Channel.value(params.qiime2_gg2_16s_target_region)
     
-    // Nextflowの標準機能（checkIfExists: true）で安全にファイルを指定
     backbone_ch = Channel.value(file(params.qiime2_gg2_16s_backbone_fna, checkIfExists: true))
     taxonomy_ch = Channel.value(file(params.qiime2_gg2_16s_taxonomy, checkIfExists: true))
 

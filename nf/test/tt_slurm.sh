@@ -42,8 +42,6 @@ virsorterMga="${extDir}/mga_linux_ia64"
 virsorter2Db="${extDir}/virsorter2-data"
 metaphlanDb="${extDir}/metaphlan_db"
 
-wgsFnqGzPair="${extDir}/K1_sample29_wgs_R{1,2}.fastq.gz"
-
 longFnqGzPair="${dataDir}/ecoli_1K_{1,2}.fq.gz"
 longFnaPair="${dataDir}/NC_*.fna"
 longFnaGz1="${dataDir}/ecoli_1K_1.fa.gz"
@@ -67,6 +65,8 @@ dFna="${dataDir}/d.fna"
 dFaa="${dataDir}/d.faa"
 
 inPairs="/home/data202502/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.gz"
+
+wgsFnqGzPair="${extDir}/K1_sample29_wgs_R{1,2}.fastq.gz"
 in16SPairs="K1_sample29_v4_R{1,2}.fastq.gz"
 
 args="\
@@ -120,7 +120,8 @@ case ${test} in
                  --qiime2_gg2_wgs_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
                  --qiime2_gg2_wgs_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
                  --qiime2_woltka_wol_map "${extDir}/greengenes2_db/wol_map.txt" \
-                 --qiime2_gg2_wgs_tree "${extDir}/greengenes2_db/2024.09.taxonomy.id.nwk"
+                 --qiime2_gg2_wgs_tree "${extDir}/greengenes2_db/2024.09.taxonomy.id.nwk" \
+		 --qiime2_gg2_wgs_max_mismatch 0
 	;;
     "dada")
         nextflow run ${nfDir}/lv1/qiime2_dada2.nf -entry QIIME2_DADA2_ALL ${args} --force \

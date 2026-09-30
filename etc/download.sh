@@ -391,6 +391,10 @@ if check_module virsorter2 && [ ! -d virsorter2-data ] ; then
     fi
 fi
 
+if [ ! -f rrnDB-5.10_pantaxa_stats_RDP.tsv.zip ] ; then
+  wget --no-check-certificate https://rrndb.umms.med.umich.edu/downloads/rrnDB-5.10_pantaxa_stats_RDP.tsv.zip
+fi
+
 if [ ! -d greengenes2_db ] ; then
   mkdir -p greengenes2_db
   pushd greengenes2_db

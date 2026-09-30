@@ -50,7 +50,8 @@ process qiime2_greengenes2_wgs {
     output:
         tuple val(pair_id), 
               path("${pair_id}/feature-table.tsv"), 
-              path("${pair_id}/taxonomy.tsv")
+              path("${pair_id}/taxonomy.tsv"),
+              path("${pair_id}/taxonomy_counts.tsv") // ← 追加
 
     script:
         """
@@ -152,6 +153,15 @@ process qiime2_greengenes2_wgs {
             "${pair_id}": freq_list
         })
         table_out.to_csv("${pair_id}/feature-table.tsv", sep="\\t", index=False)
+
+        # 【追加】カウント数の大きい順（降順）にソートした taxonomy_counts.tsv の出力
+        summary_out = pd.DataFrame({
+            "Taxonomy": taxa_list,
+            "${pair_id}": freq_list
+        }).sort_values(by="${pair_id}", ascending=False)
+        
+        summary_out.to_csv("${pair_id}/taxonomy_counts.tsv", sep="\\t", index=False)
+
         print("Done successfully.")
         EOF
         """
