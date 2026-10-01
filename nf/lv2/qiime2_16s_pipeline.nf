@@ -12,6 +12,7 @@ params.qiime2_dada2_trunc_len_f = 230
 params.qiime2_trunc_len_r = 230
 
 params.qiime2_gg2_16s_target_region = 'v4'
+params.qiime2_gg2_perc_identity = 0.99 // パーセント一致度閾値のデフォルト設定
 params.qiime2_gg2_rrndb_mode = 'right' // rrnDBコピー数探索モードのデフォルト
 
 // 機能アノテーション関連パラメータのデフォルト追加
@@ -68,7 +69,7 @@ process qiime2_import_fasta_as_features {
             --input-path ${fasta_file} \
             --output-path ${sample_id}/rep-seqs.qza
 
-        # 2. 標準PythonだけでFASTAをパースしてBIOMテーブルを生成
+        # 2. 標準PythonだけでFASTAをパースしてBIOMテーブルを生成（カウントを1から順に増加させる）
         python3 - <<EOF
 import biom
 import pandas as pd
@@ -84,8 +85,9 @@ with open(fasta_path, 'r') as f:
             rec_id = line[1:].strip().split()[0]
             record_ids.append(rec_id)
 
-# すべての配列IDに対してカウント1のダミーテーブルを作成
-data = pd.DataFrame(1, index=record_ids, columns=["${sample_id}"])
+# 配列の上から順番に 1, 2, 3... と増加する数値をカウントとして割り当てる
+counts = list(range(1, len(record_ids) + 1))
+data = pd.DataFrame(counts, index=record_ids, columns=["${sample_id}"])
 table = biom.Table(data.values, data.index, data.columns)
 
 biom_file = "${sample_id}/feature_table.biom"
@@ -120,6 +122,7 @@ workflow QIIME2_16S_PIPELINE_SUB {
     rrndb_mode
     annotation_table
     target_annots
+    perc_identity
     is_fasta
 
     main:
@@ -140,7 +143,8 @@ workflow QIIME2_16S_PIPELINE_SUB {
         rrndb_stats,
         rrndb_mode,
         annotation_table,
-        target_annots
+        target_annots,
+        perc_identity
     )
 
     emit:
@@ -172,6 +176,7 @@ workflow QIIME2_16S_PIPELINE_ALL {
 
     region_ch = Channel.value(params.qiime2_gg2_16s_target_region)
     mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode)
+    perc_identity_ch = Channel.value(params.qiime2_gg2_perc_identity)
     
     // 機能アノテーション関連チャンネルの作成
     annotation_ch = Channel.value(file(params.annotation_table, checkIfExists: true))
@@ -192,6 +197,7 @@ workflow QIIME2_16S_PIPELINE_ALL {
         mode_ch,
         annotation_ch,
         annots_ch,
+        perc_identity_ch,
         is_fasta
     )
 

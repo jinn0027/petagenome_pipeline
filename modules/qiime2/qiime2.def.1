@@ -1,0 +1,41 @@
+Bootstrap: docker
+From: mambaorg/micromamba:latest
+
+%post
+    # 必要なパッケージのインストール
+    apt-get update && apt-get install -y wget curl git procps build-essential
+
+    # 1. QIIME 2の公式リリース版の環境構築用YAMLをダウンロード
+    wget https://raw.githubusercontent.com/qiime2/distributions/refs/heads/dev/2026.1/amplicon/released/qiime2-amplicon-ubuntu-latest-conda.yml -O /tmp/qiime2.yml
+
+    # 2. micromambaを使って環境を一発構築（biocondaチャンネルを追加してwoltkaを導入）
+    micromamba create -n qiime2 -f /tmp/qiime2.yml -c conda-forge -c bioconda
+
+    # 3. 追加パッケージのインストール（q2-greengenes2 と woltka）
+    micromamba run -n qiime2 pip install q2-greengenes2
+    micromamba install -n qiime2 -c conda-forge -c bioconda woltka --yes
+
+    # キャッシュのクリアでイメージサイズをダイエット
+    micromamba clean --all --yes
+
+%environment
+    # コンテナ起動時にQIIME 2の環境にパスを通す
+    export PATH=/opt/conda/envs/qiime2/bin:$PATH
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    # ホームディレクトリ書き込みエラーを防ぐため /tmp をデフォルトキャッシュにする
+    export XDG_CONFIG_HOME=/tmp/qiime2_config
+    export MPLCONFIGDIR=/tmp/matplotlib_config
+    # Numbaのキャッシュ先を /tmp に逃がす
+    export NUMBA_CACHE_DIR=/tmp/numba_cache
+
+%runscript
+    # コンテナを直接実行したときのデフォルト動作
+    exec qiime "$@"
+
+%test
+    # テスト時は環境変数を明示的に読み込んでから qiime と woltka の動作確認を行う
+    export PATH=/opt/conda/envs/qiime2/bin:$PATH
+    export XDG_CONFIG_HOME=/tmp/qiime2_config
+    qiime --help
+    woltka --help

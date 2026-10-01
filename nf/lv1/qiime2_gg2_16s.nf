@@ -15,10 +15,13 @@ params.qiime2_gg2_16s_threads = Math.min(params.threads as Integer, QIIME2_GG2_1
 // 3. ターゲット領域の指定（デフォルトは V4）
 params.qiime2_gg2_16s_target_region = 'v4'
 
-// 4. rrnDBのコピー数探索モード ('right': 右側から細かい階層へ遡る, 'genus': 属レベル固定)
+// 4. パーセント一致度閾値のデフォルト設定
+params.qiime2_gg2_perc_identity = 0.99
+
+// 5. rrnDBのコピー数探索モード ('right': 右側から細かい階層へ遡る, 'genus': 属レベル固定)
 params.qiime2_gg2_rrndb_mode = 'right'
 
-// 5. 機能アノテーション関連パラメータ
+// 6. 機能アノテーション関連パラメータ
 if (!params.containsKey('annotation_table')) {
     params.annotation_table = "${params.petagenomeDir}/data/greengenes2/genome_annotations_table.tsv"
 }
@@ -57,6 +60,7 @@ process qiime2_greengenes2_16s {
         val rrndb_mode
         path annotation_table
         val target_annots
+        val perc_identity
 
     output:
         tuple val(pair_id), 
@@ -83,6 +87,7 @@ process qiime2_greengenes2_16s {
         mkdir -p ${pair_id}
 
         echo "Target region: ${target_region}"
+        echo "Percent identity: ${perc_identity}"
         echo "rrnDB search mode: ${rrndb_mode}"
 
         # 1. Greengenes2 実行（16S用）
@@ -92,6 +97,7 @@ process qiime2_greengenes2_16s {
             --i-backbone ${backbone_fna} \
             --o-mapped-table mapped_table.qza \
             --o-representatives representatives.qza \
+            --p-perc-identity ${perc_identity} \
             --p-threads ${threads}
 
         # 2. フィーチャーテーブルをTSVに変換
@@ -158,6 +164,7 @@ workflow QIIME2_GREENGENES2_16S_SUB {
     rrndb_mode
     annotation_table
     target_annots
+    perc_identity
 
     main:
     in_ch = dada2_out.map { pair_id, table, rep_seqs, stats, trans ->
@@ -172,7 +179,8 @@ workflow QIIME2_GREENGENES2_16S_SUB {
         rrndb_stats,
         rrndb_mode,
         annotation_table,
-        target_annots
+        target_annots,
+        perc_identity
     )
 
     emit:
@@ -186,6 +194,7 @@ workflow QIIME2_GREENGENES2_16S_ALL {
     p = createNullParamsChannel()
     region_ch = Channel.value(params.qiime2_gg2_16s_target_region)
     mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode)
+    perc_identity_ch = Channel.value(params.qiime2_gg2_perc_identity)
     
     backbone_ch = Channel.value(file(params.qiime2_gg2_16s_backbone_fna, checkIfExists: true))
     taxonomy_ch = Channel.value(file(params.qiime2_gg2_16s_taxonomy, checkIfExists: true))
@@ -209,7 +218,8 @@ workflow QIIME2_GREENGENES2_16S_ALL {
         rrndb_ch,
         mode_ch,
         annotation_ch,
-        annots_ch
+        annots_ch,
+        perc_identity_ch
     )
 }
 

@@ -105,15 +105,24 @@ test=${test%.*}
 
 case ${test} in
     "oo")
-	nextflow run ${nfDir}/lv2/qiime2_16s_pipeline.nf \
-		 -entry QIIME2_16S_PIPELINE_ALL \
-		 ${args} \
-		 --annotation_table "${extDir}/greengenes2_db/genome_annotations_table.tsv" \
-		 --functional_annotations "KO,MetaCyc" \
-		 --qiime2_reads "backbone_exported.fasta" \
-		 --qiime2_gg2_16s_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
-		 --qiime2_gg2_16s_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
-		 --qiime2_gg2_16s_rrndb_stats "${extDir}/rrnDB-5.10_pantaxa_stats_RDP.tsv.zip"
+        rm -f feature_mapping.tsv
+	cp  -f backbone_exported.fasta unmapped_backbone.fasta
+	for i in $(seq 1 2)
+	do
+	    nextflow run ${nfDir}/lv2/qiime2_16s_pipeline.nf \
+		     -entry QIIME2_16S_PIPELINE_ALL \
+		     ${args} \
+		     --qiime2_gg2_perc_identity 1.0 \
+		     --annotation_table "${extDir}/greengenes2_db/genome_annotations_table.tsv" \
+		     --functional_annotations "KO,MetaCyc" \
+		     --qiime2_reads "unmapped_backbone.fasta" \
+		     --qiime2_gg2_16s_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
+		     --qiime2_gg2_16s_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
+		     --qiime2_gg2_16s_rrndb_stats "${extDir}/rrnDB-5.10_pantaxa_stats_RDP.tsv.zip"
+	    ./y.sh
+	    ./c.sh
+	    break
+	done
         ;;
     "pp")
 	nextflow run ${nfDir}/lv2/qiime2_16s_pipeline.nf \
@@ -122,6 +131,7 @@ case ${test} in
 		 --annotation_table "${extDir}/greengenes2_db/genome_annotations_table.tsv" \
 		 --functional_annotations "KO,MetaCyc" \
 		 --qiime2_reads "${in16SPairs}" \
+		 --qiime2_gg2_perc_identity 0.9 \
 		 --qiime2_gg2_16s_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
 		 --qiime2_gg2_16s_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
 		 --qiime2_gg2_16s_rrndb_stats "${extDir}/rrnDB-5.10_pantaxa_stats_RDP.tsv.zip"
