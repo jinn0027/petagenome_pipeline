@@ -34,7 +34,7 @@ process qiime2_dada2 {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     
     input:
-        tuple val(p), val(pair_id), path(reads, arity: '2')
+        tuple val(p), val(pair_id), path(reads) // arity制限を外し、Listとして柔軟に受け取る
         
     output:
         tuple val(pair_id), 
@@ -44,6 +44,10 @@ process qiime2_dada2 {
               path("${pair_id}/base-transition-stats.qza")
 
     script:
+        // readsの数（1つならシングル、2つならペアエンド）を判定
+        def read_list = reads instanceof List ? reads : [reads]
+        def is_paired = read_list.size() == 2
+        
         """
         # Pythonの非推奨警告を抑制
         export PYTHONWARNINGS="ignore"
@@ -57,29 +61,49 @@ process qiime2_dada2 {
         echo "${processProfile(task)}" | tee prof.txt
         mkdir -p ${pair_id}
 
-        # 1. 作業ディレクトリ（\$PWD）を利用して絶対パスを構築し、TSVとして書き込む
-        printf "sample-id\\tforward-absolute-filepath\\treverse-absolute-filepath\\n" > manifest.tsv
-        printf "%s\\t\$PWD/%s\\t\$PWD/%s\\n" "${pair_id}" "${reads[0]}" "${reads[1]}" >> manifest.tsv
+        if [ "${is_paired}" = "true" ]; then
+            # --- ペアエンドの場合 ---
+            printf "sample-id\\tforward-absolute-filepath\\treverse-absolute-filepath\\n" > manifest.tsv
+            printf "%s\\t\$PWD/%s\\t\$PWD/%s\\n" "${pair_id}" "${read_list[0]}" "${read_list[1]}" >> manifest.tsv
 
-        # 2. FASTQのインポート (Artifact生成)
-        qiime tools import \
-            --type SampleData[PairedEndSequencesWithQuality] \
-            --input-path manifest.tsv \
-            --output-path ${pair_id}/demux.qza \
-            --input-format PairedEndFastqManifestPhred33V2
+            qiime tools import \
+                --type SampleData[PairedEndSequencesWithQuality] \
+                --input-path manifest.tsv \
+                --output-path ${pair_id}/demux.qza \
+                --input-format PairedEndFastqManifestPhred33V2
 
-        # 3. DADA2によるデノイジング・ASV生成
-        qiime dada2 denoise-paired \
-            --i-demultiplexed-seqs ${pair_id}/demux.qza \
-            --p-trim-left-f ${getParam(p, params, 'qiime2_trim_left_f')} \
-            --p-trim-left-r ${getParam(p, params, 'qiime2_trim_left_r')} \
-            --p-trunc-len-f ${getParam(p, params, 'qiime2_trunc_len_f')} \
-            --p-trunc-len-r ${getParam(p, params, 'qiime2_trunc_len_r')} \
-            --o-table ${pair_id}/table.qza \
-            --o-representative-sequences ${pair_id}/rep-seqs.qza \
-            --o-denoising-stats ${pair_id}/denoising-stats.qza \
-            --o-base-transition-stats ${pair_id}/base-transition-stats.qza \
-            --p-n-threads ${threads}
+            qiime dada2 denoise-paired \
+                --i-demultiplexed-seqs ${pair_id}/demux.qza \
+                --p-trim-left-f ${getParam(p, params, 'qiime2_trim_left_f')} \
+                --p-trim-left-r ${getParam(p, params, 'qiime2_trim_left_r')} \
+                --p-trunc-len-f ${getParam(p, params, 'qiime2_trunc_len_f')} \
+                --p-trunc-len-r ${getParam(p, params, 'qiime2_trunc_len_r')} \
+                --o-table ${pair_id}/table.qza \
+                --o-representative-sequences ${pair_id}/rep-seqs.qza \
+                --o-denoising-stats ${pair_id}/denoising-stats.qza \
+                --o-base-transition-stats ${pair_id}/base-transition-stats.qza \
+                --p-n-threads ${threads}
+        else
+            # --- シングルエンドの場合 ---
+            printf "sample-id\\tabsolute-filepath\\n" > manifest.tsv
+            printf "%s\\t\$PWD/%s\\n" "${pair_id}" "${read_list[0]}" >> manifest.tsv
+
+            qiime tools import \
+                --type SampleData[SequencesWithQuality] \
+                --input-path manifest.tsv \
+                --output-path ${pair_id}/demux.qza \
+                --input-format SingleEndFastqManifestPhred33V2
+
+            qiime dada2 denoise-single \
+                --i-demultiplexed-seqs ${pair_id}/demux.qza \
+                --p-trim-left ${getParam(p, params, 'qiime2_trim_left_f')} \
+                --p-trunc-len ${getParam(p, params, 'qiime2_trunc_len_f')} \
+                --o-table ${pair_id}/table.qza \
+                --o-representative-sequences ${pair_id}/rep-seqs.qza \
+                --o-denoising-stats ${pair_id}/denoising-stats.qza \
+                --o-base-transition-stats ${pair_id}/base-transition-stats.qza \
+                --p-n-threads ${threads}
+        fi
         """
 }
 

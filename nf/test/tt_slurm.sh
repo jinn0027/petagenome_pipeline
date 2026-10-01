@@ -104,8 +104,19 @@ test=${1:-"qq"}
 test=${test%.*}
 
 case ${test} in
+    "oo")
+	nextflow run ${nfDir}/lv2/qiime2_16s_pipeline.nf \
+		 -entry QIIME2_16S_PIPELINE_ALL \
+		 ${args} \
+		 --annotation_table "${extDir}/greengenes2_db/genome_annotations_table.tsv" \
+		 --functional_annotations "KO,MetaCyc" \
+		 --qiime2_reads "backbone_exported.fasta" \
+		 --qiime2_gg2_16s_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
+		 --qiime2_gg2_16s_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
+		 --qiime2_gg2_16s_rrndb_stats "${extDir}/rrnDB-5.10_pantaxa_stats_RDP.tsv.zip"
+        ;;
     "pp")
-	NXF_DEBUG=2 nextflow run ${nfDir}/lv2/qiime2_16s_pipeline.nf \
+	nextflow run ${nfDir}/lv2/qiime2_16s_pipeline.nf \
 		 -entry QIIME2_16S_PIPELINE_ALL \
 		 ${args} \
 		 --annotation_table "${extDir}/greengenes2_db/genome_annotations_table.tsv" \

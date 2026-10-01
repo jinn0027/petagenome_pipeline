@@ -46,7 +46,7 @@ process qiime2_greengenes2_wgs {
     clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
     
     input:
-        tuple val(p), val(pair_id), path(rep_seqs)
+        tuple val(p), val(pair_id), path(sam_file)
         path backbone_fna
         path taxonomy
         path rrndb_stats
@@ -78,32 +78,46 @@ process qiime2_greengenes2_wgs {
 
         echo "rrnDB search mode: ${rrndb_mode}"
 
-        # 1. WGS（Shotgun）向け Greengenes2 実行
-        qiime greengenes2 shotgun \
-            --i-sequences ${rep_seqs} \
-            --i-backbone ${backbone_fna} \
-            --o-mapped-table mapped_table.qza \
-            --o-representatives representatives.qza \
-            --p-threads ${threads}
+        # 1. Bowtie2のSAMファイルからリファレンス配列ごとのカウントを集計し、feature-table.tsv (TSVフォーマットのBIOMライク形式) を作成する
+        python3 -c "
+        import sys
+        from collections import Counter
 
-        # 2. フィーチャーテーブルをTSVに変換
+        counts = Counter()
+        sam_path = '${sam_file}'
+
+        with open(sam_path, 'r') as f:
+            for line in f:
+                if line.startswith('@'):
+                    continue
+                parts = line.strip().split('\\t')
+                if len(parts) > 2:
+                    ref_id = parts[2]
+                    if ref_id != '*':
+                        counts[ref_id] += 1
+
+        # feature-table.tsv を出力 (QIIME形式のタブ区切りテーブル：行名=FeatureID, 列=サンプル名)
+        sample_id = '${pair_id}'
+        with open('${pair_id}/feature-table.tsv', 'w') as out:
+            out.write(f'# Constructed from biom file\\n#OTU ID\\t{sample_id}\\n')
+            for ref_id, count in counts.items():
+                out.write(f'{ref_id}\\t{count}\\n')
+        "
+
+        # 2. 代表配列 (.qza) から代表配列 FASTA をエクスポートする
         qiime tools export \
-            --input-path mapped_table.qza \
-            --output-path exported_table
-        
-        biom convert \
-            -i exported_table/feature-table.biom \
-            -o ${pair_id}/feature-table.tsv \
-            --to-tsv
+            --input-path ${backbone_fna} \
+            --output-path exported_ref
 
-        # 3. 代表配列をFASTAに変換
-        qiime tools export \
-            --input-path representatives.qza \
-            --output-path ${pair_id}
-        
-        mv ${pair_id}/dna-sequences.fasta ${pair_id}/representatives.fasta
+        if [ -f exported_ref/dna-sequences.fasta ]; then
+            cp exported_ref/dna-sequences.fasta ${pair_id}/representatives.fasta
+        elif ls exported_ref/*.fasta 1> /dev/null 2>&1; then
+            cp exported_ref/*.fasta ${pair_id}/representatives.fasta
+        else
+            cp exported_ref/*.fna ${pair_id}/representatives.fasta
+        fi
 
-        # 4. タクソノミ情報をTSVに変換
+        # 3. タクソノミ情報をTSVに変換
         qiime tools export \
             --input-path ${taxonomy} \
             --output-path exported_taxonomy
@@ -113,10 +127,10 @@ process qiime2_greengenes2_wgs {
         elif [ -f exported_taxonomy/consensus_assignments.tsv ]; then
             cp exported_taxonomy/consensus_assignments.tsv ${pair_id}/taxonomy.tsv
         else
-            find exported_taxonomy -name "*.tsv" -exec cp {} ${pair_id}/taxonomy.tsv
+            find exported_taxonomy -name "*.tsv" -exec cp {} ${pair_id}/taxonomy.tsv \\;
         fi
 
-        # 5. feature-table.tsv と taxonomy.tsv を結合し、rrnDBコピー数補正 & 全体和正規化を行い、カウント数順（降順）でソートする (タクソノミ)
+        # 4. feature-table.tsv と taxonomy.tsv を結合し、rrnDBコピー数補正 & 全体和正規化を行い、カウント数順（降順）でソートする (タクソノミ)
         python3 ${params.petagenomeDir}/scripts/Python/parse_taxonomy.py \
             ${pair_id}/feature-table.tsv \
             ${pair_id}/taxonomy.tsv \
@@ -124,7 +138,7 @@ process qiime2_greengenes2_wgs {
             ${pair_id}/taxonomy_counts.tsv \
             --mode ${rrndb_mode}
 
-        # 6. アノテーションテーブルを紐づけて、rrnDB補正後の存在量を各機能（KO, MetaCycなど）に分配・集計する
+        # 5. アノテーションテーブルを紐づけて、rrnDB補正後の存在量を各機能（KO, MetaCycなど）に分配・集計する
         python3 ${params.petagenomeDir}/scripts/Python/parse_functional_profiles.py \
             ${pair_id}/feature-table.tsv \
             ${pair_id}/taxonomy.tsv \
@@ -142,7 +156,7 @@ process qiime2_greengenes2_wgs {
 workflow QIIME2_GREENGENES2_WGS_SUB {
     take:
     p
-    input_ch // tuple val(ref_id), val(pair_id), path(rep_seqs)
+    input_ch // tuple val(ref_id), val(pair_id), path(sam_file)
     backbone_fna
     taxonomy
     rrndb_stats
@@ -152,7 +166,7 @@ workflow QIIME2_GREENGENES2_WGS_SUB {
 
     main:
     out = qiime2_greengenes2_wgs(
-        p.combine(input_ch).map { p_val, ref_id, pair_id, rep_seqs -> tuple(p_val, pair_id, rep_seqs) },
+        p.combine(input_ch).map { p_val, ref_id, pair_id, sam_file -> tuple(p_val, pair_id, sam_file) },
         backbone_fna,
         taxonomy,
         rrndb_stats,
@@ -178,11 +192,11 @@ workflow QIIME2_GREENGENES2_WGS_ALL {
     annotation_ch = Channel.value(file(params.annotation_table, checkIfExists: true))
     annots_ch = Channel.value(params.functional_annotations)
 
-    wgs_input_ch = Channel.fromPath("${params.output}/wgs_rep_seqs/*/rep-seqs.qza")
-        .map { rep_path ->
+    wgs_input_ch = Channel.fromPath("${params.output}/MAP_SUB/*/*.sam")
+        .map { sam_path ->
             def ref_id = "gg2_backbone"
-            def pair_id = rep_path.parent.name
-            return tuple(ref_id, pair_id, rep_path)
+            def pair_id = sam_path.parent.name
+            return tuple(ref_id, pair_id, sam_path)
         }
 
     QIIME2_GREENGENES2_WGS_SUB(

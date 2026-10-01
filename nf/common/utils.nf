@@ -100,6 +100,29 @@ def createSeqsChannel(path) {
     return seqs
 }
 
+def createAutoChannel(path) {
+    def seqs_list = path.split(';')
+    // 最初のパスパターンにマッチする実際のファイルを軽く探して判定する
+    def sample_files = file(seqs_list[0])
+    
+    // パスが複数ファイルに展開されるか、あるいは名前に _R1/_R2 や _1/_2 のようなペアの規則があるかで判定
+    // ざっくり「1つのパターンに対してファイルが2つ以上見つかるか」で判定する例：
+    def matched_files = file(seqs_list[0].contains('*') ? seqs_list[0] : seqs_list[0] + "*")
+    
+    // ※より確実に判定するため、ファイルリストの要素数や名前の傾向を見ることもできます
+    boolean is_paired = (matched_files instanceof List && matched_files.size() % 2 == 0) 
+        // またはご自身のデータの命名規則（例: "_R1" や "_1.fastq" を含むか）で判定
+        // || seqs_list[0].contains('R1') || seqs_list[0].contains('_1.')
+
+    if (is_paired) {
+        println "INFO: Detected Paired-End data. Using createPairsChannel."
+        return createPairsChannel(path)
+    } else {
+        println "INFO: Detected Single-End data. Using createSeqsChannel."
+        return createSeqsChannel(path)
+    }
+}
+
 def apptainerContainerOptions(userOptions = "") {
     def binds = [launchDir.toString()]
     
