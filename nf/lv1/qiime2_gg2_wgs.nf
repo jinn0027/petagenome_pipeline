@@ -83,28 +83,27 @@ process qiime2_greengenes2_wgs {
 
         # 1. Bowtie2のSAMファイルからリファレンス配列ごとのカウントを集計
         python3 -c "
-        import sys
-        from collections import Counter
+import sys from collections import Counter
 
-        counts = Counter()
-        sam_path = '${sam_file}'
+counts = Counter()
+sam_path = '${sam_file}'
 
-        with open(sam_path, 'r') as f:
-            for line in f:
-                if line.startswith('@'):
-                    continue
-                parts = line.strip().split('\\t')
-                if len(parts) > 2:
-                    ref_id = parts[2]
-                    if ref_id != '*':
-                        counts[ref_id] += 1
+with open(sam_path, 'r') as f:
+    for line in f:
+        if line.startswith('@'):
+            continue
+        parts = line.strip().split('\\t')
+        if len(parts) > 2:
+            ref_id = parts[2]
+            if ref_id != '*':
+                counts[ref_id] += 1
 
-        sample_id = '${pair_id}'
-        with open('${pair_id}/feature-table.tsv', 'w') as out:
-            out.write(f'# Constructed from biom file\\n#OTU ID\\t{sample_id}\\n')
-            for ref_id, count in counts.items():
-                out.write(f'{ref_id}\\t{count}\\n')
-        "
+sample_id = '${pair_id}'
+with open('${pair_id}/feature-table.tsv', 'w') as out:
+    out.write(f'# Constructed from biom file\\n#OTU ID\\t{sample_id}\\n')
+    for ref_id, count in counts.items():
+         out.write(f'{ref_id}\\t{count}\\n')
+"
 
         # 2. 代表配列 (.qza) から代表配列 FASTA をエクスポートする
         qiime tools export \
