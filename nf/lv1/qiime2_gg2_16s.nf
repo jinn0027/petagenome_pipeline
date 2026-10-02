@@ -39,6 +39,9 @@ params.qiime2_gg2_16s_rrndb_stats = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
+// ==========================================
+// Greengenes2 による集計プロセス (16S用)
+// ==========================================
 process qiime2_greengenes2_16s {
     tag "${pair_id} (${target_region})"
     container = "${params.petagenomeDir}/modules/qiime2/qiime2.sif"
@@ -117,18 +120,38 @@ process qiime2_greengenes2_16s {
         
         mv ${pair_id}/dna-sequences.fasta ${pair_id}/representatives.fasta
 
-        # 4. タクソノミ情報をTSVに変換
+        # 4. タクソノミ情報をTSVに変換（安全なPython処理）
         qiime tools export \
             --input-path ${taxonomy} \
             --output-path exported_taxonomy
 
-        if [ -f exported_taxonomy/taxonomy.tsv ]; then
-            cp exported_taxonomy/taxonomy.tsv ${pair_id}/taxonomy.tsv
-        elif [ -f exported_taxonomy/consensus_assignments.tsv ]; then
-            cp exported_taxonomy/consensus_assignments.tsv ${pair_id}/taxonomy.tsv
-        else
-            find exported_taxonomy -name "*.tsv" -exec cp {} ${pair_id}/taxonomy.tsv
-        fi
+        python3 -c "
+import os, glob, shutil
+
+exported_dir = 'exported_taxonomy'
+target_dest = '${pair_id}/taxonomy.tsv'
+
+candidates = [
+    os.path.join(exported_dir, 'taxonomy.tsv'),
+    os.path.join(exported_dir, 'consensus_assignments.tsv')
+]
+
+found = False
+for path in candidates:
+    if os.path.exists(path):
+        shutil.copy(path, target_dest)
+        found = True
+        break
+
+if not found:
+    all_tsvs = glob.glob(os.path.join(exported_dir, '**', '*.tsv'), recursive=True)
+    if all_tsvs:
+        shutil.copy(all_tsvs[0], target_dest)
+        found = True
+
+if not found:
+    raise FileNotFoundError(f'Taxonomy tsv file not found in {exported_dir}')
+"
 
         # 5. feature-table.tsv と taxonomy.tsv を結合し、rrnDBコピー数補正 & 全体和正規化を行い、カウント数順（降順）でソートする (タクソノミ)
         python3 ${params.petagenomeDir}/scripts/Python/parse_taxonomy.py \
@@ -151,7 +174,7 @@ process qiime2_greengenes2_16s {
 }
 
 // ==========================================
-// 1. サブワークフロー
+// サブワークフロー定義
 // ==========================================
 workflow QIIME2_GREENGENES2_16S_SUB {
     take:
@@ -185,44 +208,4 @@ workflow QIIME2_GREENGENES2_16S_SUB {
 
     emit:
     out = out
-}
-
-// ==========================================
-// 2. コマンドライン用エントリーポイント
-// ==========================================
-workflow QIIME2_GREENGENES2_16S_ALL {
-    p = createNullParamsChannel()
-    region_ch = Channel.value(params.qiime2_gg2_16s_target_region)
-    mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode)
-    perc_identity_ch = Channel.value(params.qiime2_gg2_perc_identity)
-    
-    backbone_ch = Channel.value(file(params.qiime2_gg2_16s_backbone_fna, checkIfExists: true))
-    taxonomy_ch = Channel.value(file(params.qiime2_gg2_16s_taxonomy, checkIfExists: true))
-    rrndb_ch = Channel.value(file(params.qiime2_gg2_16s_rrndb_stats, checkIfExists: true))
-    annotation_ch = Channel.value(file(params.annotation_table, checkIfExists: true))
-    annots_ch = Channel.value(params.functional_annotations)
-
-    dada2_dummy_ch = Channel.fromPath("${params.output}/qiime2_dada2/*/table.qza")
-        .map { table_path ->
-            def pair_id = table_path.parent.name
-            def rep_seqs = file("${table_path.parent}/rep-seqs.qza", checkIfExists: true)
-            return tuple(pair_id, table_path, rep_seqs, file('dummy_stats.qza'), file('dummy_trans.qza'))
-        }
-
-    QIIME2_GREENGENES2_16S_SUB(
-        p,
-        dada2_dummy_ch,
-        region_ch,
-        backbone_ch,
-        taxonomy_ch,
-        rrndb_ch,
-        mode_ch,
-        annotation_ch,
-        annots_ch,
-        perc_identity_ch
-    )
-}
-
-workflow {
-    QIIME2_GREENGENES2_16S_ALL()
 }

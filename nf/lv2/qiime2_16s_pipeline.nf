@@ -14,6 +14,7 @@ params.qiime2_trunc_len_r = 230
 params.qiime2_gg2_16s_target_region = 'v4'
 params.qiime2_gg2_perc_identity = 0.99 // パーセント一致度閾値のデフォルト設定
 params.qiime2_gg2_rrndb_mode = 'right' // rrnDBコピー数探索モードのデフォルト
+params.qiime2_gg2_only_gxxxx = true    // G[0-9]ノードのみに絞る（デフォルト: true）
 
 // 機能アノテーション関連パラメータのデフォルト追加
 if (!params.containsKey('annotation_table')) {
@@ -30,12 +31,82 @@ if (!params.containsKey('petagenomeDir') || !params.petagenomeDir) {
     error "Error: 'petagenomeDir' parameter is not specified. Please provide it."
 }
 
-include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; createSeqsChannel } \
+include { createNullParamsChannel; getParam; clusterOptions; processProfile; createPairsChannel; createSeqsChannel; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
 // 下位モジュール（lv1）のインポート
 include { QIIME2_DADA2_SUB } from "${params.petagenomeDir}/nf/lv1/qiime2_dada2"
 include { QIIME2_GREENGENES2_16S_SUB } from "${params.petagenomeDir}/nf/lv1/qiime2_gg2_16s"
+
+// ==========================================
+// バックボーンを G[0-9] のみにフィルタリングするプロセス (16S用)
+// ==========================================
+process filter_backbone_gxxxx_16s {
+    tag "filtering backbone for G[0-9] (16S)"
+    container = "${params.petagenomeDir}/modules/qiime2/qiime2.sif"
+    containerOptions = { apptainerContainerOptions("${params.apptainerRunOptions}") }
+
+    def gb = "${params.qiime2_gg2_16s_memory ?: params.memory}"
+    def threads = "${params.qiime2_gg2_16s_threads ?: params.threads}"
+    memory params.executor=="sge" ? null : "${gb} GB"
+    cpus params.executor=="sge" ? null : threads
+    clusterOptions "${clusterOptions(params.executor, gb, threads, label)}"
+
+    input:
+    path backbone_fna
+
+    output:
+    path "filtered_backbone.fna.qza", emit: backbone
+
+    script:
+    """
+    export PYTHONWARNINGS="ignore"
+    export XDG_CONFIG_HOME=/tmp/qiime2_config
+    export MPLCONFIGDIR=/tmp/matplotlib_config
+    export NUMBA_CACHE_DIR=/tmp/numba_cache
+    export FONTCONFIG_PATH=/tmp/fontconfig
+
+    qiime tools export \
+        --input-path ${backbone_fna} \
+        --output-path exported_backbone
+
+    python3 - << 'EOF'
+import re
+
+input_file = "exported_backbone/dna-sequences.fasta"
+output_file = "filtered_backbone.fasta"
+pattern = re.compile(r"^G[0-9]")
+
+count = 0
+filtered_count = 0
+
+with open(input_file, "r") as fin, open(output_file, "w") as fout:
+    write_this = False
+    for line in fin:
+        if line.startswith(">"):
+            count += 1
+            header = line.strip()
+            seq_id = header[1:].split()[0]
+            if pattern.match(seq_id):
+                write_this = True
+                filtered_count += 1
+                print(header, file=fout)
+            else:
+                write_this = False
+        else:
+            if write_this:
+                fout.write(line)
+
+print(f"Total backbone sequences: {count}")
+print(f"Filtered G[0-9] sequences: {filtered_count}")
+EOF
+
+    qiime tools import \
+        --type 'FeatureData[Sequence]' \
+        --input-path filtered_backbone.fasta \
+        --output-path filtered_backbone.fna.qza
+    """
+}
 
 // ==========================================
 // 追加：FASTA直接入力からDADA2出力を模倣するプロセス（標準ライブラリのみ使用）
@@ -69,7 +140,7 @@ process qiime2_import_fasta_as_features {
             --input-path ${fasta_file} \
             --output-path ${sample_id}/rep-seqs.qza
 
-        # 2. 標準PythonだけでFASTAをパースしてBIOMテーブルを生成（カウントを1から順に増加させる）
+        # 2. 標準PythonだけでFASTAをパースしてBIOMテーブルを生成
         python3 - <<EOF
 import biom
 import pandas as pd
@@ -77,15 +148,12 @@ import pandas as pd
 fasta_path = "${fasta_file}"
 record_ids = []
 
-# Biopythonを使わず標準機能でFASTAのヘッダー（ID）を抽出
 with open(fasta_path, 'r') as f:
     for line in f:
         if line.startswith('>'):
-            # スペース等があれば最初の単語をIDとする
             rec_id = line[1:].strip().split()[0]
             record_ids.append(rec_id)
 
-# 配列の上から順番に 1, 2, 3... と増加する数値をカウントとして割り当てる
 counts = list(range(1, len(record_ids) + 1))
 data = pd.DataFrame(counts, index=record_ids, columns=["${sample_id}"])
 table = biom.Table(data.values, data.index, data.columns)
@@ -102,7 +170,6 @@ EOF
             --input-format BIOMV100Format \
             --output-path ${sample_id}/table.qza
 
-        # 4. 後続プロセスが必要とするダミーの統計ファイルを作成
         touch ${sample_id}/denoising-stats.qza
         touch ${sample_id}/base-transition-stats.qza
         """
@@ -133,12 +200,15 @@ workflow QIIME2_16S_PIPELINE_SUB {
         dada2_out = QIIME2_DADA2_SUB(p, reads)
     }
 
+    // B-0. パラメータに応じてバックボーンを G[0-9] ノードのみにフィルタリング
+    ch_backbone = params.qiime2_gg2_only_gxxxx ? filter_backbone_gxxxx_16s(backbone_fna) : backbone_fna
+
     // B. Greengenes2 (16S用) による系統配置・タクソノミ付与 & 機能アノテーション集計
     gg2_out = QIIME2_GREENGENES2_16S_SUB(
         p,
         dada2_out,
         target_region,
-        backbone_fna,
+        ch_backbone, // フィルタ済み（または元の）バックボーンを渡す
         taxonomy,
         rrndb_stats,
         rrndb_mode,
@@ -157,7 +227,6 @@ workflow QIIME2_16S_PIPELINE_SUB {
 workflow QIIME2_16S_PIPELINE_ALL {
     p = createNullParamsChannel()
 
-    // 入力ファイルがFASTA形式かどうかを安全に判定
     def is_fasta = false
     if (params.containsKey('qiime2_reads')) {
         def r_str = params.qiime2_reads.toString().toLowerCase()
@@ -166,7 +235,6 @@ workflow QIIME2_16S_PIPELINE_ALL {
         }
     }
 
-    // FASTAのときは単一配列チャンネル、それ以外は元のペアエンドチャンネルを生成
     def reads
     if (is_fasta) {
         reads = createSeqsChannel(params.qiime2_reads)
@@ -178,11 +246,9 @@ workflow QIIME2_16S_PIPELINE_ALL {
     mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode)
     perc_identity_ch = Channel.value(params.qiime2_gg2_perc_identity)
     
-    // 機能アノテーション関連チャンネルの作成
     annotation_ch = Channel.value(file(params.annotation_table, checkIfExists: true))
     annots_ch = Channel.value(params.functional_annotations)
 
-    // Nextflowの標準機能（checkIfExists: true）で安全にファイル存在チェックを行う
     backbone_ch = Channel.value(file(params.qiime2_gg2_16s_backbone_fna, checkIfExists: true))
     taxonomy_ch = Channel.value(file(params.qiime2_gg2_16s_taxonomy, checkIfExists: true))
     rrndb_ch = Channel.value(file(params.qiime2_gg2_16s_rrndb_stats, checkIfExists: true))

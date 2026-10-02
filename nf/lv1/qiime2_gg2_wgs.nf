@@ -15,7 +15,10 @@ params.qiime2_gg2_wgs_threads = Math.min(params.threads as Integer, QIIME2_GG2_W
 // 3. rrnDBのコピー数探索モード ('right': 右側から細かい階層へ遡る, 'genus': 属レベル固定)
 params.qiime2_gg2_rrndb_mode = 'right'
 
-// 4. 機能アノテーション関連パラメータ
+// 4. GXXXX (G[0-9]) ノードのみにバックボーンを絞るかどうか（デフォルト: true）
+params.qiime2_gg2_only_gxxxx = true
+
+// 5. 機能アノテーション関連パラメータ
 if (!params.containsKey('annotation_table')) {
     params.annotation_table = "${params.petagenomeDir}/data/greengenes2/genome_annotations_table.tsv"
 }
@@ -33,6 +36,9 @@ params.qiime2_gg2_wgs_rrndb_stats = "${params.petagenomeDir}/data/rrnDB/rrnDB-5.
 include { createNullParamsChannel; getParam; clusterOptions; processProfile; apptainerContainerOptions } \
     from "${params.petagenomeDir}/nf/common/utils"
 
+// ==========================================
+// Greengenes2 による集計プロセス (WGS用)
+// ==========================================
 process qiime2_greengenes2_wgs {
     tag "${pair_id} (WGS)"
     container = "${params.petagenomeDir}/modules/qiime2/qiime2.sif"
@@ -64,10 +70,7 @@ process qiime2_greengenes2_wgs {
 
     script:
         """
-        # Pythonの非推奨警告を抑制
         export PYTHONWARNINGS="ignore"
-
-        # コンテナ特有のキャッシュ・ホームディレクトリ競合を防ぐ環境変数
         export XDG_CONFIG_HOME=/tmp/qiime2_config
         export MPLCONFIGDIR=/tmp/matplotlib_config
         export NUMBA_CACHE_DIR=/tmp/numba_cache
@@ -78,7 +81,7 @@ process qiime2_greengenes2_wgs {
 
         echo "rrnDB search mode: ${rrndb_mode}"
 
-        # 1. Bowtie2のSAMファイルからリファレンス配列ごとのカウントを集計し、feature-table.tsv (TSVフォーマットのBIOMライク形式) を作成する
+        # 1. Bowtie2のSAMファイルからリファレンス配列ごとのカウントを集計
         python3 -c "
         import sys
         from collections import Counter
@@ -96,7 +99,6 @@ process qiime2_greengenes2_wgs {
                     if ref_id != '*':
                         counts[ref_id] += 1
 
-        # feature-table.tsv を出力 (QIIME形式のタブ区切りテーブル：行名=FeatureID, 列=サンプル名)
         sample_id = '${pair_id}'
         with open('${pair_id}/feature-table.tsv', 'w') as out:
             out.write(f'# Constructed from biom file\\n#OTU ID\\t{sample_id}\\n')
@@ -117,20 +119,40 @@ process qiime2_greengenes2_wgs {
             cp exported_ref/*.fna ${pair_id}/representatives.fasta
         fi
 
-        # 3. タクソノミ情報をTSVに変換
+        # 3. タクソノミ情報をTSVに変換（安全なPython処理）
         qiime tools export \
             --input-path ${taxonomy} \
             --output-path exported_taxonomy
 
-        if [ -f exported_taxonomy/taxonomy.tsv ]; then
-            cp exported_taxonomy/taxonomy.tsv ${pair_id}/taxonomy.tsv
-        elif [ -f exported_taxonomy/consensus_assignments.tsv ]; then
-            cp exported_taxonomy/consensus_assignments.tsv ${pair_id}/taxonomy.tsv
-        else
-            find exported_taxonomy -name "*.tsv" -exec cp {} ${pair_id}/taxonomy.tsv \\;
-        fi
+        python3 -c "
+import os, glob, shutil
 
-        # 4. feature-table.tsv と taxonomy.tsv を結合し、rrnDBコピー数補正 & 全体和正規化を行い、カウント数順（降順）でソートする (タクソノミ)
+exported_dir = 'exported_taxonomy'
+target_dest = '${pair_id}/taxonomy.tsv'
+
+candidates = [
+    os.path.join(exported_dir, 'taxonomy.tsv'),
+    os.path.join(exported_dir, 'consensus_assignments.tsv')
+]
+
+found = False
+for path in candidates:
+    if os.path.exists(path):
+        shutil.copy(path, target_dest)
+        found = True
+        break
+
+if not found:
+    all_tsvs = glob.glob(os.path.join(exported_dir, '**', '*.tsv'), recursive=True)
+    if all_tsvs:
+        shutil.copy(all_tsvs[0], target_dest)
+        found = True
+
+if not found:
+    raise FileNotFoundError(f'Taxonomy tsv file not found in {exported_dir}')
+"
+
+        # 4. feature-table.tsv と taxonomy.tsv の結合・rrnDB補正
         python3 ${params.petagenomeDir}/scripts/Python/parse_taxonomy.py \
             ${pair_id}/feature-table.tsv \
             ${pair_id}/taxonomy.tsv \
@@ -138,7 +160,7 @@ process qiime2_greengenes2_wgs {
             ${pair_id}/taxonomy_counts.tsv \
             --mode ${rrndb_mode}
 
-        # 5. アノテーションテーブルを紐づけて、rrnDB補正後の存在量を各機能（KO, MetaCycなど）に分配・集計する
+        # 5. 機能アノテーション集計
         python3 ${params.petagenomeDir}/scripts/Python/parse_functional_profiles.py \
             ${pair_id}/feature-table.tsv \
             ${pair_id}/taxonomy.tsv \
@@ -151,12 +173,12 @@ process qiime2_greengenes2_wgs {
 }
 
 // ==========================================
-// 1. サブワークフロー
+// サブワークフロー定義
 // ==========================================
 workflow QIIME2_GREENGENES2_WGS_SUB {
     take:
     p
-    input_ch // tuple val(ref_id), val(pair_id), path(sam_file)
+    sam_ch
     backbone_fna
     taxonomy
     rrndb_stats
@@ -166,7 +188,7 @@ workflow QIIME2_GREENGENES2_WGS_SUB {
 
     main:
     out = qiime2_greengenes2_wgs(
-        p.combine(input_ch).map { p_val, ref_id, pair_id, sam_file -> tuple(p_val, pair_id, sam_file) },
+        sam_ch,
         backbone_fna,
         taxonomy,
         rrndb_stats,
@@ -177,40 +199,4 @@ workflow QIIME2_GREENGENES2_WGS_SUB {
 
     emit:
     out = out
-}
-
-// ==========================================
-// 2. コマンドライン用エントリーポイント
-// ==========================================
-workflow QIIME2_GREENGENES2_WGS_ALL {
-    p = createNullParamsChannel()
-    mode_ch = Channel.value(params.qiime2_gg2_rrndb_mode)
-    
-    backbone_ch = Channel.value(file(params.qiime2_gg2_wgs_backbone_fna, checkIfExists: true))
-    taxonomy_ch = Channel.value(file(params.qiime2_gg2_wgs_taxonomy, checkIfExists: true))
-    rrndb_ch = Channel.value(file(params.qiime2_gg2_wgs_rrndb_stats, checkIfExists: true))
-    annotation_ch = Channel.value(file(params.annotation_table, checkIfExists: true))
-    annots_ch = Channel.value(params.functional_annotations)
-
-    wgs_input_ch = Channel.fromPath("${params.output}/MAP_SUB/*/*.sam")
-        .map { sam_path ->
-            def ref_id = "gg2_backbone"
-            def pair_id = sam_path.parent.name
-            return tuple(ref_id, pair_id, sam_path)
-        }
-
-    QIIME2_GREENGENES2_WGS_SUB(
-        p,
-        wgs_input_ch,
-        backbone_ch,
-        taxonomy_ch,
-        rrndb_ch,
-        mode_ch,
-        annotation_ch,
-        annots_ch
-    )
-}
-
-workflow {
-    QIIME2_GREENGENES2_WGS_ALL()
 }
