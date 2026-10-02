@@ -83,7 +83,8 @@ process qiime2_greengenes2_wgs {
 
         # 1. Bowtie2のSAMファイルからリファレンス配列ごとのカウントを集計
         python3 -c "
-import sys from collections import Counter
+import sys
+from collections import Counter
 
 counts = Counter()
 sam_path = '${sam_file}'

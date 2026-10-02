@@ -5,6 +5,13 @@ nextflow.enable.dsl=2
 params.memory = 32
 params.threads = 8
 
+// 2. タスク固有の上限値
+def QIIME2_16S_MAX_MEMORY = 64
+def QIIME2_16S_MAX_THREADS = 32
+
+params.qiime2_gg2_16s_memory = Math.min(params.memory as Integer, QIIME2_16S_MAX_MEMORY)
+params.qiime2_gg2_16s_threads = Math.min(params.threads as Integer, QIIME2_16S_MAX_THREADS)
+
 // パラメータの初期化
 params.qiime2_dada2_trim_left_f = 0
 params.qiime2_dada2_trim_left_r = 0
