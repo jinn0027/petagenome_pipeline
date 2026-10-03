@@ -68,8 +68,8 @@ inPairs="/home/data202502/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.g
 
 wgsFnqGzPair="${extDir}/K1_sample29_wgs_R{1,2}.fastq.gz"
 in16SPairs="K1_sample29_v4_R{1,2}.fastq.gz"
-only_gxxxx="false"
-#only_gxxxx="true"
+#only_gxxxx="false"
+only_gxxxx="true"
 
 args="\
     --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \

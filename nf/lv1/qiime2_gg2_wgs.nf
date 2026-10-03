@@ -62,11 +62,12 @@ process qiime2_greengenes2_wgs {
 
     output:
         tuple val(pair_id), 
-              path("${pair_id}/feature-table.tsv"), 
-              path("${pair_id}/representatives.fasta"),
-              path("${pair_id}/taxonomy.tsv"),
-              path("${pair_id}/taxonomy_counts.tsv"),
-              path("${pair_id}/*_functional_counts.tsv")
+            path("${pair_id}/feature-table.tsv"), 
+            path("${pair_id}/feature_counts.tsv"),
+            path("${pair_id}/representatives.fasta"),
+            path("${pair_id}/taxonomy.tsv"),
+            path("${pair_id}/taxonomy_counts.tsv"),
+            path("${pair_id}/*_functional_counts.tsv")
 
     script:
         """
@@ -152,13 +153,91 @@ if not found:
     raise FileNotFoundError(f'Taxonomy tsv file not found in {exported_dir}')
 "
 
-        # 4. feature-table.tsv と taxonomy.tsv の結合・rrnDB補正
+        # 4. feature-table.tsv と taxonomy.tsv の結合・rrnDB補正 (タクソノミ集計)
         python3 ${params.petagenomeDir}/scripts/Python/parse_taxonomy.py \
             ${pair_id}/feature-table.tsv \
             ${pair_id}/taxonomy.tsv \
             ${rrndb_stats} \
             ${pair_id}/taxonomy_counts.tsv \
             --mode ${rrndb_mode}
+
+        # 4.5. フィーチャー単位のカウントテーブルに対しても rrnDB補正・正規化・ソートを行い feature_counts.tsv を出力する
+        python3 -c "
+import pandas as pd
+import zipfile
+import gzip
+import os
+
+feat_path = '${pair_id}/feature-table.tsv'
+tax_path = '${pair_id}/taxonomy.tsv'
+rrndb_path = '${rrndb_stats}'
+mode = '${rrndb_mode}'
+output_path = '${pair_id}/feature_counts.tsv'
+
+df_feat = pd.read_csv(feat_path, sep='\t', skiprows=1, index_col=0)
+df_tax = pd.read_csv(tax_path, sep='\t', index_col=0)
+
+sample_cols = df_feat.select_dtypes(include=['number']).columns
+df_counts = df_feat[sample_cols].copy()
+
+rrndb_df = None
+if rrndb_path.endswith('.zip'):
+    with zipfile.ZipFile(rrndb_path, 'r') as z:
+        for filename in z.namelist():
+            if filename.endswith('.tsv') or filename.endswith('.txt'):
+                with z.open(filename) as f:
+                    rrndb_df = pd.read_csv(f, sep='\t')
+                break
+elif rrndb_path.endswith('.gz'):
+    with gzip.open(rrndb_path, 'rt') as f:
+        rrndb_df = pd.read_csv(f, sep='\t')
+else:
+    rrndb_df = pd.read_csv(rrndb_path, sep='\t')
+
+copy_num_dict = {}
+if rrndb_df is not None:
+    genus_col = next((c for c in ['genus', 'tax_name', 'name'] if c in rrndb_df.columns), rrndb_df.columns[0])
+    mean_col = next((c for c in ['mean', 'copy_number'] if c in rrndb_df.columns), rrndb_df.columns[-1])
+    for _, row in rrndb_df.iterrows():
+        tax_name = str(row[genus_col]).strip()
+        try:
+            copy_num_dict[tax_name] = float(row[mean_col])
+        except ValueError:
+            pass
+
+def get_rrn_copy(tax_str):
+    if pd.isna(tax_str):
+        return 1.0
+    parts = [p.strip() for p in str(tax_str).split(';')]
+    if mode == 'genus' and len(parts) >= 6:
+        g = parts[5].replace('g__', '')
+        if g in copy_num_dict:
+            return copy_num_dict[g]
+    for part in reversed(parts):
+        clean_name = part.replace('g__', '').replace('s__', '').replace('f__', '')
+        if clean_name in copy_num_dict:
+            return copy_num_dict[clean_name]
+    return 1.0
+
+copy_nums = pd.Series(1.0, index=df_counts.index)
+if 'Taxon' in df_tax.columns:
+    tax_series = df_tax['Taxon']
+elif df_tax.shape[1] > 0:
+    tax_series = df_tax.iloc[:, 0]
+else:
+    tax_series = pd.Series(index=df_counts.index, dtype=str)
+
+for idx in df_counts.index:
+    if idx in tax_series.index:
+        copy_nums[idx] = get_rrn_copy(tax_series[idx])
+
+df_corrected = df_counts.div(copy_nums, axis=0)
+df_norm = df_corrected.div(df_corrected.sum(axis=0), axis=1)
+
+df_norm['Total'] = df_norm.sum(axis=1)
+df_sorted = df_norm.sort_values(by='Total', ascending=False).drop(columns=['Total'])
+df_sorted.to_csv(output_path, sep='\t')
+"
 
         # 5. 機能アノテーション集計
         python3 ${params.petagenomeDir}/scripts/Python/parse_functional_profiles.py \
