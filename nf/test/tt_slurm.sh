@@ -68,6 +68,8 @@ inPairs="/home/data202502/metagenome/*_XXXXXXXX_XXXXXXXX_L001_R{1,2}_001.fastq.g
 
 wgsFnqGzPair="${extDir}/K1_sample29_wgs_R{1,2}.fastq.gz"
 in16SPairs="K1_sample29_v4_R{1,2}.fastq.gz"
+only_gxxxx="false"
+#only_gxxxx="true"
 
 args="\
     --petagenomeDir=${PETAGENOME_PIPELINE_DIR} \
@@ -131,7 +133,7 @@ case ${test} in
 		 --annotation_table "${extDir}/greengenes2_db/genome_annotations_table.tsv" \
 		 --functional_annotations "KO,MetaCyc" \
 		 --qiime2_reads "${in16SPairs}" \
-		 --qiime2_gg2_only_gxxxx true \
+		 --qiime2_gg2_only_gxxxx "${only_gxxxx}" \
 	         --qiime2_gg2_perc_identity 0.9 \
 		 --qiime2_gg2_16s_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
 		 --qiime2_gg2_16s_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
@@ -144,7 +146,7 @@ case ${test} in
 		 --annotation_table "${extDir}/greengenes2_db/genome_annotations_table.tsv" \
 		 --functional_annotations "KO,MetaCyc" \
 		 --qiime2_reads "${wgsFnqGzPair}" \
-		 --qiime2_gg2_only_gxxxx true \
+		 --qiime2_gg2_only_gxxxx "${only_gxxxx}" \
                  --qiime2_gg2_wgs_backbone_fna "${extDir}/greengenes2_db/2024.09.backbone.full-length.fna.qza" \
                  --qiime2_gg2_wgs_taxonomy "${extDir}/greengenes2_db/2024.09.backbone.tax.qza" \
                  --qiime2_gg2_wgs_tree "${extDir}/greengenes2_db/2024.09.taxonomy.id.nwk" \
